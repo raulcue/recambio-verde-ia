@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recambio Verde IA - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(-45deg, #064e3b, #059669, #10b981, #065f46);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center">
+    <div class="glass p-10 rounded-2xl w-full max-w-md text-center">
+        <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Recambio Verde <span class="text-green-300">IA</span></h1>
+        <p class="text-green-100 mb-8 opacity-80">Gestión inteligente de piezas de desguace</p>
+        
+        <form class="space-y-6">
+            <div class="text-left">
+                <label class="block text-sm font-medium text-green-100">Usuario</label>
+                <input type="text" class="w-full mt-1 p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-green-200/50 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" placeholder="admin@recambioverde.com">
+            </div>
+            
+            <div class="text-left">
+                <label class="block text-sm font-medium text-green-100">Contraseña</label>
+                <input type="password" class="w-full mt-1 p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-green-200/50 focus:outline-none focus:ring-2 focus:ring-green-400 transition-all" placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 active:scale-95 shadow-green-900/50">
+                Entrar al Panel
+            </button>
+        </form>
+        
+        <div class="mt-8 text-xs text-green-200/60 uppercase tracking-widest">
+            Powered by OpenAI & Render
+        </div>
+    </div>
+</body>
+</html>
