@@ -12,60 +12,36 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// --- NAVEGACIÓN (GET) ---
+// --- NAVEGACIÓN ---
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/registro', (req, res) => res.sendFile(path.join(__dirname, 'public', 'registro.html')));
+app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/registro', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'registro.html'));
-});
-
-app.get('/privacidad', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'privacidad.html'));
-});
-
-// Nueva ruta para el Dashboard (Kanban)
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-// --- MOTOR DE REGISTRO ---
-
-app.post('/auth/registro', async (req, res) => {
-  const { nombre, telefono, email, password } = req.body;
+// --- API PARA EL KANBAN (NUEVO) ---
+app.get('/api/pedidos', async (req, res) => {
   try {
-    const query = 'INSERT INTO usuarios (nombre_taller, telefono, email, password) VALUES ($1, $2, $3, $4) RETURNING id';
-    await pool.query(query, [nombre, telefono, email, password]);
-    res.json({ success: true });
+    const result = await pool.query('SELECT * FROM pedidos ORDER BY fecha_creacion DESC');
+    res.json(result.rows);
   } catch (err) {
-    res.status(400).json({ success: false, message: 'El email o teléfono ya existen.' });
+    res.status(500).json({ error: "Error al cargar pedidos" });
   }
 });
 
-// --- MOTOR DE LOGIN (NUEVO) ---
-
+// --- LOGIN ---
 app.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const query = 'SELECT * FROM usuarios WHERE email = $1 AND password = $2';
     const result = await pool.query(query, [email, password]);
-
     if (result.rows.length > 0) {
-      // Usuario encontrado
-      res.json({ success: true, message: 'Bienvenido', taller: result.rows[0].nombre_taller });
+      res.json({ success: true, rol: result.rows[0].rol });
     } else {
-      // Usuario no encontrado o clave mal
-      res.status(401).json({ success: false, message: 'Email o contraseña incorrectos.' });
+      res.status(401).json({ success: false, message: 'Credenciales incorrectas' });
     }
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Error en el servidor.' });
+    res.status(500).json({ success: false });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor de Recambio Verde IA funcionando en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
