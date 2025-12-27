@@ -2,23 +2,134 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Control - Recambio Verde IA</title>
+    <title>Gestión de Pedidos - Recambio Verde IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .kanban-col { min-height: 80vh; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .card-inner { transition: transform 0.2s; cursor: pointer; }
+        .card-inner:hover { transform: translateY(-2px); }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-8">
-    <div class="max-w-7xl mx-auto">
-        <header class="flex justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm border-l-8 border-green-500">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800">Panel de Recambios <span class="text-green-600">IA</span></h1>
-                <p class="text-slate-500 text-sm">Bienvenido al sistema de gestión inteligente</p>
-            </div>
-            <button onclick="window.location.href='/'" class="text-slate-400 hover:text-red-500 transition-colors">Cerrar Sesión</button>
-        </header>
+<body class="bg-slate-100 font-sans">
 
-        <div class="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-300">
-            <h2 class="text-xl font-semibold text-slate-700">¡Login Correcto!</h2>
-            <p class="text-slate-500 mt-2">Estamos preparando tu tablero Kanban espectacular...</p>
+    <div class="max-w-[1400px] mx-auto mt-6 px-4">
+        <div class="bg-white p-4 rounded-t-lg border-b-2 border-slate-200 flex justify-between items-center shadow-sm">
+            <h1 class="text-slate-700 font-bold uppercase tracking-tight flex items-center gap-3">
+                <i class="fas fa-list-check text-green-600"></i> Listado de Pedidos IA
+            </h1>
+            <div class="flex gap-4 items-center">
+                <span id="contador-piezas" class="text-xs font-bold bg-slate-100 px-3 py-1 rounded-full text-slate-500">400+ PIEZAS PRECARGADAS</span>
+                <button onclick="window.location.href='/'" class="text-red-400 hover:text-red-600 text-xs font-black uppercase">Salir</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+            
+            <div class="kanban-col rounded-lg p-3">
+                <div class="bg-orange-500 text-white p-2 rounded mb-4 flex justify-between items-center shadow-md">
+                    <span class="font-black text-xs uppercase italic"><i class="fas fa-truck-fast mr-2"></i> En Ruta</span>
+                    <i class="fas fa-check-square opacity-40"></i>
+                </div>
+                <div id="col-ruta" class="space-y-3"></div>
+            </div>
+
+            <div class="kanban-col rounded-lg p-3">
+                <div class="bg-green-600 text-white p-2 rounded mb-4 flex justify-between items-center shadow-md">
+                    <span class="font-black text-xs uppercase italic"><i class="fas fa-box-open mr-2"></i> Recibido</span>
+                    <i class="fas fa-check-square opacity-40"></i>
+                </div>
+                <div id="col-recibido" class="space-y-3"></div>
+            </div>
+
+            <div class="kanban-col rounded-lg p-3">
+                <div class="bg-amber-500 text-white p-2 rounded mb-4 flex justify-between items-center shadow-md">
+                    <span class="font-black text-xs uppercase italic"><i class="fas fa-clock mr-2"></i> Pendiente</span>
+                    <i class="fas fa-check-square opacity-40"></i>
+                </div>
+                <div id="col-pendiente" class="space-y-3"></div>
+            </div>
+
+            <div class="kanban-col rounded-lg p-3">
+                <div class="bg-red-600 text-white p-2 rounded mb-4 flex justify-between items-center shadow-md">
+                    <span class="font-black text-xs uppercase italic"><i class="fas fa-ban mr-2"></i> Cancelado</span>
+                    <i class="fas fa-check-square opacity-40"></i>
+                </div>
+                <div id="col-cancelado" class="space-y-3"></div>
+            </div>
         </div>
     </div>
+
+    <script>
+        // Mapeo de iconos para las 400 piezas más comunes
+        const iconosPiezas = {
+            'alternador': 'fa-bolt-lightning',
+            'bateria': 'fa-car-battery',
+            'embrague': 'fa-gears',
+            'turbo': 'fa-wind',
+            'optica': 'fa-lightbulb',
+            'amortiguador': 'fa-arrows-up-down',
+            'pastillas': 'fa-circle-stop',
+            'filtros': 'fa-filter',
+            'caudalimetro': 'fa-gauge-high',
+            'kit distribucion': 'fa-shuttle-space',
+            'elevalunas': 'fa-window-maximize'
+        };
+
+        async function cargarTablero() {
+            try {
+                const res = await fetch('/api/pedidos');
+                const pedidos = await res.json();
+                
+                // Limpiar columnas antes de precargar
+                ['ruta', 'recibido', 'pendiente', 'cancelado'].forEach(c => 
+                    document.getElementById(`col-${c}`).innerHTML = ''
+                );
+
+                pedidos.forEach(p => {
+                    // Detectar icono basado en el nombre de la pieza
+                    const piezaLower = p.pieza.toLowerCase();
+                    let iconoClass = 'fa-car-side'; // Icono por defecto
+                    
+                    for (let key in iconosPiezas) {
+                        if (piezaLower.includes(key)) {
+                            iconoClass = iconosPiezas[key];
+                            break;
+                        }
+                    }
+
+                    const card = `
+                        <div class="card-inner bg-white p-4 rounded-md shadow-sm border-l-8 border-${getBordeColor(p.estado)} relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-black text-slate-800 text-sm">${p.numero_pedido}</span>
+                                <span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold text-slate-500 uppercase">${p.matricula || 'S/M'}</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                                    <i class="fas ${iconoClass} text-lg"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-[11px] font-bold text-slate-700 leading-tight">${p.modelo_coche || 'Modelo IA'}</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">${p.pieza}</p>
+                                </div>
+                            </div>
+                            ${p.detalles_extra ? `<p class="mt-2 text-[9px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded italic w-fit">! ${p.detalles_extra}</p>` : ''}
+                        </div>
+                    `;
+                    
+                    const col = document.getElementById(`col-${p.estado}`);
+                    if(col) col.innerHTML += card;
+                });
+            } catch (e) { console.error("Error al precargar piezas", e); }
+        }
+
+        function getBordeColor(estado) {
+            const colors = { 'ruta': 'orange-500', 'recibido': 'green-600', 'pendiente': 'amber-400', 'cancelado': 'red-600' };
+            return colors[estado] || 'slate-300';
+        }
+
+        cargarTablero();
+        setInterval(cargarTablero, 10000); // Refresco cada 10 seg para efecto "Live"
+    </script>
 </body>
 </html>

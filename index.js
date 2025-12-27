@@ -45,3 +45,14 @@ app.post('/auth/login', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor activo en puerto ${PORT}`));
+
+// Agrega o verifica esta ruta en tu index.js
+app.get('/api/pedidos', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM pedidos ORDER BY fecha_creacion DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error al leer pedidos:', err);
+    res.status(500).json({ error: 'Error en la base de datos' });
+  }
+});
