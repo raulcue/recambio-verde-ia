@@ -4,8 +4,7 @@ const path = require('path');
 const app = express();
 
 app.use(express.json());
-
-// Servir archivos estáticos desde la carpeta 'public'
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const pool = new Pool({
@@ -13,29 +12,60 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// --- RUTAS DE NAVEGACIÓN ---
+// --- NAVEGACIÓN (GET) ---
 
-// Página de inicio (Login)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Página de Registro
 app.get('/registro', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'registro.html'));
 });
 
-// Página de Política de Privacidad (LOPD)
 app.get('/privacidad', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'privacidad.html'));
 });
 
-// Ruta temporal para Recuperar Contraseña
-app.get('/recuperar', (req, res) => {
-  res.send('<body style="background:#064e3b; color:white; font-family:sans-serif; display:flex; flex-direction:column; align-items:center; justify-center; height:100vh;"><h1>Recuperar Acceso</h1><p>En construcción: Pronto podrás recuperar tu acceso vía WhatsApp.</p><a href="/" style="color:#4ade80;">Volver</a></body>');
+// Nueva ruta para el Dashboard (Kanban)
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+// --- MOTOR DE REGISTRO ---
+
+app.post('/auth/registro', async (req, res) => {
+  const { nombre, telefono, email, password } = req.body;
+  try {
+    const query = 'INSERT INTO usuarios (nombre_taller, telefono, email, password) VALUES ($1, $2, $3, $4) RETURNING id';
+    await pool.query(query, [nombre, telefono, email, password]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: 'El email o teléfono ya existen.' });
+  }
+});
+
+// --- MOTOR DE LOGIN (NUEVO) ---
+
+app.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const query = 'SELECT * FROM usuarios WHERE email = $1 AND password = $2';
+    const result = await pool.query(query, [email, password]);
+
+    if (result.rows.length > 0) {
+      // Usuario encontrado
+      res.json({ success: true, message: 'Bienvenido', taller: result.rows[0].nombre_taller });
+    } else {
+      // Usuario no encontrado o clave mal
+      res.status(401).json({ success: false, message: 'Email o contraseña incorrectos.' });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Error en el servidor.' });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor de Recambio Verde IA activo en el puerto ${PORT}`);
+  console.log(`Servidor de Recambio Verde IA funcionando en puerto ${PORT}`);
 });
