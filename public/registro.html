@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Recambio Verde IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    <style>
+        body {
+            background: linear-gradient(-45deg, #064e3b, #059669, #10b981, #065f46);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="glass p-8 rounded-2xl w-full max-w-lg text-center">
+        <h1 class="text-3xl font-bold text-white mb-2">Crear Cuenta <span class="text-green-300">Taller</span></h1>
+        <p class="text-green-100 mb-6 opacity-80">Únete a la red inteligente de recambios</p>
+        
+        <form class="space-y-4">
+            <div class="text-left">
+                <label class="block text-sm font-medium text-green-100">Nombre del Taller / Empresa</label>
+                <input type="text" required class="w-full mt-1 p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-green-200/50 focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="Ej: Talleres Mecánicos Pérez">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="text-left">
+                    <label class="block text-sm font-medium text-green-100">WhatsApp (Teléfono)</label>
+                    <input type="tel" required class="w-full mt-1 p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-green-200/50 focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="+34600000000">
+                </div>
+                <div class="text-left">
+                    <label class="block text-sm font-medium text-green-100">Email</label>
+                    <input type="email" required class="w-full mt-1 p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-green-200/50 focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="taller@ejemplo.com">
+                </div>
+            </div>
+            
+            <div class="text-left">
+                <label class="block text-sm font-medium text-green-100">Contraseña de acceso</label>
+                <input type="password" required class="w-full mt-1 p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-green-400" placeholder="••••••••">
+            </div>
+
+            <div class="flex items-start space-x-3 text-left py-2">
+                <div class="flex items-center h-5">
+                    <input id="privacy" type="checkbox" required class="w-4 h-4 rounded border-white/20 bg-white/10 text-green-500 focus:ring-green-400">
+                </div>
+                <label for="privacy" class="text-xs text-green-100/80 leading-tight">
+                    He leído y acepto la <a href="/privacidad" target="_blank" class="underline hover:text-white font-bold">Política de Privacidad</a> y el tratamiento de mis datos según la LOPD.
+                </label>
+            </div>
+
+            <div class="flex justify-center py-2">
+                <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
+            </div>
+
+            <button type="submit" class="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-3 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 shadow-green-900/50">
+                Registrar Taller 🚀
+            </button>
+        </form>
+        
+        <p class="mt-6 text-sm text-green-100/70">
+            ¿Ya tienes cuenta? <a href="/" class="text-white font-semibold underline decoration-green-400">Inicia sesión aquí</a>
+        </p>
+    </div>
+</body>
+</html>
