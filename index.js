@@ -5,7 +5,6 @@ const app = express();
 
 // 1. MIDDLEWARE
 app.use(express.json());
-// Servimos los archivos desde la carpeta 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
 const pool = new Pool({
@@ -13,7 +12,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// 2. FUNCIÓN DE LOGS (Para registrar movimientos)
+// 2. FUNCIÓN DE LOGS
 async function registrarLog(email, accion, pedidoId = null) {
     try {
         await pool.query(
@@ -23,15 +22,13 @@ async function registrarLog(email, accion, pedidoId = null) {
     } catch (e) { console.error("Error en log:", e); }
 }
 
-// 3. RUTAS DE AUTENTICACIÓN (LOGIN Y REGISTRO)
-
+// 3. RUTAS DE AUTENTICACIÓN
 app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
         const user = result.rows[0];
 
-        // Verificación simple (En producción usar bcrypt)
         if (user && user.password === password) {
             let redirect = 'pedidos-taller.html';
             if (user.rol === 'admin') redirect = 'landing.html';
@@ -66,8 +63,7 @@ app.post('/api/auth/register', async (req, res) => {
     }
 });
 
-// 4. RUTAS DE USUARIOS (Para configuracion.html)
-
+// 4. RUTAS DE USUARIOS
 app.get('/api/usuarios', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, nombre_taller, email, rol FROM usuarios ORDER BY id DESC');
@@ -89,10 +85,39 @@ app.delete('/api/usuarios/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 5. RUTAS DE PEDIDOS (Para Dashboard y Taller)
-
+// 5. RUTAS DE PEDIDOS (Lo que faltaba)
 app.get('/api/pedidos', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM pedidos ORDER BY id DESC');
         res.json(result.rows);
-    } catch (e)
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/pedidos', async (req, res) => {
+    const { numero_pedido, marca_coche, modelo_coche, pieza, matricula } = req.body;
+    try {
+        const result = await pool.query(
+            'INSERT INTO pedidos (numero_pedido, marca_coche, modelo_coche, pieza, matricula, estado) VALUES ($1, $2, $3, $4, $5, 1) RETURNING id',
+            [numero_pedido, marca_coche, modelo_coche, pieza, matricula]
+        );
+        res.json({ success: true, id: result.rows[0].id });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/pedidos/:id/estado', async (req, res) => {
+    try {
+        await pool.query('UPDATE pedidos SET estado = $1 WHERE id = $2', [req.body.estado, req.params.id]);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 6. RUTA COMODÍN (Para SPA)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 7. ARRANQUE DEL SERVIDOR
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor funcionando en puerto ${PORT}`);
+});
