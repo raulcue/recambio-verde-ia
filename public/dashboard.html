@@ -7,9 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* Personalización para ocultar scrollbar pero mantener funcionalidad */
         main::-webkit-scrollbar { display: none; }
         main { -ms-overflow-style: none; scrollbar-width: none; }
+        .active-waffle { background-color: #f1f5f9; transform: scale(0.95); }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -24,19 +24,19 @@
                 <div id="waffleMenu" class="hidden absolute left-0 mt-3 w-72 bg-white rounded-[30px] shadow-2xl border border-slate-100 p-5 z-[300]">
                     <p class="text-[10px] font-black uppercase text-slate-400 mb-4 ml-2 tracking-widest italic">Nuestras Apps</p>
                     <div class="grid grid-cols-3 gap-2">
-                        <a href="#" class="flex flex-col items-center p-3 hover:bg-slate-50 rounded-2xl transition-all group">
+                        <a href="#" onclick="alert('Ya estás en el Kanban')" class="flex flex-col items-center p-3 hover:bg-slate-50 rounded-2xl transition-all group">
                             <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-1 group-hover:scale-110 transition">
                                 <i class="fas fa-columns text-sm"></i>
                             </div>
                             <span class="text-[9px] font-black text-slate-700 uppercase">Kanban</span>
                         </a>
-                        <a href="#" class="flex flex-col items-center p-3 hover:bg-slate-50 rounded-2xl transition-all group">
+                        <a href="#stock" class="flex flex-col items-center p-3 hover:bg-slate-50 rounded-2xl transition-all group">
                             <div class="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center mb-1 group-hover:scale-110 transition">
                                 <i class="fas fa-boxes-stacked text-sm"></i>
                             </div>
                             <span class="text-[9px] font-black text-slate-700 uppercase">Stock</span>
                         </a>
-                        <a href="#" class="flex flex-col items-center p-3 hover:bg-slate-50 rounded-2xl transition-all group">
+                        <a href="#talleres" class="flex flex-col items-center p-3 hover:bg-slate-50 rounded-2xl transition-all group">
                             <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-1 group-hover:scale-110 transition">
                                 <i class="fas fa-users text-sm"></i>
                             </div>
@@ -47,22 +47,35 @@
             </div>
 
             <button onclick="openModal('NUEVO')" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all">Nuevo</button>
-            <a href="/admin-logs.html" class="text-slate-400 hover:text-slate-800 self-center text-xs font-black uppercase italic tracking-tighter">Ver Logs</a>
+            <a href="#" class="text-slate-400 hover:text-slate-800 self-center text-xs font-black uppercase italic tracking-tighter">Ver Logs</a>
         </div>
 
-        <button onclick="window.location.href='/api/pedidos/export'" class="text-green-600 font-bold text-xs hover:bg-green-50 px-3 py-2 rounded-lg transition-all">
+        <button class="text-green-600 font-bold text-xs hover:bg-green-50 px-3 py-2 rounded-lg transition-all">
             <i class="fas fa-file-excel mr-1"></i> Exportar Excel
         </button>
     </nav>
 
     <main class="p-6 flex gap-6 overflow-x-auto h-[calc(100vh-64px)]">
         <script>
-            const estados = ["Pendiente", "En Proceso", "Esperando Piezas", "Revisión", "Finalizado", "Entregado"];
+            const estados = ["Pedido", "En Desguace", "Listo Envío", "En Tránsito", "Entregado", "Incidencia"];
             estados.forEach((nombre, i) => {
                 document.write(`
                     <div class="w-72 flex-shrink-0" id="col-${i+1}" ondragover="allowDrop(event)" ondrop="handleDrop(event, ${i+1})">
-                        <h2 class="text-[10px] font-black uppercase text-slate-400 mb-4 italic tracking-widest">${nombre}</h2>
-                        <div id="tasks-${i+1}" class="space-y-3 min-h-[600px] bg-slate-100/30 rounded-[32px] p-3 border-2 border-dashed border-transparent hover:border-slate-200 transition-all"></div>
+                        <div class="flex justify-between items-center mb-4 px-2">
+                            <h2 class="text-[10px] font-black uppercase text-slate-400 italic tracking-widest">${nombre}</h2>
+                            <span class="bg-slate-200 text-slate-600 text-[9px] px-2 py-0.5 rounded-full font-bold">0</span>
+                        </div>
+                        <div id="tasks-${i+1}" class="space-y-3 min-h-[600px] bg-slate-100/30 rounded-[32px] p-3 border-2 border-dashed border-transparent hover:border-slate-200 transition-all">
+                            ${i === 0 ? `
+                            <div draggable="true" ondragstart="handleDrag(event, 101)" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing">
+                                <p class="text-[9px] font-black text-slate-300 mb-2 uppercase">RV-2024-001</p>
+                                <p class="font-bold text-slate-800 text-sm italic">Puerta Delantera Izquierda</p>
+                                <div class="mt-4 flex justify-between items-center">
+                                    <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded-lg font-bold">Audi A3</span>
+                                    <i class="fas fa-comment-dots text-slate-300"></i>
+                                </div>
+                            </div>` : ''}
+                        </div>
                     </div>
                 `);
             });
@@ -70,71 +83,52 @@
     </main>
 
     <div id="modalMaster" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-xl rounded-[40px] p-8 shadow-2xl border border-slate-100">
+        <div class="bg-white w-full max-w-xl rounded-[40px] p-8 shadow-2xl">
             <h3 class="font-black uppercase text-slate-800 mb-6 text-xl tracking-tighter italic">Gestión de Pedido</h3>
-            
             <form id="masterForm" class="space-y-4">
-                <input type="hidden" id="pedido_id">
-                
                 <div class="bg-slate-50 p-6 rounded-[32px] border border-slate-100">
                     <div class="flex justify-between items-center mb-4">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Información del Taller</p>
-                        <button type="button" onclick="toggleTallerEdit()" class="text-[9px] font-black text-blue-500 underline uppercase italic">Cambiar / Nuevo</button>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Taller Destino</p>
+                        <button type="button" onclick="toggleTallerEdit()" class="text-[9px] font-black text-blue-500 underline uppercase italic">Editar</button>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="t_nom" readonly class="p-4 bg-white border rounded-2xl text-xs font-bold text-slate-500 shadow-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nombre Taller">
-                        <input type="text" id="t_tel" readonly class="p-4 bg-white border rounded-2xl text-xs font-bold text-slate-500 shadow-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="WhatsApp">
-                    </div>
-                    <div id="extensor-taller" class="hidden mt-4 pt-4 border-t border-slate-200 space-y-3">
-                        <select id="sel-taller" onchange="fillTaller(this.value)" class="w-full p-4 bg-white border rounded-2xl text-xs font-bold outline-none">
-                            <option value="">-- Seleccionar Taller --</option>
-                            <option value="NEW">+ CREAR NUEVO TALLER</option>
-                        </select>
+                        <input type="text" id="t_nom" readonly class="p-4 bg-white border rounded-2xl text-xs font-bold text-slate-500 outline-none" placeholder="Nombre">
+                        <input type="text" id="t_tel" readonly class="p-4 bg-white border rounded-2xl text-xs font-bold text-slate-500 outline-none" placeholder="Teléfono">
                     </div>
                 </div>
-
-                <div class="border rounded-[32px] p-6 space-y-4 bg-white shadow-inner">
-                    <div class="flex border rounded-2xl overflow-hidden bg-slate-50 focus-within:ring-2 focus-within:ring-slate-800 transition-all">
-                        <span class="bg-slate-800 text-white px-4 flex items-center text-[10px] font-black">MAT</span>
-                        <input type="text" id="matricula" placeholder="0000BBB" class="w-full p-4 outline-none uppercase font-mono text-sm bg-transparent">
-                    </div>
-                    <input type="text" id="pieza" placeholder="PIEZA SOLICITADA" class="w-full p-4 bg-slate-50 border rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-slate-800 transition-all">
+                <div class="border rounded-[32px] p-6 space-y-4 bg-white">
+                    <input type="text" id="pieza" placeholder="PIEZA (EJ: FARO DELANTERO)" class="w-full p-4 bg-slate-50 border rounded-2xl text-xs font-bold outline-none uppercase">
                 </div>
-
                 <div class="flex gap-4 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 font-black text-slate-300 uppercase text-[10px] tracking-widest hover:text-slate-500">Cerrar</button>
-                    <button type="submit" class="flex-1 bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all tracking-widest">Guardar Cambios</button>
+                    <button type="button" onclick="closeModal()" class="flex-1 font-black text-slate-300 uppercase text-[10px]">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-[10px]">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // --- LÓGICA DEL WAFFLE MENU ---
         const waffleBtn = document.getElementById('waffleBtn');
         const waffleMenu = document.getElementById('waffleMenu');
 
+        // Función Abrir/Cerrar Waffle
         waffleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             waffleMenu.classList.toggle('hidden');
-            waffleBtn.classList.toggle('bg-slate-100');
+            waffleBtn.classList.toggle('active-waffle');
         });
 
-        // --- DRAG & DROP ---
-        function allowDrop(ev) { ev.preventDefault(); }
-        function handleDrag(ev, id) { ev.dataTransfer.setData("pedidoId", id); }
-        async function handleDrop(ev, newStatus) {
-            ev.preventDefault();
-            const id = ev.dataTransfer.getData("pedidoId");
-            // Aquí iría tu llamada al API
-            console.log(`Cambiando pedido ${id} a estado ${newStatus}`);
-            loadData();
-        }
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!waffleMenu.contains(e.target)) {
+                waffleMenu.classList.add('hidden');
+                waffleBtn.classList.remove('active-waffle');
+            }
+        });
 
-        // --- MODALES Y TALLER ---
         function openModal(tipo) {
             document.getElementById('modalMaster').classList.remove('hidden');
-            waffleMenu.classList.add('hidden'); // Cerrar waffle si está abierto
+            waffleMenu.classList.add('hidden');
         }
 
         function closeModal() {
@@ -142,27 +136,20 @@
         }
 
         function toggleTallerEdit() {
-            const ext = document.getElementById('extensor-taller');
-            ext.classList.toggle('hidden');
-            const isReadonly = ext.classList.contains('hidden');
-            document.getElementById('t_nom').readOnly = isReadonly;
-            document.getElementById('t_tel').readOnly = isReadonly;
+            const t_nom = document.getElementById('t_nom');
+            const t_tel = document.getElementById('t_tel');
+            t_nom.readOnly = !t_nom.readOnly;
+            t_tel.readOnly = !t_tel.readOnly;
+            t_nom.focus();
         }
 
-        // Clic fuera para cerrar Waffle
-        document.addEventListener('click', (e) => {
-            if (!waffleMenu.contains(e.target) && !waffleBtn.contains(e.target)) {
-                waffleMenu.classList.add('hidden');
-                waffleBtn.classList.remove('bg-slate-100');
-            }
-        });
-
-        async function loadData() {
-            // Tu lógica de fetch original...
-            console.log("Datos cargados");
+        function allowDrop(ev) { ev.preventDefault(); }
+        function handleDrag(ev, id) { ev.dataTransfer.setData("pedidoId", id); }
+        function handleDrop(ev, newStatus) {
+            ev.preventDefault();
+            const id = ev.dataTransfer.getData("pedidoId");
+            alert("Moviste el pedido " + id + " al estado " + newStatus);
         }
-        
-        loadData();
     </script>
 </body>
 </html>
