@@ -3,31 +3,44 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware para entender JSON (vital para que el login funcione)
+// Middleware para procesar datos JSON en el login
 app.use(express.json());
 
-// 1. SERVIR ARCHIVOS ESTÁTICOS
-// Intentamos servir desde 'public' y luego desde la raíz para que carguen assets y js
+/**
+ * 1. CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS
+ * Según tu estructura, los archivos están en la carpeta 'public'.
+ * Esto permite que el navegador encuentre /assets/logo.png y /js/global.js
+ */
 app.use(express.static(path.resolve(__dirname, 'public')));
 app.use(express.static(path.resolve(__dirname)));
 
-// 2. RUTA PRINCIPAL (index.html)
+/**
+ * 2. RUTA PRINCIPAL
+ * Envía el archivo index.html ubicado dentro de la carpeta public.
+ */
 app.get('/', (req, res) => {
-    // Buscamos el index dentro de public según tu estructura actual
     const indexPath = path.resolve(__dirname, 'public', 'index.html');
     res.sendFile(indexPath, (err) => {
         if (err) {
-            // Si por algún motivo no está en public, intenta en la raíz
+            // Si no está en public, intenta en la raíz por seguridad
             res.sendFile(path.resolve(__dirname, 'index.html'), (err2) => {
-                if (err2) res.status(404).send("Error: No se encuentra index.html");
+                if (err2) {
+                    res.status(404).send("Error crítico: index.html no encontrado.");
+                }
             });
         }
     });
 });
 
-// 3. LÓGICA DE LOGIN (Con tus credenciales exactas)
+/**
+ * 3. LÓGICA DE AUTENTICACIÓN
+ * Credenciales:
+ * - admin@recambio.com / 1234
+ * - taller@test.com / 1234
+ */
 app.post('/auth/login', (req, res) => {
     const { email, password } = req.body;
+    console.log(`Intento de acceso: ${email}`);
 
     if (email === "admin@recambio.com" && password === "1234") {
         return res.json({ 
@@ -51,6 +64,8 @@ app.post('/auth/login', (req, res) => {
     }
 });
 
+// Inicio del servidor
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor listo en puerto ${PORT}`);
+    console.log(`🚀 Servidor Recambio Reciclado listo en puerto ${PORT}`);
+    console.log(`Directorio base: ${__dirname}`);
 });
