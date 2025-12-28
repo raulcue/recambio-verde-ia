@@ -3,231 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pedidos Taller - Recambio Reciclado IA</title>
-    
+    <title>Mis Pedidos - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <script src="/js/global.js"></script>
-
-    <style>
-        .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
-        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .tab-active { border-bottom: 3px solid #3b82f6; color: #1e40af; }
-        #ptr { text-align: center; height: 0; overflow: hidden; transition: height 0.2s; background: #f8fafc; font-size: 10px; font-weight: bold; color: #94a3b8; display: flex; align-items: center; justify-content: center; }
-    </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-24 select-none">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
 
-    <div id="ptr"><i class="fas fa-sync-alt fa-spin mr-2"></i> ACTUALIZANDO...</div>
-
-    <nav class="bg-white/90 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-100 p-4 shadow-sm">
-        <div class="max-w-xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                    <i class="fas fa-car-side"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-black text-slate-800 uppercase tracking-tighter leading-none">Mis Pedidos</h1>
-                    <span id="badge-total" class="text-[9px] font-bold text-blue-500 uppercase tracking-widest text-xs">Cargando...</span>
+    <nav class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-6 py-3 flex justify-between items-center sticky top-0 z-[100]">
+        <div class="flex items-center gap-4">
+            <img src="/assets/logo.png" alt="Logo" class="h-8 dark:brightness-0 dark:invert">
+            <h1 class="text-slate-800 dark:text-white font-black text-sm uppercase tracking-tighter hidden sm:block">Recambio Reciclado IA</h1>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center"><i class="fas fa-moon dark:hidden"></i><i class="fas fa-sun hidden dark:block text-yellow-500"></i></button>
+            <div class="relative group">
+                <button class="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300 flex items-center justify-center"><i class="fas fa-th-large"></i></button>
+                <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 shadow-2xl rounded-3xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-4 border border-slate-100 dark:border-slate-700">
+                    <a href="landing.html" class="block p-3 text-xs font-black uppercase text-slate-600 dark:text-slate-300">Menú Principal</a>
                 </div>
             </div>
-            <button onclick="abrirModalNuevo()" class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-xl active:scale-90 transition-all">
-                <i class="fas fa-plus"></i>
-            </button>
+            <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
         </div>
     </nav>
 
-    <div class="flex bg-white border-b sticky top-[73px] z-40">
-        <button onclick="cambiarTab('activos')" id="tab-activos" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest tab-active">Activos</button>
-        <button onclick="cambiarTab('historial')" id="tab-historial" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Historial</button>
+    <header class="p-6 max-w-xl mx-auto flex justify-between items-center mt-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Mis Pedidos</h1>
+            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-widest" id="contador-piezas">Cargando...</p>
+        </div>
+        <button onclick="abrirModalNuevo()" class="w-14 h-14 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl shadow-xl flex items-center justify-center">
+            <i class="fas fa-plus text-xl"></i>
+        </button>
+    </header>
+
+    <div class="flex bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 sticky top-[65px] z-40">
+        <button class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 border-blue-500 text-blue-600 dark:text-white">Activos</button>
+        <button class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Historial</button>
     </div>
 
-    <main class="p-4 max-w-xl mx-auto">
-        <div class="relative mb-6 group">
-            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
-            <input type="text" id="inputBusqueda" oninput="render()" placeholder="BUSCAR POR MATRÍCULA O PIEZA..." 
-                class="w-full bg-white border-none p-5 pl-12 rounded-[2rem] text-[11px] font-bold uppercase shadow-sm focus:ring-4 focus:ring-blue-500/10 outline-none transition-all">
-        </div>
+    <main class="p-6 max-w-xl mx-auto space-y-4" id="listaPedidosTaller">
+        </main>
 
-        <div id="listaPedidos" class="space-y-4">
-            <div class="bg-white p-6 rounded-[2.5rem] skeleton h-32"></div>
-        </div>
-    </main>
+    <footer class="mt-12 py-10 border-t border-slate-100 dark:border-slate-800 text-center">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Desarrollado por <span class="text-slate-900 dark:text-white font-black">Raul C.</span> | raulcue@gmail.com | Versión Beta 1.2
+        </p>
+        <p class="text-[9px] text-slate-300 uppercase mt-2">
+            © Copyright 2026-2030 - Recambio Reciclado IA | <a href="#" class="underline">Política de Privacidad</a>
+        </p>
+    </footer>
 
-    <div id="modalNuevo" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden z-[150] p-4 items-end sm:items-center justify-center">
-        <div class="bg-white w-full max-w-lg rounded-[3.5rem] p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Nueva Solicitud</h2>
-                <button onclick="cerrarModalNuevo()" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-times-circle text-2xl"></i></button>
-            </div>
-            
-            <form id="formPedido" class="space-y-5">
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Pieza Solicitada</label>
-                    <input type="text" id="new-pieza" class="w-full p-5 bg-slate-50 rounded-3xl border-none text-xs font-bold uppercase" placeholder="Ej: MOTOR COMPLETO" required>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1 relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Matrícula</label>
-                        <input type="text" id="new-matricula" class="w-full p-5 bg-slate-50 rounded-3xl border-none text-xs font-bold uppercase" placeholder="0000XXX">
-                        <button type="button" onclick="lanzarOCR('new-matricula')" class="absolute right-3 top-9 bg-white shadow-md text-blue-600 w-10 h-10 rounded-2xl"><i class="fas fa-camera"></i></button>
-                    </div>
-                    <div class="space-y-1 relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Bastidor</label>
-                        <input type="text" id="new-bastidor" class="w-full p-5 bg-slate-50 rounded-3xl border-none text-xs font-bold uppercase" placeholder="VIN...">
-                        <button type="button" onclick="lanzarOCR('new-bastidor')" class="absolute right-3 top-9 bg-white shadow-md text-blue-600 w-10 h-10 rounded-2xl"><i class="fas fa-barcode"></i></button>
-                    </div>
-                </div>
-
-                <input type="file" id="ocr-helper" accept="image/*" capture="camera" class="hidden" onchange="procesarOCR(this)">
-
-                <button type="submit" class="w-full bg-slate-900 text-white py-6 rounded-3xl font-black uppercase text-xs tracking-widest shadow-xl">Enviar Solicitud</button>
-            </form>
-        </div>
-    </div>
-
-    <div id="modalAccion" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden items-end z-[200]" onclick="cerrarModalAccion()">
-        <div class="bg-white w-full rounded-t-[3.5rem] p-10" onclick="event.stopPropagation()">
-            <div id="box-presupuesto" class="text-center mb-8">
-                <span class="text-[10px] font-black text-orange-500 bg-orange-50 px-4 py-1 rounded-full uppercase mb-4 inline-block">Presupuesto Recibido</span>
-                <h2 id="precio-valor" class="text-6xl font-black text-slate-800 tracking-tighter">0.00€</h2>
-            </div>
-            
-            <div class="flex gap-4">
-                <button onclick="cerrarModalAccion()" class="flex-1 py-5 bg-slate-50 text-slate-400 rounded-3xl font-black uppercase text-[10px]">Cerrar</button>
-                <a id="btnWhatsapp" href="#" target="_blank" class="flex-1 py-5 bg-emerald-500 text-white rounded-3xl font-black uppercase text-[10px] flex items-center justify-center gap-2">
-                    <i class="fab fa-whatsapp"></i> Aceptar por WhatsApp
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let pedidos = [];
-        let tabActual = 'activos';
-        let campoDestinoOCR = '';
-
-        async function load() {
-            const email = localStorage.getItem('userEmail');
-            try {
-                const res = await fetch(`/api/pedidos?email=${email}`);
-                pedidos = await res.json();
-                render();
-            } catch (e) { console.error("Error cargando:", e); }
-        }
-
-        function render() {
-            const container = document.getElementById('listaPedidos');
-            const term = document.getElementById('inputBusqueda').value.toUpperCase();
-            
-            const filtrados = pedidos.filter(p => {
-                const cumpleTab = tabActual === 'activos' ? p.estado < 5 : p.estado >= 5;
-                const cumpleBusqueda = p.pieza.toUpperCase().includes(term) || (p.matricula || '').toUpperCase().includes(term);
-                return cumpleTab && cumpleBusqueda;
-            });
-
-            container.innerHTML = filtrados.map(p => `
-                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm relative active:scale-95 transition-all" onclick="abrirAccion(${p.id})">
-                    ${p.precio && p.estado === 1 ? '<div class="absolute top-6 right-6 w-3 h-3 bg-orange-500 rounded-full animate-ping"></div>' : ''}
-                    <div class="flex gap-5 items-center">
-                        <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400">
-                            <i class="fas fa-box-open text-xl"></i>
-                        </div>
-                        <div class="flex-grow">
-                            <div class="flex justify-between">
-                                <h4 class="font-black text-slate-800 uppercase text-xs tracking-tighter">${p.pieza}</h4>
-                                <span class="text-[9px] font-black text-blue-600 uppercase">${p.matricula || '---'}</span>
-                            </div>
-                            <div class="flex items-center gap-2 mt-2">
-                                <span class="text-[9px] font-black uppercase px-3 py-1 rounded-full ${getColorEstado(p.estado)}">
-                                    ${getEstadoNombre(p.estado)}
-                                </span>
-                                ${p.precio ? `<span class="text-xs font-black text-slate-800 ml-auto">${p.precio}€</span>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-
-            document.getElementById('badge-total').innerText = `${filtrados.length} PIEZAS EN LISTA`;
-        }
-
-        function lanzarOCR(campo) {
-            campoDestinoOCR = campo;
-            document.getElementById('ocr-helper').click();
-        }
-
-        async function procesarOCR(input) {
-            if (!input.files[0]) return;
-            const btn = document.querySelector(`button[onclick="lanzarOCR('${campoDestinoOCR}')"] i`);
-            btn.className = "fas fa-spinner fa-spin";
-
-            try {
-                const result = await Tesseract.recognize(input.files[0], 'eng');
-                let texto = result.data.text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-                if (campoDestinoOCR === 'new-matricula') texto = texto.slice(-7);
-                document.getElementById(campoDestinoOCR).value = texto;
-            } catch (e) { alert("Error al leer imagen"); }
-            btn.className = campoDestinoOCR === 'new-matricula' ? "fas fa-camera" : "fas fa-barcode";
-        }
-
-        document.getElementById('formPedido').onsubmit = async (e) => {
-            e.preventDefault();
-            const data = {
-                numero_pedido: 'RV-' + Math.floor(Math.random()*9000+1000),
-                pieza: document.getElementById('new-pieza').value,
-                matricula: document.getElementById('new-matricula').value,
-                bastidor: document.getElementById('new-bastidor').value,
-                email_usuario: localStorage.getItem('userEmail')
-            };
-
-            await fetch('/api/pedidos', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            cerrarModalNuevo();
-            load();
-            e.target.reset();
-        };
-
-        function abrirAccion(id) {
-            const p = pedidos.find(x => x.id === id);
-            if(p.precio) {
-                document.getElementById('precio-valor').innerText = p.precio + '€';
-                document.getElementById('box-presupuesto').classList.remove('hidden');
-            } else {
-                document.getElementById('box-presupuesto').classList.add('hidden');
-            }
-            const msg = `Hola! Acepto presupuesto para el pedido ${p.numero_pedido} (${p.pieza}) de ${p.precio}€`;
-            document.getElementById('btnWhatsapp').href = `https://wa.me/34600000000?text=${encodeURIComponent(msg)}`;
-            document.getElementById('modalAccion').style.display = 'flex';
-        }
-
-        function getEstadoNombre(e) {
-            return ["Pedido", "En Desguace", "Listo", "Tránsito", "Entregado", "Incidencia"][e-1] || '---';
-        }
-
-        function getColorEstado(e) {
-            if(e === 6) return 'bg-red-50 text-red-500';
-            if(e === 5) return 'bg-slate-100 text-slate-500';
-            return 'bg-green-50 text-green-600';
-        }
-
-        function abrirModalNuevo() { document.getElementById('modalNuevo').style.display = 'flex'; }
-        function cerrarModalNuevo() { document.getElementById('modalNuevo').style.display = 'none'; }
-        function cerrarModalAccion() { document.getElementById('modalAccion').style.display = 'none'; }
-        
-        function cambiarTab(tab) {
-            tabActual = tab;
-            document.getElementById('tab-activos').className = `flex-1 py-4 text-[10px] font-black uppercase tracking-widest ${tab==='activos'?'tab-active':'text-slate-400'}`;
-            document.getElementById('tab-historial').className = `flex-1 py-4 text-[10px] font-black uppercase tracking-widest ${tab==='historial'?'tab-active':'text-slate-400'}`;
-            render();
-        }
-
-        load();
-    </script>
 </body>
 </html>
