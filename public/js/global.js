@@ -12,15 +12,19 @@ function cargarInterfazGlobal() {
     const rol = localStorage.getItem('userRol');
     const path = window.location.pathname;
 
+    // 1. SEGURIDAD: Bloqueo de acceso al Kanban para perfiles Taller
     if (rol === 'taller' && path.includes('dashboard.html')) {
         window.location.replace('pedidos-taller.html');
         return;
     }
 
+    // 2. Lógica de redirección del logo según rol
+    const logoRedirect = (rol === 'taller') ? 'pedidos-taller.html' : 'landing.html';
+
     const navbar = `
     <nav class="h-16 bg-white dark:bg-slate-900 border-b dark:border-slate-800 flex items-center justify-between px-6 sticky top-0 z-50 shadow-sm transition-colors duration-300">
         <div class="flex items-center gap-4">
-            <img src="/assets/logo.png" class="h-8 cursor-pointer dark:brightness-0 dark:invert" alt="Logo" onclick="window.location.href='landing.html'">
+            <img src="/assets/logo.png" class="h-8 cursor-pointer dark:brightness-0 dark:invert" alt="Logo" onclick="window.location.href='${logoRedirect}'">
             <span class="text-slate-800 dark:text-white font-black text-sm uppercase tracking-tighter border-l pl-4 border-slate-200 dark:border-slate-700 hidden sm:inline">
                 Recambio Reciclado IA
             </span>
@@ -43,12 +47,20 @@ function cargarInterfazGlobal() {
                     <a href="dashboard.html" class="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition">
                         <i class="fas fa-columns text-green-500 w-4"></i> Kanban Pedidos
                     </a>
-                    ` : ''}
+                    <a href="stats.html" class="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition">
+                        <i class="fas fa-chart-pie text-red-500 w-4"></i> Estadísticas BI
+                    </a>
+                    ` : `
+                    <a href="pedidos-taller.html" class="flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition">
+                        <i class="fas fa-box text-purple-500 w-4"></i> Mis Recambios
+                    </a>
+                    `}
                     <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-bold uppercase text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl mt-2 border-t dark:border-slate-800 transition">
                         <i class="fas fa-sign-out-alt w-4"></i> Cerrar Sesión
                     </button>
                 </div>
             </div>
+
             <div class="w-10 h-10 bg-slate-800 dark:bg-white dark:text-slate-900 text-white rounded-full flex items-center justify-center font-black text-[10px] border-2 border-white dark:border-slate-700 shadow-sm">
                 ${iniciales}
             </div>

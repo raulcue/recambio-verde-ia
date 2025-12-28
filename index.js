@@ -3,34 +3,33 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware para entender JSON (vital para que el login funcione)
 app.use(express.json());
 
-// 1. Servir estáticos de ambas rutas para asegurar carga de logo/js
+// 1. SERVIR ARCHIVOS ESTÁTICOS
+// Intentamos servir desde 'public' y luego desde la raíz para que carguen assets y js
 app.use(express.static(path.resolve(__dirname, 'public')));
 app.use(express.static(path.resolve(__dirname)));
 
-// 2. RUTA PRINCIPAL CON RUTA ABSOLUTA
+// 2. RUTA PRINCIPAL (index.html)
 app.get('/', (req, res) => {
-    const filePath = path.resolve(__dirname, 'public', 'index.html');
-    
-    res.sendFile(filePath, (err) => {
+    // Buscamos el index dentro de public según tu estructura actual
+    const indexPath = path.resolve(__dirname, 'public', 'index.html');
+    res.sendFile(indexPath, (err) => {
         if (err) {
-            console.error("No se encontró en /public, intentando raíz...");
+            // Si por algún motivo no está en public, intenta en la raíz
             res.sendFile(path.resolve(__dirname, 'index.html'), (err2) => {
-                if (err2) {
-                    res.status(404).send("Error crítico: index.html no encontrado.");
-                }
+                if (err2) res.status(404).send("Error: No se encuentra index.html");
             });
         }
     });
 });
 
-// 3. LOGIN (admin@test.com / 123456)
+// 3. LÓGICA DE LOGIN (Con tus credenciales exactas)
 app.post('/auth/login', (req, res) => {
     const { email, password } = req.body;
-    console.log(`Intento de login: ${email}`);
 
-    if (email === "admin@test.com" && password === "123456") {
+    if (email === "admin@recambio.com" && password === "1234") {
         return res.json({ 
             success: true, 
             rol: 'admin', 
