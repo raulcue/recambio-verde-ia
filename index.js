@@ -5,22 +5,20 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// 1. Servir estáticos de ambas rutas para mayor seguridad
+// 1. Servir estáticos de ambas rutas para asegurar carga de logo/js
 app.use(express.static(path.resolve(__dirname, 'public')));
 app.use(express.static(path.resolve(__dirname)));
 
 // 2. RUTA PRINCIPAL CON RUTA ABSOLUTA
 app.get('/', (req, res) => {
-    // Intentamos la ruta que vimos en tu captura (dentro de public)
     const filePath = path.resolve(__dirname, 'public', 'index.html');
     
     res.sendFile(filePath, (err) => {
         if (err) {
             console.error("No se encontró en /public, intentando raíz...");
-            // Backup: Intentar enviarlo desde la raíz si no estaba en public
             res.sendFile(path.resolve(__dirname, 'index.html'), (err2) => {
                 if (err2) {
-                    res.status(404).send("Error crítico: index.html no encontrado. Revisa la estructura en GitHub.");
+                    res.status(404).send("Error crítico: index.html no encontrado.");
                 }
             });
         }
@@ -56,5 +54,4 @@ app.post('/auth/login', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor listo en puerto ${PORT}`);
-    console.log(`Directorio actual: ${__dirname}`);
 });

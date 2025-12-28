@@ -39,23 +39,21 @@
         document.getElementById('btnAcceder').addEventListener('click', async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value;
+            const captcha = document.querySelector('[name="cf-turnstile-response"]')?.value;
 
             if (!email || !password) return alert("Rellena todos los campos");
-            
-            // Si el captcha está habilitado, descomenta la siguiente línea:
-            // if (!turnstileResponse) return alert("Por favor, completa el captcha");
 
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, captcha })
                 });
 
                 const data = await res.json();
 
                 if (data.success) {
+                    // Guardamos los datos que usará global.js para el logo y la interfaz
                     localStorage.setItem('userRol', data.rol);
                     localStorage.setItem('userEmail', data.email);
                     window.location.replace(data.redirect);
