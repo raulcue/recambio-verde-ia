@@ -6,36 +6,38 @@ const app = express();
 // --- CONFIGURACIÓN DE MIDDLEWARE ---
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'))); // Sirve la carpeta public
 
-// --- CONEXIÓN A BASE DE DATOS (POSTGRESQL) ---
+// --- CONEXIÓN A BASE DE DATOS ---
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-// --- RUTAS DE NAVEGACIÓN (VISTAS) ---
+// --- RUTAS DE NAVEGACIÓN (VISTAS HTML) ---
 
-// Acceso público
+// Públicas
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/registro', (req, res) => res.sendFile(path.join(__dirname, 'public', 'registro.html')));
 
-// Acceso Administrador (Ve todo)
+// Administrador (Landing con 4 iconos)
 app.get('/landing', (req, res) => res.sendFile(path.join(__dirname, 'public', 'landing.html')));
-app.get('/configuracion', (req, res) => res.sendFile(path.join(__dirname, 'public', 'configuracion.html')));
 
-// Acceso Gestor/Agente (No ve configuración de usuarios)
+// Gestor/Agente (Landing sin botón de Usuarios)
 app.get('/landing-agente', (req, res) => res.sendFile(path.join(__dirname, 'public', 'landing-agente.html')));
 
-// Acceso compartido (Kanban y Lista Excel)
+// Comunes (Dashboard Kanban y Lista Excel)
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
 app.get('/pedidos-lista', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pedidos-lista.html')));
 
-// Acceso Taller (Directo a Excel móvil)
+// Configuración (Solo Admin)
+app.get('/configuracion', (req, res) => res.sendFile(path.join(__dirname, 'public', 'configuracion.html')));
+
+// Taller (Vista optimizada para móvil)
 app.get('/pedidos-taller', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pedidos-taller.html')));
 
 
-// --- MOTOR DE AUTENTICACIÓN (LOGIN CON REDIRECCIÓN POR ROL) ---
+// --- LÓGICA DE AUTENTICACIÓN ---
 app.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -46,62 +48,52 @@ app.post('/auth/login', async (req, res) => {
       const user = result.rows[0];
       let destino = '';
 
-      // Lógica de redirección según el requerimiento
+      // Redirección por rol según requerimientos
       if (user.rol === 'admin') {
-        destino = '/landing'; // Centro de mando con 4 iconos
+        destino = '/landing';
       } else if (user.rol === 'gestor') {
-        destino = '/landing-agente'; // Centro de mando sin "Configuración"
+        destino = '/landing-agente';
       } else if (user.rol === 'taller') {
-        destino = '/pedidos-taller'; // Directo a su lista optimizada para móvil
+        destino = '/pedidos-taller';
       }
 
-      res.json({ 
-        success: true, 
-        rol: user.rol, 
-        nombre: user.nombre_taller,
-        redirect: destino 
-      });
+      res.json({ success: true, redirect: destino });
     } else {
       res.status(401).json({ success: false, message: 'Email o contraseña incorrectos.' });
     }
   } catch (err) {
-    console.error('Error Login:', err);
-    res.status(500).json({ success: false, message: 'Error en el servidor.' });
-  }
-});
-
-// --- API DE PEDIDOS (PARA KANBAN Y EXCEL) ---
-app.get('/api/pedidos', async (req, res) => {
-  try {
-    // Ordenamos por los más recientes primero
-    const result = await pool.query('SELECT * FROM pedidos ORDER BY fecha_creacion DESC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error al obtener pedidos:', err);
-    res.status(500).json({ error: 'Error al cargar los datos' });
-  }
-});
-
-// --- ACTUALIZAR ESTADO DE PEDIDO (PARA EL MODAL) ---
-app.post('/api/pedidos/update', async (req, res) => {
-  const { id, estado, pieza, matricula } = req.body;
-  try {
-    const query = 'UPDATE pedidos SET estado = $1, pieza = $2, matricula = $3 WHERE id = $4';
-    await pool.query(query, [estado, pieza, matricula, id]);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Error al actualizar pedido:', err);
+    console.error('Error en Login:', err);
     res.status(500).json({ success: false });
   }
 });
 
-// --- REGISTRO DE NUEVOS TALLERES ---
-app.post('/auth/registro', async (req, res) => {
-  const { nombre, telefono, email, password } = req.body;
+
+// --- API DE DATOS (PARA EL KANBAN Y LA LISTA) ---
+app.get('/api/pedidos', async (req, res) => {
   try {
-    const query = 'INSERT INTO usuarios (nombre_taller, telefono, email, password, rol) VALUES ($1, $2, $3, $4, $5)';
-    await pool.query(query, [nombre, telefono, email, password, 'taller']);
+    const result = await pool.query('SELECT * FROM pedidos ORDER BY fecha_creacion DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al cargar pedidos' });
+  }
+});
+
+// API para actualizar pedidos desde el modal
+app.post('/api/pedidos/update', async (req, res) => {
+  const { id, estado, pieza, matricula } = req.body;
+  try {
+    await pool.query(
+      'UPDATE pedidos SET estado = $1, pieza = $2, matricula = $3 WHERE id = $4',
+      [estado, pieza, matricula, id]
+    );
     res.json({ success: true });
   } catch (err) {
-    console.error('Error Registro:', err);
-    res.status(400).json({ success: false, message: 'El usuario ya existe o
+    res.status(500).json({ success: false });
+  }
+});
+
+// --- ARRANQUE ---
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor de Recambio Reciclado activo en puerto ${PORT}`);
+});
