@@ -9,67 +9,52 @@
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md text-center border border-slate-200">
         <img src="/assets/logo.png" alt="Logo" class="h-20 mx-auto mb-6">
-        
         <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-6">Iniciar Sesión</h2>
-
+        
         <form id="loginForm" class="space-y-4">
-            <input type="email" id="email" name="email" placeholder="Email" 
-                class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all" required>
+            <input type="email" id="email" placeholder="Email" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all" required>
+            <input type="password" id="password" placeholder="Contraseña" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all" required>
             
-            <input type="password" id="password" name="password" placeholder="Contraseña" 
-                class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all" required>
-            
-            <div class="text-right px-2">
-                <a href="#" class="text-[10px] font-bold uppercase text-slate-400 hover:text-slate-600 transition-colors italic">¿Olvidaste tu contraseña?</a>
-            </div>
-
             <div class="flex justify-center py-2">
                 <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
             </div>
 
-            <button type="submit" 
-                class="w-full bg-slate-800 text-white p-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-700 shadow-lg shadow-slate-200 transition-all">
+            <button type="button" onclick="enviarLogin()" class="w-full bg-slate-800 text-white p-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-700 shadow-lg transition-all">
                 Entrar
             </button>
         </form>
-
-        <div class="mt-8 pt-6 border-t border-slate-100">
-            <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">¿No tienes cuenta?</p>
-            <a href="registro.html" 
-                class="block py-3 border-2 border-slate-800 text-slate-800 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all">
-                Registrarse como Taller
-            </a>
-        </div>
     </div>
 
     <script>
-        document.getElementById('loginForm').onsubmit = async (e) => {
-            e.preventDefault();
-            
-            // Validación del Captcha
-            const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]').value;
-            if (!turnstileResponse) { 
-                alert("Por favor, completa el captcha para continuar."); 
-                return; 
-            }
+        async function enviarLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const captcha = document.querySelector('[name="cf-turnstile-response"]').value;
+
+            if (!email || !password) return alert("Rellena todos los campos");
+            if (!captcha) return alert("Por favor, completa el captcha");
 
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        email: e.target.email.value, 
-                        password: e.target.password.value,
-                        captcha: turnstileResponse
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, captcha })
                 });
 
-                const contentType = res.headers.get("content-type");
-                
-                if (res.ok && contentType && contentType.includes("application/json")) {
-                    const data = await res.json();
-                    
-                    if(data.success) {
-                        // Guardamos info básica en el navegador
-                        localStorage.setItem('userRol', data.rol);
-                        localStorage.setItem('userEmail', data.email);
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('userRol', data.rol);
+                    localStorage.setItem('userEmail', data.email);
+                    // Redirección limpia
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.message || "Error en el login");
+                }
+            } catch (err) {
+                alert("Error de conexión con el servidor");
+            }
+        }
+    </script>
+</body>
+</html>
