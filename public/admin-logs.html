@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><title>Logs - Recambio Verde</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-black uppercase italic tracking-tighter">Historial de Actividad</h1>
+            <a href="/dashboard" class="bg-slate-800 text-white px-6 py-2 rounded-full text-[10px] font-black uppercase">Volver</a>
+        </div>
+
+        <div class="bg-white rounded-[40px] shadow-sm border overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 border-b">
+                    <tr>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400">Fecha</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400">Usuario</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400">Pedido</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="logsBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        async function loadLogs() {
+            const res = await fetch('/api/admin/logs');
+            const logs = await res.json();
+            document.getElementById('logsBody').innerHTML = logs.map(l => `
+                <tr class="text-xs">
+                    <td class="p-6 text-slate-400">${new Date(l.fecha).toLocaleString()}</td>
+                    <td class="p-6 font-bold uppercase">${l.email || 'Sistema'}</td>
+                    <td class="p-6 font-black text-blue-600 italic">${l.numero_pedido || 'N/A'}</td>
+                    <td class="p-6 text-slate-600">${l.accion}</td>
+                </tr>
+            `).join('');
+        }
+        loadLogs();
+    </script>
+</body>
+</html>

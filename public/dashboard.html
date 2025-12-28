@@ -1,167 +1,110 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Kanban - Recambio Verde</title>
+    <meta charset="UTF-8"><title>Kanban Pro - Recambio Verde</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="bg-slate-50 min-h-screen">
-
     <nav class="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-            <img src="/assets/logo.png" class="h-8">
-            <button onclick="openModal('NUEVO')" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all flex items-center gap-2">
-                <i class="fas fa-plus"></i> Nuevo Pedido
-            </button>
-        </div>
-
-        <div class="flex items-center gap-3">
-            <a href="/landing" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                <img src="image_8e05e7.png" class="w-5 h-5 opacity-70">
-            </a>
-            
-            <div class="relative group">
-                <button onclick="toggleUserMenu()" class="focus:outline-none">
-                    <img src="image_8e1891.png" class="w-10 h-10 rounded-full border border-slate-200 shadow-sm">
-                </button>
-                <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border p-2 z-50">
-                    <a href="/perfil" class="block p-3 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-50 rounded-xl italic">Configuración</a>
-                    <a href="/" class="block p-3 text-[10px] font-black uppercase text-red-500 hover:bg-red-50 rounded-xl italic">Cerrar Sesión</a>
-                </div>
-            </div>
-        </div>
+        <button onclick="openModal('NUEVO')" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">Nuevo Pedido</button>
+        <button onclick="descargarExcel()" class="text-green-600 font-bold text-xs px-4"><i class="fas fa-file-excel"></i> Exportar</button>
     </nav>
 
-    <main class="p-6 overflow-x-auto flex gap-6 items-start">
-        <div id="col-1" class="w-72 flex-shrink-0"><h2 class="text-[10px] font-black uppercase text-slate-400 border-b pb-2 mb-4 italic">1 Pedido</h2><div id="tasks-1" class="space-y-3"></div></div>
-        <div id="col-2" class="w-72 flex-shrink-0"><h2 class="text-[10px] font-black uppercase text-amber-500 border-b pb-2 mb-4 italic">2 Pendiente</h2><div id="tasks-2" class="space-y-3"></div></div>
-        <div id="col-3" class="w-72 flex-shrink-0"><h2 class="text-[10px] font-black uppercase text-blue-500 border-b pb-2 mb-4 italic">3 En Ruta</h2><div id="tasks-3" class="space-y-3"></div></div>
-        <div id="col-4" class="w-72 flex-shrink-0"><h2 class="text-[10px] font-black uppercase text-green-600 border-b pb-2 mb-4 italic">4 Recibido</h2><div id="tasks-4" class="space-y-3"></div></div>
-        <div id="col-5" class="w-72 flex-shrink-0"><h2 class="text-[10px] font-black uppercase text-purple-500 border-b pb-2 mb-4 italic">5 En Reparto</h2><div id="tasks-5" class="space-y-3"></div></div>
-        <div id="col-6" class="w-72 flex-shrink-0"><h2 class="text-[10px] font-black uppercase text-red-500 border-b pb-2 mb-4 italic">6 Cancelado</h2><div id="tasks-6" class="space-y-3"></div></div>
-    </main>
+    <main class="p-6 flex gap-6 overflow-x-auto items-start">
+        <div class="w-72 flex-shrink-0" id="col-1" ondragover="allowDrop(event)" ondrop="handleDrop(event)">
+            <h2 class="text-[10px] font-black uppercase text-slate-400 mb-4 italic">1 Pedido</h2>
+            <div id="tasks-1" class="space-y-3 min-h-[500px]"></div>
+        </div>
+        </main>
 
-    <div id="modalPedido" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[95vh]">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="modalTitle" class="font-black uppercase text-slate-800 tracking-tighter text-xl">Detalle del Pedido</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
-            </div>
-
-            <form id="orderForm" class="space-y-6">
-                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                    <p class="text-[9px] font-black text-slate-400 uppercase mb-3">Información del Taller (Pre-cargada)</p>
+    <div id="modalMaster" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xl rounded-[40px] p-10 shadow-2xl">
+            <h3 class="font-black uppercase text-slate-800 mb-6">Detalle Pedido</h3>
+            
+            <form id="masterForm" class="space-y-4">
+                <input type="hidden" id="pedido_id">
+                
+                <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-[9px] font-black text-slate-400 uppercase">Información del Taller</p>
+                        <button type="button" onclick="document.getElementById('extensor-taller').classList.toggle('hidden')" class="text-[9px] font-black text-blue-500 underline">CAMBIAR / NUEVO</button>
+                    </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="taller_nombre" readonly class="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500 cursor-not-allowed">
-                        <input type="text" id="taller_tel" readonly class="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500 cursor-not-allowed">
+                        <input type="text" id="taller_nom" placeholder="Nombre" class="p-4 bg-white border rounded-2xl text-xs font-bold text-slate-600">
+                        <input type="text" id="taller_tel" placeholder="Teléfono" class="p-4 bg-white border rounded-2xl text-xs font-bold text-slate-600">
                     </div>
-                </div>
-
-                <div class="border rounded-2xl overflow-hidden">
-                    <div class="bg-slate-100 p-4 border-b">
-                        <p class="text-[10px] font-black uppercase text-slate-600">Selecciona tu vehículo</p>
-                    </div>
-                    <div class="p-5 space-y-4">
-                        <div class="flex gap-2">
-                            <div class="flex-1 flex border rounded-xl overflow-hidden bg-slate-50 focus-within:ring-2 focus-within:ring-blue-400">
-                                <span class="bg-blue-800 text-white px-2 flex items-center text-[10px] font-bold">E</span>
-                                <input type="text" id="matricula" placeholder="MATRÍCULA (0000BBB)" class="w-full p-3 bg-transparent outline-none text-sm uppercase font-mono">
-                            </div>
-                            <button type="button" class="bg-orange-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">OK</button>
-                        </div>
-
-                        <div class="relative flex py-2 items-center italic">
-                            <div class="flex-grow border-t border-slate-200"></div>
-                            <span class="flex-shrink mx-4 text-slate-300 text-[10px]">O</span>
-                            <div class="flex-grow border-t border-slate-200"></div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <select id="marca" class="p-3 bg-slate-50 border rounded-xl text-xs outline-none">
-                                <option value="">Marca</option>
-                                <option value="toyota">Toyota</option>
-                                <option value="vw">Volkswagen</option>
-                                <option value="seat">Seat</option>
-                                <option value="renault">Renault</option>
-                                <option value="peugeot">Peugeot</option>
-                                <option value="ford">Ford</option>
-                                <option value="bmw">BMW</option>
-                                <option value="audi">Audi</option>
-                            </select>
-                            <input type="text" id="modelo" placeholder="Modelo" class="p-3 bg-slate-50 border rounded-xl text-xs outline-none">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Pieza Solicitada</label>
-                        <input type="text" id="pieza" required class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-slate-200 text-sm">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Estado</label>
-                        <select id="estado" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none text-xs font-bold uppercase">
-                            <option value="1">1 Pedido</option>
-                            <option value="2">2 Pendiente</option>
-                            <option value="3">3 En Ruta</option>
-                            <option value="4">4 Recibido</option>
-                            <option value="5">5 En Reparto</option>
-                            <option value="6">6 Cancelado</option>
+                    <div id="extensor-taller" class="hidden mt-4 pt-4 border-t border-slate-200">
+                        <select id="select-taller" onchange="fillTaller(this.value)" class="w-full p-4 bg-white border rounded-2xl text-xs font-bold italic outline-none">
+                            <option value="">-- Buscar taller existente --</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="flex gap-4 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 font-black text-slate-300 uppercase text-[10px]">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg hover:bg-slate-700 transition-all">Guardar Cambios</button>
+                <div class="border rounded-3xl p-6 bg-white space-y-4">
+                    <div class="flex gap-2">
+                        <div class="flex-1 flex border rounded-xl overflow-hidden bg-slate-50">
+                            <span class="bg-blue-800 text-white px-3 flex items-center text-[10px] font-bold italic">E</span>
+                            <input type="text" id="matricula" placeholder="0000BBB" class="w-full p-3 outline-none uppercase font-mono">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="text" id="pieza" placeholder="Pieza..." class="p-4 bg-slate-50 border rounded-2xl text-xs outline-none">
+                        <select id="estado" class="p-4 bg-slate-50 border rounded-2xl text-xs font-bold">
+                            <option value="1">1 Pedido</option> <option value="2">2 Pendiente</option>
+                            <option value="3">3 En Ruta</option> <option value="4">4 Recibido</option>
+                            <option value="5">5 En Reparto</option> <option value="6">6 Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-6">
+                    <button type="button" onclick="closeModal()" class="flex-1 font-black text-slate-300 uppercase text-[10px]">Cerrar</button>
+                    <button type="submit" class="flex-1 bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-[10px]">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        function toggleUserMenu() { document.getElementById('userMenu').classList.toggle('hidden'); }
-        function closeModal() { document.getElementById('modalPedido').classList.add('hidden'); }
-
-        function openModal(mode, data = null) {
-            const form = document.getElementById('orderForm');
-            const title = document.getElementById('modalTitle');
+        // DRAG & DROP
+        function allowDrop(ev) { ev.preventDefault(); }
+        function handleDrag(ev, id) { ev.dataTransfer.setData("pedidoId", id); }
+        async function handleDrop(ev) {
+            ev.preventDefault();
+            const id = ev.dataTransfer.getData("pedidoId");
+            const newCol = ev.currentTarget.id.replace('col-', '');
             
-            // Precarga de Taller (Simulado por ahora, vendría del taller seleccionado)
-            document.getElementById('taller_nombre').value = data ? data.taller_nombre : "Taller Central Madrid";
-            document.getElementById('taller_tel').value = data ? data.telefono : "912 345 678";
-
-            if(mode === 'NUEVO') {
-                title.innerText = "Crear Nuevo Pedido";
-                form.reset();
-                // Reiniciar campos bloqueados si fuera necesario
-            } else {
-                title.innerText = "Editar Pedido " + data.numero_pedido;
-                document.getElementById('matricula').value = data.matricula;
-                document.getElementById('pieza').value = data.pieza;
-                document.getElementById('estado').value = data.estado;
-                // La marca/modelo se podría buscar en el string de la BBDD
-            }
-
-            document.getElementById('modalPedido').classList.remove('hidden');
+            await fetch('/api/pedidos/update-status', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, estado: newCol, userId: localStorage.getItem('userId') })
+            });
+            loadData();
         }
 
-        // Simulación de carga inicial de tarjetas
-        function loadDemo() {
-            const container = document.getElementById('tasks-1');
-            const demo = { numero_pedido: 'REC-5542', pieza: 'Faro Derecho LED', matricula: '1234ABC', taller_nombre: 'Talleres Pérez', telefono: '600111222', estado: '1' };
-            container.innerHTML += `
-                <div onclick='openModal("EDIT", ${JSON.stringify(demo)})' class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl transition-all cursor-pointer border-l-8 border-l-slate-100">
-                    <div class="text-[9px] font-black text-slate-300 uppercase mb-2">${demo.numero_pedido}</div>
-                    <div class="font-black text-slate-800 text-sm mb-3">${demo.pieza}</div>
-                    <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
-                        <span class="text-[9px] font-black text-slate-700 uppercase">${demo.taller_nombre}</span>
-                        <span class="text-[8px] bg-blue-100 text-blue-600 px-2 py-1 rounded-full font-bold">${demo.matricula}</span>
-                    </div>
-                </div>`;
+        // EXPORTAR EXCEL
+        function descargarExcel() {
+            window.open('/api/pedidos?rol=admin&export=true', '_blank');
+            // O lógica de Blob si prefieres generar el CSV en el cliente
         }
-        loadDemo();
+
+        // CARGA DE DATOS
+        async function loadData() {
+            const res = await fetch(`/api/pedidos?email=${localStorage.getItem('userEmail')}&rol=${localStorage.getItem('userRol')}`);
+            const data = await res.json();
+            [1,2,3,4,5,6].forEach(i => document.getElementById('tasks-'+i).innerHTML = '');
+            data.forEach(p => {
+                const card = `
+                    <div id="card-${p.id}" draggable="true" ondragstart="handleDrag(event, ${p.id})" onclick='openEdit(${JSON.stringify(p)})' 
+                         class="bg-white p-5 rounded-3xl border shadow-sm cursor-grab active:cursor-grabbing">
+                        <p class="text-[9px] font-black text-slate-300 uppercase mb-2">${p.numero_pedido}</p>
+                        <p class="font-bold text-slate-800 text-sm">${p.pieza}</p>
+                    </div>`;
+                document.getElementById('tasks-'+p.estado).innerHTML += card;
+            });
+        }
+        loadData();
     </script>
 </body>
 </html>
