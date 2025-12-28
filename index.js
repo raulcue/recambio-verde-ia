@@ -7,40 +7,61 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 1. CONFIGURACIÓN DE LA BASE DE DATOS
-// En Render, DATABASE_URL se configura automáticamente o la pegas en Environment
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Necesario para la seguridad de Render
+        rejectUnauthorized: false // Necesario para Render
     }
 });
 
-// Middleware para procesar datos JSON
+// Middleware
 app.use(express.json());
 app.use(express.static(path.resolve(__dirname, 'public')));
 app.use(express.static(path.resolve(__dirname)));
 
 /**
- * 2. RUTA PARA OBTENER PEDIDOS DE LA DDBB (Para el Kanban)
+ * 2. RUTA PARA OBTENER PEDIDOS (GET)
+ * Ajustada a tus columnas reales de DBeaver: 'pieza' y 'modelo_coche'
  */
 app.get('/api/pedidos', async (req, res) => {
     try {
-        // Ajusta los nombres de las columnas según tu tabla real
+        // Consultamos 'pieza' y 'modelo_coche' pero los enviamos como espera el frontend
         const query = `
-            SELECT id, pieza_nombre as pieza, vehiculo_modelo as vehiculo, estado 
+            SELECT id, pieza as pieza_nombre, modelo_coche as vehiculo_modelo, estado 
             FROM pedidos 
             ORDER BY fecha_creacion DESC
         `;
         const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
-        console.error("Error en DDBB:", err);
-        res.status(500).json({ error: "No se pudieron cargar los datos de la base de datos" });
+        console.error("Error en DDBB:", err.message);
+        res.status(500).json({ error: "Error de conexión: " + err.message });
     }
 });
 
 /**
- * 3. LÓGICA DE AUTENTICACIÓN (Actualizada para que coincida con tus roles)
+ * 3. NUEVA RUTA PARA GUARDAR PEDIDOS (POST)
+ * Permite que el taller guarde datos reales en la base de datos
+ */
+app.post('/api/pedidos', async (req, res) => {
+    const { pieza, vehiculo } = req.body;
+    try {
+        const query = `
+            INSERT INTO pedidos (pieza, modelo_coche, estado) 
+            VALUES ($1, $2, 'pendiente') 
+            RETURNING *
+        `;
+        const values = [pieza, vehiculo];
+        const result = await pool.query(query, values);
+        res.json({ success: true, pedido: result.rows[0] });
+    } catch (err) {
+        console.error("Error al guardar:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/**
+ * 4. LÓGICA DE AUTENTICACIÓN
  */
 app.post('/auth/login', (req, res) => {
     const { email, password } = req.body;
@@ -72,5 +93,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor con DDBB listo en puerto ${PORT}`);
+    console.log(`🚀 Servidor con DDBB sincronizada listo en puerto ${PORT}`);
 });
