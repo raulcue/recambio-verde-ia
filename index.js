@@ -1,22 +1,46 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-
-// Render asigna un puerto automáticamente, si no usa el 3000
 const PORT = process.env.PORT || 3000;
 
-// 1. SERVIR ARCHIVOS ESTÁTICOS
-// Esto permite que el navegador encuentre tu carpeta /js, /assets, etc.
+// Permite al servidor entender datos JSON (necesario para el login)
+app.use(express.json());
+
+// Sirve todos los archivos de la carpeta raíz (HTML, JS, Imágenes)
 app.use(express.static(__dirname));
 
-// 2. RUTA PRINCIPAL
-// Cuando alguien entre a tu URL, le entregamos el login
+// --- RUTA PRINCIPAL (Lo que ves al abrir la URL) ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// 3. ARRANCAR EL SERVIDOR
+// --- LÓGICA DE LOGIN (Rescatada y Limpia) ---
+app.post('/auth/login', (req, res) => {
+    const { email, password } = req.body;
+
+    // Aquí puedes poner tus usuarios de prueba
+    if (email === "admin@recambio.com" && password === "1234") {
+        return res.json({ 
+            success: true, 
+            rol: 'admin', 
+            email: email, 
+            redirect: 'landing.html' 
+        });
+    } else if (email === "taller@test.com" && password === "1234") {
+        return res.json({ 
+            success: true, 
+            rol: 'taller', 
+            email: email, 
+            redirect: 'pedidos-taller.html' 
+        });
+    } else {
+        return res.status(401).json({ 
+            success: false, 
+            message: "Usuario o contraseña incorrectos" 
+        });
+    }
+});
+
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor arrancado con éxito`);
-    console.log(`🌍 Disponible en el puerto: ${PORT}`);
+    console.log(`🚀 Servidor listo en puerto ${PORT}`);
 });
