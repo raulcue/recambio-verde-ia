@@ -3,186 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Pro - Recambio Reciclado IA</title>
+    <title>Panel de Gestión - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        
-        /* Estilos de Vista Avanzada */
-        .kanban-column { min-height: 70vh; transition: all 0.3s ease; }
-        .card-adv-info { display: none; }
-        .view-advanced .card-adv-info { display: block; }
-        .view-advanced .card-image { display: block; height: 120px; }
-        
-        .dragging { opacity: 0.5; transform: scale(0.95); }
-        .drag-over { background-color: rgba(59, 130, 246, 0.05); border: 2px dashed #3b82f6; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overflow-x: hidden; }
+        .kanban-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1.25rem; padding: 2rem; min-width: 1200px; }
+        .column-header { border-top: 3px solid; padding-top: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .counter { background: #e2e8f0; color: #64748b; border-radius: 999px; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; }
+        .card-pieza { background: white; padding: 1.25rem; border-radius: 1.8rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); border: 1px solid transparent; transition: all 0.2s; cursor: pointer; margin-bottom: 1rem; }
+        .card-pieza:hover { border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
     </style>
 </head>
-<body class="bg-[#f8fafc] min-h-screen">
+<body>
 
-    <nav class="bg-white border-b border-slate-100 px-8 py-4 flex justify-between items-center sticky top-0 z-[100]">
-        <div class="flex items-center gap-6">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xl shadow-lg italic">R</div>
-                <h1 class="text-slate-800 font-black text-xs uppercase tracking-tighter italic">Recambio Reciclado IA</h1>
-            </div>
-            
-            <div class="flex bg-slate-100 p-1 rounded-xl">
-                <button onclick="toggleView('std')" id="btn-std" class="px-4 py-2 text-[9px] font-black uppercase rounded-lg bg-white shadow-sm transition-all">Standard</button>
-                <button onclick="toggleView('adv')" id="btn-adv" class="px-4 py-2 text-[9px] font-black uppercase rounded-lg text-slate-400 hover:text-slate-600 transition-all ml-1">Avanzada</button>
-            </div>
+    <nav class="flex justify-between items-center px-10 py-5 bg-white border-b border-slate-50 sticky top-0 z-50">
+        <div class="flex items-center gap-2 italic font-black text-[11px] uppercase tracking-tighter text-slate-800">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xl shadow-lg not-italic">R</div>
+            RECAMBIO RECICLADO IA
         </div>
-
-        <div class="flex items-center gap-6 text-slate-400">
-            <button class="hover:text-blue-600 transition-colors"><i class="fas fa-bell text-lg"></i></button>
-            
-            <div class="relative group">
-                <button class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 group-hover:bg-white group-hover:shadow-md transition-all">
-                    <i class="fas fa-th-large text-lg"></i>
-                </button>
-                <div class="absolute right-0 mt-2 w-72 bg-white shadow-2xl rounded-[2.5rem] border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-4 z-[110]">
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="landing.html" class="p-3 hover:bg-slate-50 rounded-2xl text-center transition-all">
-                            <i class="fas fa-home text-blue-500 mb-1 block text-lg"></i>
-                            <span class="text-[8px] font-black uppercase">Inicio</span>
-                        </a>
-                        <a href="stats.html" class="p-3 hover:bg-slate-50 rounded-2xl text-center transition-all">
-                            <i class="fas fa-chart-line text-emerald-500 mb-1 block text-lg"></i>
-                            <span class="text-[8px] font-black uppercase">BI</span>
-                        </a>
-                        <a href="configuracion.html" class="p-3 hover:bg-slate-50 rounded-2xl text-center transition-all">
-                            <i class="fas fa-users-gear text-blue-400 mb-1 block text-lg"></i>
-                            <span class="text-[8px] font-black uppercase">Equipo</span>
-                        </a>
-                        <a href="pedidos-taller.html" class="p-3 hover:bg-slate-50 rounded-2xl text-center transition-all">
-                            <i class="fas fa-list-check text-purple-500 mb-1 block text-lg"></i>
-                            <span class="text-[8px] font-black uppercase">Pedidos</span>
-                        </a>
-                    </div>
-                </div>
+        <div class="flex items-center gap-5">
+            <div class="relative">
+                <input type="text" placeholder="BUSCAR MATRÍCULA..." class="pl-10 pr-4 py-2 bg-white border border-slate-100 rounded-xl text-[10px] font-black outline-none w-64 shadow-sm focus:border-blue-300 transition-all">
+                <i class="fas fa-search absolute left-4 top-3 text-slate-300 text-[10px]"></i>
             </div>
-            <div class="w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-[11px] border-2 border-white shadow-lg">AD</div>
+            <button onclick="pullData()" class="w-10 h-10 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-blue-600 shadow-sm transition-all flex items-center justify-center">
+                <i class="fas fa-sync-alt"></i>
+            </button>
         </div>
     </nav>
 
-    <main class="p-8" id="main-content">
-        <div class="flex justify-between items-end mb-10">
-            <div>
-                <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tighter">Panel de Gestión</h2>
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Control de flujo de recambios</p>
-            </div>
-            <div class="flex gap-4">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-300"></i>
-                    <input type="text" placeholder="BUSCAR MATRÍCULA..." class="bg-white pl-12 pr-6 py-4 rounded-2xl text-[10px] font-black border-none shadow-sm w-64 outline-none focus:ring-2 ring-blue-500/20">
-                </div>
-                <button class="w-14 h-14 bg-blue-600 text-white rounded-2xl shadow-lg flex items-center justify-center hover:scale-105 transition-transform">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        </div>
+    <div class="px-10 pt-10">
+        <h2 class="text-[32px] font-black text-slate-800 uppercase tracking-tighter leading-none">Panel de Gestión</h2>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 italic">Control de flujo en tiempo real</p>
+    </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-6" id="kanban-board">
-            <div class="kanban-col-wrapper">
-                <div class="flex justify-between items-center mb-4 px-2">
-                    <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Solicitado</h3>
-                    <span class="bg-slate-200 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold">3</span>
-                </div>
-                <div class="kanban-column space-y-4 rounded-[2rem] bg-slate-100/50 p-4" id="col-solicitado" ondrop="drop(event)" ondragover="allowDrop(event)">
-                    <div class="bg-white p-5 rounded-[2rem] shadow-sm cursor-grab active:cursor-grabbing border border-white hover:shadow-xl transition-all" draggable="true" ondragstart="drag(event)" id="card-1" onclick="openPopup('RV-3002', 'Turbo', '750', 'Centro de Reparación C', '3344BCD')">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[8px] font-black text-slate-300 uppercase">RV-3002</span>
-                            <span class="text-[10px] font-black text-orange-500">750€</span>
-                        </div>
-                        <div class="card-adv-info mb-3 rounded-xl overflow-hidden card-image bg-slate-100">
-                            <img src="https://source.unsplash.com/featured/400x300?car,turbo" class="w-full h-full object-cover">
-                        </div>
-                        <h4 class="font-black text-slate-800 text-[11px] uppercase">Turbo</h4>
-                        <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-50">
-                            <p class="text-[8px] font-bold text-slate-400 uppercase italic">Taller C</p>
-                            <span class="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">3344BCD</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </div>
-    </main>
-
-    <div id="popup-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md hidden z-[300] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl animate-in zoom-in duration-200">
-            <div class="flex justify-between items-start mb-8">
-                <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg"><i class="fas fa-tools"></i></div>
-                    <div>
-                        <span id="pop-id-txt" class="text-[9px] font-black text-blue-500 uppercase tracking-widest">---</span>
-                        <h2 id="pop-pieza-txt" class="text-3xl font-black text-slate-800 uppercase tracking-tighter">---</h2>
-                    </div>
-                </div>
-                <button onclick="closePopup()" class="text-slate-200 hover:text-red-500 transition-colors"><i class="fas fa-times-circle text-3xl"></i></button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6 mb-8">
-                <div class="space-y-2">
-                    <label class="text-[9px] font-black text-slate-400 uppercase ml-2 italic">Taller (Reasignar)</label>
-                    <select id="pop-taller-select" class="w-full bg-slate-50 p-4 rounded-2xl border-none font-bold text-xs outline-none focus:ring-2 ring-blue-500/20 appearance-none cursor-pointer">
-                        <option>CENTRO DE REPARACIÓN C</option>
-                        <option>TALLERES MECÁNICOS B</option>
-                        <option>TALLER AUTOMOTRIZ A</option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[9px] font-black text-slate-400 uppercase ml-2 italic">Precio Venta (€)</label>
-                    <input type="number" id="pop-precio-input" class="w-full bg-slate-50 p-4 rounded-2xl border-none font-black text-orange-500 text-sm outline-none focus:ring-2 ring-orange-500/20">
-                </div>
-            </div>
-
-            <div class="flex gap-4">
-                <button class="flex-1 bg-slate-900 text-white font-black py-5 rounded-2xl text-[10px] uppercase tracking-widest hover:shadow-xl transition-all">Actualizar Registro</button>
-                <button class="w-20 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"><i class="fas fa-trash-alt"></i></button>
-            </div>
-        </div>
+    <div class="kanban-grid">
+        <div id="col-solicitado"><div class="column-header border-blue-400"><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Solicitado</span><div class="counter" id="cnt-solicitado">0</div></div><div class="items-container"></div></div>
+        <div id="col-desguace"><div class="column-header border-orange-400"><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">En Desguace</span><div class="counter" id="cnt-desguace">0</div></div><div class="items-container"></div></div>
+        <div id="col-listo"><div class="column-header border-indigo-500"><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Listo</span><div class="counter" id="cnt-listo">0</div></div><div class="items-container"></div></div>
+        <div id="col-transito"><div class="column-header border-emerald-400"><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tránsito</span><div class="counter" id="cnt-transito">0</div></div><div class="items-container"></div></div>
+        <div id="col-entregado"><div class="column-header border-green-500"><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Entregado</span><div class="counter" id="cnt-entregado">0</div></div><div class="items-container"></div></div>
+        <div id="col-incidencia"><div class="column-header border-red-500"><span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Incidencia</span><div class="counter" id="cnt-incidencia">0</div></div><div class="items-container"></div></div>
     </div>
 
     <script>
-        function toggleView(mode) {
-            const board = document.getElementById('kanban-board');
-            const btnStd = document.getElementById('btn-std');
-            const btnAdv = document.getElementById('btn-adv');
-            
-            if(mode === 'adv') {
-                board.classList.add('view-advanced');
-                btnAdv.className = "px-4 py-2 text-[9px] font-black uppercase rounded-lg bg-white shadow-sm transition-all ml-1";
-                btnStd.className = "px-4 py-2 text-[9px] font-black uppercase rounded-lg text-slate-400 transition-all";
-            } else {
-                board.classList.remove('view-advanced');
-                btnStd.className = "px-4 py-2 text-[9px] font-black uppercase rounded-lg bg-white shadow-sm transition-all";
-                btnAdv.className = "px-4 py-2 text-[9px] font-black uppercase rounded-lg text-slate-400 transition-all ml-1";
-            }
+        async function pullData() {
+            try {
+                const response = await fetch('/api/pedidos');
+                const pedidos = await response.json();
+                
+                document.querySelectorAll('.items-container').forEach(el => el.innerHTML = '');
+                const counts = { solicitado: 0, desguace: 0, listo: 0, transito: 0, entregado: 0, incidencia: 0 };
+
+                pedidos.forEach(p => {
+                    const card = `
+                        <div class="card-pieza" onclick='abrirPopup(${JSON.stringify(p)})'>
+                            <div class="flex justify-between items-start mb-1 text-[8px] font-black">
+                                <span class="text-slate-300 uppercase">${p.numero_pedido || '#'+p.id}</span>
+                                <span class="text-orange-500">${p.precio || 0}€</span>
+                            </div>
+                            <h4 class="font-black text-slate-800 text-[11px] uppercase mb-4 leading-tight">${p.pieza}</h4>
+                            <div class="flex justify-between items-center">
+                                <p class="text-[8px] font-bold text-slate-400 uppercase italic">${p.nombre_taller || 'S/N'}</p>
+                                <span class="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-md shadow-sm">${p.matricula || '---'}</span>
+                            </div>
+                        </div>`;
+                    
+                    let estado = p.estado.toLowerCase().trim();
+                    if(estado.includes('verificado')) estado = 'listo';
+                    if(estado.includes('tránsito')) estado = 'transito';
+
+                    const target = document.querySelector(\`#col-\${estado} .items-container\`);
+                    if(target) {
+                        target.innerHTML += card;
+                        counts[estado]++;
+                    }
+                });
+
+                Object.keys(counts).forEach(key => {
+                    const el = document.getElementById(\`cnt-\${key}\`);
+                    if(el) el.innerText = counts[key];
+                });
+            } catch (e) { console.error("Error al sincronizar:", e); }
         }
 
-        function openPopup(id, pieza, precio, taller, matricula) {
-            document.getElementById('pop-id-txt').innerText = id;
-            document.getElementById('pop-pieza-txt').innerText = pieza;
-            document.getElementById('pop-precio-input').value = precio;
-            document.getElementById('pop-taller-select').value = taller;
-            document.getElementById('popup-overlay').classList.remove('hidden');
+        function abrirPopup(p) {
+            const modal = `
+                <div id="modal-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                    <div class="bg-white rounded-[3rem] w-full max-w-2xl overflow-hidden shadow-2xl border border-white/20">
+                        <div class="flex border-b border-slate-100 font-black text-[10px] uppercase">
+                            <button onclick="tab('basica')" id="t-b" class="flex-1 py-6 bg-slate-50 text-blue-600 border-b-2 border-blue-600">Imprescindible</button>
+                            <button onclick="tab('avanzada')" id="t-a" class="flex-1 py-6 text-slate-400 hover:bg-slate-50 transition-all">Avanzada</button>
+                        </div>
+                        <div class="p-10">
+                            <div id="c-b" class="space-y-6">
+                                <div><label class="text-[9px] font-black text-slate-300 uppercase italic">Taller</label><p class="text-2xl font-black text-slate-800 uppercase tracking-tighter">${p.nombre_taller || 'Taller de Prueba'}</p></div>
+                                <div class="bg-blue-50 p-8 rounded-[2rem] border border-blue-100">
+                                    <label class="text-[9px] font-black text-blue-400 uppercase">Recambio</label>
+                                    <h3 class="text-3xl font-black text-blue-700 uppercase tracking-tighter italic">${p.pieza}</h3>
+                                    <p class="text-sm font-bold text-blue-400 mt-2">Matrícula: ${p.matricula}</p>
+                                </div>
+                            </div>
+                            <div id="c-a" class="hidden grid grid-cols-2 gap-8">
+                                <div><label class="text-[9px] font-black text-slate-300 uppercase">Bastidor</label><p class="font-bold text-slate-700 mt-1">${p.bastidor || '---'}</p></div>
+                                <div><label class="text-[9px] font-black text-slate-300 uppercase">Modelo</label><p class="font-bold text-slate-700 mt-1">${p.modelo_coche || '---'}</p></div>
+                                <div class="col-span-2 bg-slate-50 p-6 rounded-2xl">
+                                    <label class="text-[9px] font-black text-slate-300 uppercase">Notas Técnicas</label>
+                                    <p class="text-xs text-slate-500 italic mt-2 leading-relaxed">${p.notas_tecnicas || 'No hay notas registradas para esta pieza.'}</p>
+                                </div>
+                            </div>
+                            <button onclick="document.getElementById('modal-overlay').remove()" class="w-full mt-10 py-5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all">Cerrar</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', modal);
         }
 
-        function closePopup() { document.getElementById('popup-overlay').classList.add('hidden'); }
-
-        // Drag & Drop
-        function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
-        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); ev.target.classList.add('dragging'); }
-        function drop(ev) {
-            ev.preventDefault();
-            const data = ev.dataTransfer.getData("text");
-            ev.currentTarget.appendChild(document.getElementById(data));
-            ev.currentTarget.classList.remove('drag-over');
-            document.getElementById(data).classList.remove('dragging');
-            // Aquí añadirías la lógica para actualizar contadores
+        function tab(t) {
+            document.getElementById('c-b').classList.toggle('hidden', t === 'avanzada');
+            document.getElementById('c-a').classList.toggle('hidden', t === 'basica');
+            document.getElementById('t-b').className = t === 'basica' ? "flex-1 py-6 bg-slate-50 text-blue-600 border-b-2 border-blue-600" : "flex-1 py-6 text-slate-400 hover:bg-slate-50 transition-all";
+            document.getElementById('t-a').className = t === 'avanzada' ? "flex-1 py-6 bg-slate-50 text-blue-600 border-b-2 border-blue-600" : "flex-1 py-6 text-slate-400 hover:bg-slate-50 transition-all";
         }
+
+        window.onload = pullData;
     </script>
 </body>
 </html>
