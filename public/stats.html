@@ -8,16 +8,32 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="/js/global.js"></script>
     <style>
-        /* Animación suave para los tooltips en móvil y desktop */
-        .tooltip-content {
-            transition: all 0.2s ease-in-out;
-            transform-origin: bottom right;
+        /* Animación y comportamiento de Tooltips */
+        .tooltip-container:hover .tooltip-box,
+        .tooltip-container:focus-within .tooltip-box {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
-        /* Ajuste para que en móvil no se desborde el tooltip */
+        .tooltip-box {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Ajuste para pantallas pequeñas */
         @media (max-width: 640px) {
-            .tooltip-content {
-                width: 240px !important;
-                right: -10px !important;
+            .tooltip-box {
+                width: 260px !important;
+                right: -20px !important;
+                position: fixed !important;
+                bottom: 20px !important;
+                left: 50% !important;
+                transform: translateX(-50%) translateY(20px) !important;
+            }
+            .tooltip-container:hover .tooltip-box,
+            .tooltip-container:focus-within .tooltip-box {
+                transform: translateX(-50%) translateY(0) !important;
             }
         }
     </style>
@@ -31,8 +47,8 @@
             <h1 class="text-slate-800 dark:text-white font-black text-[10px] md:text-sm uppercase tracking-tighter">Inteligencia BI</h1>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-3">
-            <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 flex items-center justify-center">
+        <div class="flex items-center gap-2">
+            <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 flex items-center justify-center transition-colors">
                 <i class="fas fa-moon dark:hidden"></i>
                 <i class="fas fa-sun hidden dark:block text-yellow-500"></i>
             </button>
@@ -44,6 +60,9 @@
                     <a href="dashboard.html" class="flex items-center gap-3 p-3 text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl">
                         <i class="fas fa-columns text-blue-500"></i> Dashboard
                     </a>
+                    <a href="docs.html" class="flex items-center gap-3 p-3 text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl">
+                        <i class="fas fa-book text-emerald-500"></i> Documentación
+                    </a>
                 </div>
             </div>
             <div class="w-9 h-9 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full flex items-center justify-center font-black text-[10px]">AD</div>
@@ -51,18 +70,72 @@
     </nav>
 
     <main class="p-4 md:p-8 max-w-7xl mx-auto">
-        <div class="mb-8 md:mb-12">
-            <h2 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Análisis de Rendimiento</h2>
-            <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Datos actualizados en tiempo real</p>
-        </div>
+        <header class="mb-8 md:mb-12">
+            <h2 class="text-2xl md:text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">Análisis de Rendimiento</h2>
+            <p class="text-[9px] md:text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-2">Métricas de eficiencia y rentabilidad</p>
+        </header>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             
-            <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-visible">
-                <div class="flex justify-between items-start mb-4 md:mb-6">
-                    <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl md:rounded-2xl flex items-center justify-center">
-                        <i class="fas fa-history text-lg md:text-xl"></i>
+            <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative group">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-history text-lg"></i>
                     </div>
                     
-                    <div class="relative group/info">
-                        <button class="w-8 h-8 flex items-center justify-center text-slate-30
+                    <div class="tooltip-container relative">
+                        <button class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700 hover:text-blue-500 transition-colors focus:outline-none">
+                            <i class="fas fa-info-circle text-xl"></i>
+                        </button>
+                        <div class="tooltip-box absolute right-0 bottom-full mb-4 w-64 p-5 bg-slate-900 text-white rounded-[1.5rem] shadow-2xl z-50 pointer-events-none">
+                            <p class="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">Lead Time Medio</p>
+                            <p class="text-[11px] text-slate-300 leading-relaxed mb-4 text-left">Tiempo medio desde la solicitud inicial hasta la entrega final.</p>
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                                <p class="text-[8px] font-mono text-slate-500 uppercase mb-1">Fórmula Técnica:</p>
+                                <code class="text-[10px] text-emerald-400 font-mono">$Media(Fecha_{Entrega} - Fecha_{Solicitud})$</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Lead Time Medio</p>
+                <h3 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">3.2 <span class="text-sm md:text-lg text-slate-300">Días</span></h3>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative group">
+                <div class="flex justify-between items-start mb-6">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-chart-line text-lg"></i>
+                    </div>
+                    
+                    <div class="tooltip-container relative">
+                        <button class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700 hover:text-emerald-500 transition-colors focus:outline-none">
+                            <i class="fas fa-info-circle text-xl"></i>
+                        </button>
+                        <div class="tooltip-box absolute right-0 bottom-full mb-4 w-64 p-5 bg-slate-900 text-white rounded-[1.5rem] shadow-2xl z-50 pointer-events-none text-left">
+                            <p class="text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-2">Margen Bruto</p>
+                            <p class="text-[11px] text-slate-300 leading-relaxed mb-4">Rentabilidad porcentual basada en el coste y el PVP final.</p>
+                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                                <p class="text-[8px] font-mono text-slate-500 uppercase mb-1">Fórmula Técnica:</p>
+                                <code class="text-[10px] text-emerald-400 font-mono">$\frac{PVP - Coste}{PVP} \times 100$</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Margen Bruto</p>
+                <h3 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">28.5 <span class="text-sm md:text-lg text-slate-300">%</span></h3>
+            </div>
+
+            </div>
+    </main>
+
+    <footer class="mt-20 py-10 border-t border-slate-100 dark:border-slate-800 text-center px-6">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Desarrollado por <span class="text-slate-900 dark:text-white font-black italic">Raul C.</span> | raulcue@gmail.com | Versión Beta 1.2
+        </p>
+        <p class="text-[9px] text-slate-300 uppercase mt-2">
+            © Copyright 2026-2030 - Recambio Reciclado IA | <a href="#" class="underline">Política de Privacidad</a>
+        </p>
+    </footer>
+
+</body>
+</html>

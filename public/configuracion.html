@@ -1,50 +1,152 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"><title>Configuración de Usuarios</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="/js/global.js"></script>
 </head>
-<body class="bg-slate-50">
-    <div class="max-w-5xl mx-auto py-10 px-6">
-        <h2 class="text-slate-800 font-black uppercase text-lg mb-6 tracking-tighter">Gestión de Accesos</h2>
-        <div class="bg-white rounded-[2rem] shadow-sm border overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
-                    <tr><th class="p-5">Taller</th><th class="p-5">Email</th><th class="p-5">Rol</th><th class="p-5">Acción</th></tr>
-                </thead>
-                <tbody id="userBody"></tbody>
-            </table>
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors pb-20">
+
+    <main class="max-w-5xl mx-auto py-10 px-6">
+        <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h2 class="text-slate-800 dark:text-white font-black uppercase text-3xl tracking-tighter">Gestión de Accesos</h2>
+                <p class="text-[10px] font-bold text-blue-500 uppercase tracking-[0.3em] mt-2">Control de Roles y Seguridad Perimetral</p>
+            </div>
+            <div class="flex gap-2">
+                <span class="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500 text-[8px] font-black px-3 py-2 rounded-xl uppercase self-center">
+                    <i class="fas fa-info-circle mr-1"></i> 2FA Latente (Beta)
+                </span>
+            </div>
+        </header>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                        <tr>
+                            <th class="p-6">Taller / Usuario</th>
+                            <th class="p-6">Email</th>
+                            <th class="p-6">Rol</th>
+                            <th class="p-6">Seguridad</th>
+                            <th class="p-6 text-right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userBody" class="divide-y divide-slate-50 dark:divide-slate-800">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-10 p-6 bg-slate-100 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed text-center font-medium">
+                <i class="fas fa-shield-check mr-2 text-blue-500"></i>
+                Nota: La configuración de 2FA generada aquí se guardará en la base de datos, pero el sistema no solicitará el código al login hasta que se active el flag global de producción.
+            </p>
+        </div>
+    </main>
+
+    <div id="modalQR" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[3rem] p-10 text-center relative shadow-2xl border border-white/10">
+            <button onclick="cerrarModal()" class="absolute top-8 right-8 text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            
+            <h3 class="text-xl font-black text-slate-900 dark:text-white uppercase mb-2 tracking-tighter">Activar 2FA</h3>
+            <p class="text-[11px] text-slate-400 mb-8 px-4">Escanea este código en **Google Authenticator** para este usuario.</p>
+            
+            <div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-[2rem] inline-block border-8 border-slate-50 dark:border-slate-800"></div>
+            
+            <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl mb-8 text-left border border-slate-100 dark:border-slate-700">
+                <p class="text-[8px] font-black text-slate-400 uppercase mb-1 tracking-widest">Secreto Manual (Backup):</p>
+                <code id="qrSecret" class="text-[11px] font-mono font-bold text-blue-500 dark:text-blue-400 break-all"></code>
+            </div>
+
+            <button onclick="cerrarModal()" class="w-full bg-slate-900 dark:bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-blue-700 transition-all">
+                Configuración Completada
+            </button>
         </div>
     </div>
+
     <script>
         async function loadUsers() {
-            const res = await fetch('/api/usuarios');
-            const users = await res.json();
-            document.getElementById('userBody').innerHTML = users.map(u => `
-                <tr class="border-b">
-                    <td class="p-5 font-bold uppercase text-xs">${u.nombre_taller || 'ADMIN'}</td>
-                    <td class="p-5 text-xs text-slate-500">${u.email}</td>
-                    <td class="p-5">
-                        <select onchange="updateRol(${u.id}, this.value)" class="text-[10px] font-black uppercase bg-slate-50 p-2 rounded-xl">
-                            <option value="admin" ${u.rol==='admin'?'selected':''}>Admin</option>
-                            <option value="gestor" ${u.rol==='gestor'?'selected':''}>Gestor</option>
-                            <option value="taller" ${u.rol==='taller'?'selected':''}>Taller</option>
-                        </select>
-                    </td>
-                    <td class="p-5"><button onclick="deleteUser(${u.id})" class="text-red-400 hover:scale-110 transition"><i class="fas fa-trash"></i></button></td>
-                </tr>`).join('');
+            try {
+                const res = await fetch('/api/usuarios');
+                const users = await res.json();
+                document.getElementById('userBody').innerHTML = users.map(u => `
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td class="p-6">
+                            <p class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-tighter">${u.nombre_taller || 'ADMIN ROOT'}</p>
+                        </td>
+                        <td class="p-6 text-xs text-slate-500 font-medium">${u.email}</td>
+                        <td class="p-6">
+                            <select onchange="updateRol(${u.id}, this.value)" class="text-[10px] font-black uppercase bg-slate-100 dark:bg-slate-800 dark:text-white p-2 px-3 rounded-xl border-none outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                                <option value="admin" ${u.rol==='admin'?'selected':''}>Admin</option>
+                                <option value="gestor" ${u.rol==='gestor'?'selected':''}>Gestor</option>
+                                <option value="taller" ${u.rol==='taller'?'selected':''}>Taller</option>
+                            </select>
+                        </td>
+                        <td class="p-6">
+                            ${(u.rol === 'admin' || u.rol === 'gestor') ? `
+                                <button onclick="abrir2FA('${u.email}', '${u.secreto_2fa || 'REC'+u.id+'KEY'}')" class="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg border-2 border-slate-200 dark:border-slate-700 text-slate-400 hover:border-blue-500 hover:text-blue-500 transition-all">
+                                    <i class="fas fa-qrcode mr-1 text-[10px]"></i> Vincular 2FA
+                                </button>
+                            ` : `<span class="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase italic">No requerido</span>`}
+                        </td>
+                        <td class="p-6 text-right">
+                            <button onclick="deleteUser(${u.id})" class="w-8 h-8 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`).join('');
+            } catch (err) {
+                console.error("Error cargando usuarios:", err);
+            }
         }
+
+        function abrir2FA(email, secreto) {
+            document.getElementById('qrSecret').innerText = secreto;
+            document.getElementById('modalQR').classList.remove('hidden');
+            
+            // Limpiar QR anterior
+            document.getElementById('qrcode').innerHTML = "";
+            
+            // Generar nuevo QR
+            const url = `otpauth://totp/RecambioIA:${email}?secret=${secreto}&issuer=RecambioRecicladoIA`;
+            new QRCode(document.getElementById("qrcode"), {
+                text: url,
+                width: 180,
+                height: 180,
+                colorDark : "#0f172a",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalQR').classList.add('hidden');
+        }
+
         async function updateRol(id, rol) {
-            await fetch(`/api/usuarios/${id}/rol`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rol}) });
+            await fetch(`/api/usuarios/${id}/rol`, { 
+                method: 'PUT', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({rol}) 
+            });
+            loadUsers(); // Recargar para actualizar botones de 2FA
         }
+
         async function deleteUser(id) {
-            if(confirm('¿Eliminar usuario?')) {
+            if(confirm('¿Eliminar usuario definitivamente?')) {
                 await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
                 loadUsers();
             }
         }
+
         loadUsers();
     </script>
 </body>

@@ -1,45 +1,158 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"><title>Logs - Admin</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Auditoría de Sistema - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="/js/global.js"></script>
+    <style>
+        .log-row { transition: all 0.2s; }
+        .log-row:hover { background-color: rgba(59, 130, 246, 0.05); }
+        .dark .log-row:hover { background-color: rgba(59, 130, 246, 0.1); }
+        
+        /* Badge dinámico según acción */
+        .badge-login { bg-blue-100; text-blue-600; }
+        .badge-create { bg-emerald-100; text-emerald-600; }
+        .badge-update { bg-amber-100; text-amber-600; }
+        .badge-alert { bg-red-100; text-red-600; }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-    <nav class="h-16 bg-white border-b flex items-center justify-between px-8">
-        <div class="flex items-center gap-4">
-            <a href="landing.html" class="text-slate-400"><i class="fas fa-arrow-left"></i></a>
-            <h1 class="font-black uppercase text-slate-800 tracking-tighter">Historial</h1>
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
+
+    <nav class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 md:px-6 py-3 flex justify-between items-center sticky top-0 z-[100]">
+        <div class="flex items-center gap-3">
+            <img src="/assets/logo.png" alt="Logo" class="h-7 md:h-8 dark:brightness-0 dark:invert">
+            <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+            <h1 class="text-slate-800 dark:text-white font-black text-[10px] md:text-sm uppercase tracking-tighter">Auditoría Logs</h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl text-slate-400 flex items-center justify-center">
+                <i class="fas fa-moon dark:hidden"></i>
+                <i class="fas fa-sun hidden dark:block text-yellow-500"></i>
+            </button>
+            <div class="w-9 h-9 bg-red-600 text-white rounded-full flex items-center justify-center font-black text-[10px] shadow-lg shadow-red-500/20">AD</div>
         </div>
     </nav>
-    <main class="p-8 max-w-6xl mx-auto">
-        <div class="bg-white rounded-[40px] shadow-sm border border-slate-100 overflow-hidden">
-            <table class="w-full text-left">
-                <thead class="bg-slate-50 border-b"><tr class="text-[10px] font-black uppercase text-slate-400">
-                    <th class="p-6">Fecha</th><th class="p-6">Usuario</th><th class="p-6">Pedido</th><th class="p-6">Acción</th>
-                </tr></thead>
-                <tbody id="logsTable" class="divide-y"></tbody>
-            </table>
+
+    <main class="p-4 md:p-8 max-w-6xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h2 class="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">Historial de Actividad</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Trazabilidad de seguridad Nivel Root</p>
+            </div>
+            <div class="flex gap-2">
+                <button class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-600 dark:text-slate-400">
+                    <i class="fas fa-download mr-2"></i> Exportar CSV
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-50 dark:border-slate-800">
+                            <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Timestamp / IP</th>
+                            <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Usuario</th>
+                            <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Evento</th>
+                            <th class="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Detalle de la Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm font-medium">
+                        
+                        <tr class="log-row border-b border-slate-50 dark:border-slate-800">
+                            <td class="p-5">
+                                <p class="text-slate-900 dark:text-white font-bold text-xs">Hoy, 12:45:22</p>
+                                <p class="text-[9px] text-slate-400 font-mono">IP: 44.200.1.5</p>
+                            </td>
+                            <td class="p-5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-[8px] text-white">API</div>
+                                    <span class="text-xs dark:text-slate-300">Sistema Externo</span>
+                                </div>
+                            </td>
+                            <td class="p-5">
+                                <span class="px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[9px] font-black uppercase">INJECT_API</span>
+                            </td>
+                            <td class="p-5">
+                                <p class="text-xs text-slate-600 dark:text-slate-400">Inyección de <span class="font-bold text-slate-900 dark:text-white">5 nuevas piezas</span> desde Desguace SL.</p>
+                            </td>
+                        </tr>
+
+                        <tr class="log-row border-b border-slate-50 dark:border-slate-800">
+                            <td class="p-5">
+                                <p class="text-slate-900 dark:text-white font-bold text-xs">Hoy, 11:30:10</p>
+                                <p class="text-[9px] text-slate-400 font-mono">IP: 192.168.1.12</p>
+                            </td>
+                            <td class="p-5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 bg-slate-900 dark:bg-white dark:text-slate-900 rounded-full flex items-center justify-center text-[8px] text-white font-bold">AD</div>
+                                    <span class="text-xs dark:text-slate-300">Raul C. (Admin)</span>
+                                </div>
+                            </td>
+                            <td class="p-5">
+                                <span class="px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-600 text-[9px] font-black uppercase">KANBAN_MOVE</span>
+                            </td>
+                            <td class="p-5">
+                                <p class="text-xs text-slate-600 dark:text-slate-400">Pedido <span class="font-bold">#992</span> movido de <span class="italic text-slate-400 text-[10px]">Taller</span> a <span class="italic text-blue-500 text-[10px]">Desguace</span>.</p>
+                            </td>
+                        </tr>
+
+                        <tr class="log-row border-b border-slate-50 dark:border-slate-800">
+                            <td class="p-5">
+                                <p class="text-slate-900 dark:text-white font-bold text-xs">Hoy, 10:15:05</p>
+                                <p class="text-[9px] text-slate-400 font-mono">IP: 85.12.44.10</p>
+                            </td>
+                            <td class="p-5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-[8px] text-white">T</div>
+                                    <span class="text-xs dark:text-slate-300">Taller Central</span>
+                                </div>
+                            </td>
+                            <td class="p-5">
+                                <span class="px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[9px] font-black uppercase">CREATE_PIEZA</span>
+                            </td>
+                            <td class="p-5">
+                                <p class="text-xs text-slate-600 dark:text-slate-400">Alta de <span class="font-bold">Motor Completo</span> para matrícula <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">1234ABC</span>.</p>
+                            </td>
+                        </tr>
+
+                        <tr class="log-row">
+                            <td class="p-5">
+                                <p class="text-slate-900 dark:text-white font-bold text-xs">Hoy, 09:00:45</p>
+                                <p class="text-[9px] text-red-500 font-mono">IP: 5.45.120.22</p>
+                            </td>
+                            <td class="p-5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-[8px] text-white"><i class="fas fa-user-secret"></i></div>
+                                    <span class="text-xs dark:text-slate-300 font-bold text-red-500">Desconocido</span>
+                                </div>
+                            </td>
+                            <td class="p-5">
+                                <span class="px-2 py-1 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 text-[9px] font-black uppercase">UNAUTHORIZED_ACCESS</span>
+                            </td>
+                            <td class="p-5">
+                                <p class="text-xs text-slate-600 dark:text-slate-400">Intento fallido de acceso a <span class="font-bold">/admin-logs.html</span>.</p>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
         </div>
     </main>
-    <script>
-        async function loadLogs() {
-            try {
-                const res = await fetch('/api/admin/logs');
-                const contentType = res.headers.get("content-type");
-                if (res.ok && contentType && contentType.includes("application/json")) {
-                    const logs = await res.json();
-                    document.getElementById('logsTable').innerHTML = logs.map(log => `
-                        <tr>
-                            <td class="p-6 text-xs text-slate-400">${new Date(log.fecha).toLocaleString()}</td>
-                            <td class="p-6 text-xs font-black uppercase">${log.email || 'Sistema'}</td>
-                            <td class="p-6 text-[10px] font-black text-blue-600 uppercase">${log.numero_pedido || '---'}</td>
-                            <td class="p-6 text-xs italic">${log.accion}</td>
-                        </tr>`).join('');
-                }
-            } catch (e) { console.warn("Error en logs"); }
-        }
-        loadLogs(); setInterval(loadLogs, 30000);
-    </script>
+
+    <footer class="mt-20 py-10 border-t border-slate-100 dark:border-slate-800 text-center px-6">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            Desarrollado por <span class="text-slate-900 dark:text-white font-black italic">Raul C.</span> | raulcue@gmail.com | Versión Beta 1.2
+        </p>
+        <p class="text-[9px] text-slate-300 uppercase mt-2">
+            © Copyright 2026-2030 - Recambio Reciclado IA | <a href="#" class="underline">Política de Privacidad</a>
+        </p>
+    </footer>
+
 </body>
 </html>
