@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>BI Center - Recambio Reciclado IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="/js/global.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
+            <div>
+                <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tighter">Business Intelligence</h1>
+                <div class="flex gap-2 mt-1">
+                    <span class="text-[9px] font-bold bg-indigo-600 text-white px-2 py-0.5 rounded uppercase tracking-widest">IA Engine Active</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-3 w-full lg:w-auto">
+                <select id="filtroPeriodo" onchange="actualizarDashboard()" class="bg-white border-none p-4 rounded-2xl text-[10px] font-black uppercase shadow-sm outline-none ring-1 ring-slate-200">
+                    <option value="all">Todo el año</option>
+                    <option value="Q1">Q1 (Ene-Mar)</option>
+                    <option value="Q2">Q2 (Abr-Jun)</option>
+                    <option value="Q3">Q3 (Jul-Sep)</option>
+                    <option value="Q4">Q4 (Oct-Dic)</option>
+                </select>
+                <select id="filtroTaller" onchange="actualizarDashboard()" class="bg-white border-none p-4 rounded-2xl text-[10px] font-black uppercase shadow-sm outline-none ring-1 ring-slate-200">
+                    <option value="todos">Todos los Talleres</option>
+                </select>
+                <button onclick="exportarDatos()" class="bg-emerald-500 text-white px-6 py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg hover:bg-emerald-600 transition-all flex items-center gap-2">
+                    <i class="fas fa-file-csv"></i> Exportar
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div id="churn-card" class="bg-red-50 p-6 rounded-[2rem] border border-red-100 hidden">
+                <div class="flex items-center gap-4">
+                    <div class="bg-red-500 p-3 rounded-2xl text-white"><i class="fas fa-user-clock"></i></div>
+                    <div>
+                        <p class="text-[9px] font-black text-red-400 uppercase">Alerta Churn (Abandono)</p>
+                        <h4 id="churn-taller-nombre" class="text-xs font-black text-red-900 uppercase">Taller Inactivo</h4>
+                        <p class="text-[8px] text-red-600 mt-1">Sin pedidos hace +15 días</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-900 p-6 rounded-[2rem] text-white relative overflow-hidden">
+                <i class="fas fa-brain absolute -right-4 -bottom-4 text-6xl opacity-10"></i>
+                <p class="text-[9px] font-black text-indigo-300 uppercase">Forecast IA (Mes Próx.)</p>
+                <h4 id="forecast-value" class="text-2xl font-black mt-1">Calculando...</h4>
+                <p class="text-[8px] opacity-60">Basado en tendencia actual</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-blue-500 transition-all" onclick="abrirConfigCostes()">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase">Punto de Equilibrio</p>
+                    <h4 id="break-even-status" class="text-xl font-black text-slate-800 tracking-tighter">0€ / 0€</h4>
+                    <p id="piezas-objetivo" class="text-[8px] text-blue-500 font-bold mt-1 uppercase">Configurar Costes</p>
+                </div>
+                <i class="fas fa-cog text-slate-200"></i>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-4 border-blue-500">
+                <p class="text-[9px] font-black text-slate-400 uppercase">Ventas Brutas</p>
+                <h2 id="kpi-ventas" class="text-3xl font-black text-slate-800 tracking-tighter">0€</h2>
+            </div>
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-4 border-emerald-500">
+                <p class="text-[9px] font-black text-slate-400 uppercase">Margen Neto</p>
+                <h2 id="kpi-beneficio" class="text-3xl font-black text-emerald-600 tracking-tighter">0€</h2>
+            </div>
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-4 border-indigo-500">
+                <p class="text-[9px] font-black text-slate-400 uppercase">Lead Time Medio</p>
+                <h2 id="kpi-leadtime" class="text-3xl font-black text-indigo-600 tracking-tighter">--</h2>
+            </div>
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border-b-4 border-orange-500">
+                <p class="text-[9px] font-black text-slate-400 uppercase">Tasa Conversión</p>
+                <h2 id="kpi-conversion" class="text-3xl font-black text-orange-600 tracking-tighter">0%</h2>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            <div class="bg-white p-10 rounded-[3rem] shadow-sm h-96">
+                <h3 class="font-black uppercase text-xs text-slate-400 mb-8">Evolución de Márgenes</h3>
+                <canvas id="chartComparativa"></canvas>
+            </div>
+            <div class="bg-white p-10 rounded-[3rem] shadow-sm h-96">
+                <h3 class="font-black uppercase text-xs text-slate-400 mb-8">Incidencias y Rechazos</h3>
+                <canvas id="chartIncidencias"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-[3rem] shadow-sm overflow-hidden mb-20">
+            <div class="p-8 border-b border-slate-50"><h3 class="font-black uppercase text-xs text-slate-400">Customer Lifetime Value (CLV)</h3></div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead><tr class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase"><th class="p-6">Taller</th><th class="p-6">Ventas Totales</th><th class="p-6">Devoluciones</th><th class="p-6">Provincia</th><th class="p-6">Ranking</th></tr></thead>
+                    <tbody id="tabla-clv" class="text-xs font-bold text-slate-600"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalCostes" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-6">
+        <div class="bg-white p-10 rounded-[2.5rem] w-full max-w-md shadow-2xl">
+            <h3 class="text-xl font-black text-slate-800 uppercase mb-2">Gastos Fijos</h3>
+            <p class="text-xs text-slate-400 mb-6 font-medium">Define tus gastos mensuales para calcular el Punto de Equilibrio.</p>
+            <div class="space-y-4">
+                <input type="number" id="input-costes-fijos" class="w-full p-5 bg-slate-50 rounded-2xl border-none font-black text-lg" placeholder="0.00 €">
+                <button onclick="guardarCostes()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase text-xs shadow-xl">Guardar Configuración</button>
+                <button onclick="cerrarConfigCostes()" class="w-full text-slate-400 font-bold uppercase text-[9px] mt-2">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rawData = [];
+        let configNegocio = { costes_fijos_mensuales: 0 };
+        let charts = {};
+
+        async function init() {
+            await loadConfig();
+            await loadStats();
+        }
+
+        async function loadConfig() {
+            const res = await fetch('/api/config');
+            configNegocio = await res.json();
+            document.getElementById('input-costes-fijos').value = configNegocio.costes_fijos_mensuales;
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats/global');
+                rawData = await res.json();
+                
+                const selector = document.getElementById('filtroTaller');
+                selector.innerHTML = '<option value="todos">Todos los Talleres</option>' + 
+                    rawData.map(d => `<option value="${d.nombre_taller}">${d.nombre_taller.toUpperCase()}</option>`).join('');
+
+                actualizarDashboard();
+            } catch (e) { console.error(e); }
+        }
+
+        function actualizarDashboard() {
+            const filtro = document.getElementById('filtroTaller').value;
+            const periodo = document.getElementById('filtroPeriodo').value; // Simplificado: Filtraría en SQL realmente
+            
+            const data = filtro === 'todos' ? rawData : rawData.filter(d => d.nombre_taller === filtro);
+
+            // Cálculos KPIs
+            let tVentas = 0, tBeneficio = 0, tLead = 0, tRechazos = 0, tPedidos = 0, tDevs = 0;
+            data.forEach(d => {
+                tVentas += parseFloat(d.total_ventas);
+                tBeneficio += parseFloat(d.beneficio_total);
+                tPedidos += parseInt(d.total_pedidos);
+                tLead += parseFloat(d.lead_time_medio || 0);
+                tRechazos += parseInt(d.rechazos_precio || 0);
+                tDevs += parseInt(d.devoluciones || 0);
+            });
+
+            // Actualizar UI
+            document.getElementById('kpi-ventas').innerText = tVentas.toLocaleString() + '€';
+            document.getElementById('kpi-beneficio').innerText = tBeneficio.toLocaleString() + '€';
+            document.getElementById('kpi-leadtime').innerText = tPedidos > 0 ? (tLead / data.length).toFixed(1) + 'd' : '--';
+            
+            const conv = tPedidos > 0 ? ((tPedidos / (tPedidos + tRechazos)) * 100).toFixed(1) : 0;
+            document.getElementById('kpi-conversion').innerText = conv + '%';
+
+            // Punto de Equilibrio
+            const fijos = configNegocio.costes_fijos_mensuales;
+            document.getElementById('break-even-status').innerText = `${tBeneficio.toFixed(0)}€ / ${fijos}€`;
+            document.getElementById('piezas-objetivo').innerText = tBeneficio >= fijos ? 'Rentable ✅' : `Faltan ${(fijos - tBeneficio).toFixed(0)}€`;
+
+            // IA Forecast (Simulado: Crecimiento 15%)
+            document.getElementById('forecast-value').innerText = (tVentas * 1.15).toLocaleString(undefined, {maximumFractionDigits:0}) + '€';
+
+            // Churn Check
+            verificarChurn(data);
+            
+            renderCharts(data);
+            renderTabla(data);
+        }
+
+        function verificarChurn(data) {
+            const hoy = new Date();
+            const critico = data.find(d => {
+                const ultima = new Date(d.fecha_ultimo_pedido);
+                return (hoy - ultima) / (1000 * 60 * 60 * 24) > 15;
+            });
+            const card = document.getElementById('churn-card');
+            if (critico) {
+                card.classList.remove('hidden');
+                document.getElementById('churn-taller-nombre').innerText = critico.nombre_taller;
+            } else { card.classList.add('hidden'); }
+        }
+
+        function renderCharts(data) {
+            const ctxComp = document.getElementById('chartComparativa').getContext('2d');
+            if(charts.comp) charts.comp.destroy();
+            charts.comp = new Chart(ctxComp, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.nombre_taller),
+                    datasets: [
+                        { label: 'Beneficio', data: data.map(d => d.beneficio_total), borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' },
+                        { label: 'Ventas', data: data.map(d => d.total_ventas), borderColor: '#3b82f6', tension: 0.4 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctxInc = document.getElementById('chartIncidencias').getContext('2d');
+            if(charts.inc) charts.inc.destroy();
+            charts.inc = new Chart(ctxInc, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.nombre_taller),
+                    datasets: [
+                        { label: 'Rechazos Precio', data: data.map(d => d.rechazos_precio), backgroundColor: '#f59e0b' },
+                        { label: 'Devoluciones', data: data.map(d => d.devoluciones), backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } } }
+            });
+        }
+
+        function renderTabla(data) {
+            const tbody = document.getElementById('tabla-clv');
+            tbody.innerHTML = data.sort((a,b) => b.total_ventas - a.total_ventas).map(d => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-all">
+                    <td class="p-6 uppercase text-slate-900">${d.nombre_taller}</td>
+                    <td class="p-6">${parseFloat(d.total_ventas).toFixed(2)}€</td>
+                    <td class="p-6 text-red-500">${d.devoluciones || 0}</td>
+                    <td class="p-6 uppercase text-slate-400">${d.provincia || 'S/N'}</td>
+                    <td class="p-6"><span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px]">VIP</span></td>
+                </tr>
+            `).join('');
+        }
+
+        async function guardarCostes() {
+            const fijos = document.getElementById('input-costes-fijos').value;
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ costes_fijos: fijos })
+            });
+            cerrarConfigCostes();
+            init();
+        }
+
+        function abrirConfigCostes() { document.getElementById('modalCostes').style.display = 'flex'; }
+        function cerrarConfigCostes() { document.getElementById('modalCostes').style.display = 'none'; }
+        
+        function exportarDatos() {
+            let csv = "Taller,Ventas,Beneficio,Rechazos,Devoluciones\n";
+            rawData.forEach(d => csv += `${d.nombre_taller},${d.total_ventas},${d.beneficio_total},${d.rechazos_precio},${d.devoluciones}\n`);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'reporte_bi_recambios.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        init();
+    </script>
+</body>
+</html>

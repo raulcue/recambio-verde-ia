@@ -6,30 +6,58 @@
     <title>Panel Gestor - Recambio Reciclado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="/js/global.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col items-center p-6">
     <div class="mb-12 mt-10 text-center">
         <div class="flex flex-col items-center">
-             <img src="/assets/logo.png" alt="Recambio Reciclado" class="h-24 mb-2">
-             <h1 class="text-slate-800 font-black text-2xl tracking-tighter uppercase">Gestión de Operaciones</h1>
+             <img src="/assets/logo.png" alt="Recambio Reciclado" class="h-24 mb-4">
+             <h1 class="text-slate-800 font-black text-3xl tracking-tighter uppercase italic">Control Hub</h1>
+             <div class="flex gap-2 mt-2">
+                <span class="text-[9px] font-bold bg-indigo-600 text-white px-2 py-1 rounded uppercase tracking-widest">BI Engine v2.0</span>
+                <span class="text-[9px] font-bold bg-slate-200 text-slate-500 px-2 py-1 rounded uppercase tracking-widest italic">Agente Autorizado</span>
+             </div>
         </div>
     </div>
 
-    <div class="max-w-3xl w-full grid grid-cols-1 md:grid-cols-3 gap-8">
-        <a href="dashboard.html" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-green-500 hover:shadow-xl transition-all text-center group">
-            <i class="fas fa-columns text-3xl text-green-600 mb-4"></i>
-            <span class="block font-black text-slate-700 uppercase text-xs tracking-widest">Dashboard</span>
+    <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <a href="dashboard.html" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:border-blue-500 hover:shadow-2xl hover:-translate-y-2 transition-all text-center group">
+            <div class="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-500 transition-colors">
+                <i class="fas fa-columns text-2xl text-blue-600 group-hover:text-white"></i>
+            </div>
+            <span class="block font-black text-slate-800 uppercase text-[10px] tracking-widest">Gestión Kanban</span>
+            <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase">Flujo de Pedidos</p>
         </a>
 
-        <a href="pedidos-taller.html" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-blue-500 hover:shadow-xl transition-all text-center group">
-            <i class="fas fa-table-list text-3xl text-blue-600 mb-4"></i>
-            <span class="block font-black text-slate-700 uppercase text-xs tracking-widest">Mis Pedidos</span>
+        <a href="stats.html" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:border-emerald-500 hover:shadow-2xl hover:-translate-y-2 transition-all text-center group">
+            <div class="bg-emerald-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-500 transition-colors">
+                <i class="fas fa-chart-pie text-2xl text-emerald-600 group-hover:text-white"></i>
+            </div>
+            <span class="block font-black text-slate-800 uppercase text-[10px] tracking-widest">Business Intelligence</span>
+            <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase">KPIs y Rentabilidad</p>
         </a>
 
-        <a href="index.html" onclick="localStorage.clear()" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:border-red-500 hover:shadow-xl transition-all text-center group">
-            <i class="fas fa-power-off text-3xl text-red-500 mb-4"></i>
-            <span class="block font-black text-slate-700 uppercase text-xs tracking-widest">Salir</span>
+        <a href="pedidos-taller.html" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:border-orange-500 hover:shadow-2xl hover:-translate-y-2 transition-all text-center group">
+            <div class="bg-orange-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-orange-500 transition-colors">
+                <i class="fas fa-layer-group text-2xl text-orange-600 group-hover:text-white"></i>
+            </div>
+            <span class="block font-black text-slate-800 uppercase text-[10px] tracking-widest">Vista Taller</span>
+            <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase">Simular Cliente</p>
         </a>
+
+        <a href="index.html" onclick="localStorage.clear()" class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 hover:border-red-500 hover:shadow-2xl hover:-translate-y-2 transition-all text-center group">
+            <div class="bg-red-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-red-500 transition-colors">
+                <i class="fas fa-power-off text-2xl text-red-500 group-hover:text-white"></i>
+            </div>
+            <span class="block font-black text-slate-800 uppercase text-[10px] tracking-widest">Cerrar Sesión</span>
+            <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase">Finalizar Jornada</p>
+        </a>
+    </div>
+
+    <div class="mt-20 text-center opacity-40">
+        <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Recambio Reciclado S.L. &copy; 2025</p>
+        <p class="text-[7px] text-slate-400 mt-1 uppercase">Sistema de trazabilidad certificado bajo normativa Veri*factu</p>
     </div>
 </body>
 </html>
