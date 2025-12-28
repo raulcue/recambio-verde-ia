@@ -1,159 +1,54 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Kanban Pro - Recambio Verde</title>
+    <meta charset="UTF-8"><title>Kanban - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="/js/global.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen">
-    
-    <nav class="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-            <button onclick="openModal()" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all">+ Nuevo Pedido</button>
-            <a href="landing.html" class="text-slate-400 hover:text-slate-800 text-xs font-black uppercase tracking-widest">Panel Principal</a>
+    <div class="p-6 max-w-[1600px] mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Panel de Gestión</h1>
         </div>
-        <img src="/assets/logo.png" class="h-8">
-    </nav>
-
-    <main class="p-6 flex gap-6 overflow-x-auto">
-        <script>
-            const estados = ["Pedido", "En Desguace", "Listo Envío", "En Tránsito", "Entregado", "Incidencia"];
-            estados.forEach((nom, i) => {
-                document.write(`
-                    <div class="w-72 flex-shrink-0" id="col-${i+1}" ondragover="allowDrop(event)" ondrop="handleDrop(event, ${i+1})">
-                        <h2 class="text-[10px] font-black uppercase text-slate-400 mb-4 italic">${i+1} ${nom}</h2>
-                        <div id="tasks-${i+1}" class="space-y-3 min-h-[600px] bg-slate-100/30 rounded-2xl p-2"></div>
-                    </div>
-                `);
-            });
-        </script>
-    </main>
-
-    <div id="modalMaster" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl rounded-[40px] p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-black uppercase text-slate-800 text-xl tracking-tighter">Detalles del Vehículo y Pieza</h3>
-                <button onclick="closeModal()" class="text-slate-300 hover:text-slate-500"><i class="fas fa-times text-xl"></i></button>
-            </div>
-
-            <form id="masterForm" class="space-y-6">
-                <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Marca (Top 200)</label>
-                        <input type="text" list="marcasLista" id="marca_coche" placeholder="Ej: Toyota" class="w-full p-4 bg-white border rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-green-500 shadow-sm">
-                        <datalist id="marcasLista">
-                            </datalist>
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Modelo / Año</label>
-                        <input type="text" id="modelo_coche" placeholder="Ej: Corolla 2018" class="w-full p-4 bg-white border rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-green-500 shadow-sm">
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <input type="text" id="pieza" placeholder="PIEZA SOLICITADA (Ej: Faro delantero derecho)" class="w-full p-4 bg-slate-50 border rounded-2xl text-xs font-bold outline-none uppercase">
-                    <input type="text" id="matricula" placeholder="MATRÍCULA (Opcional)" class="w-full p-4 bg-slate-50 border rounded-2xl text-xs font-bold outline-none uppercase">
-                </div>
-
-                <div class="flex gap-4 pt-4 border-t border-slate-100">
-                    <button type="button" onclick="closeModal()" class="flex-1 font-black text-slate-300 uppercase text-[10px]">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-[10px] hover:bg-slate-900 transition-all">Guardar Pedido</button>
-                </div>
-            </form>
-        </div>
+        <main class="flex gap-6 overflow-x-auto pb-10">
+            <script>
+                ["Pedido", "En Desguace", "Listo Envío", "En Tránsito", "Entregado", "Incidencia"].forEach((nom, i) => {
+                    document.write(`
+                        <div class="min-w-[300px] flex-1">
+                            <h3 class="text-[11px] font-black uppercase text-slate-500 tracking-widest mb-4 px-2">${i+1}. ${nom}</h3>
+                            <div id="tasks-${i+1}" class="bg-slate-100/50 min-h-[600px] p-3 rounded-[2rem] border-2 border-dashed border-slate-200 space-y-4"></div>
+                        </div>`);
+                });
+            </script>
+        </main>
     </div>
 
     <script>
-        // --- LISTA TOP 200 MARCAS ---
-        const marcasTop200 = [
-            "Abarth", "Alfa Romeo", "Alpine", "Aston Martin", "Audi", "Bentley", "BMW", "Bugatti", "BYD", "Cadillac", 
-            "Caterham", "Chevrolet", "Chrysler", "Citroën", "Cupra", "Dacia", "Daewoo", "Daihatsu", "Dodge", "DS", 
-            "Ferrari", "Fiat", "Ford", "Honda", "Hummer", "Hyundai", "Infiniti", "Isuzu", "Jaguar", "Jeep", "Kia", 
-            "Lamborghini", "Lancia", "Land Rover", "Lexus", "Lotus", "Maserati", "Mazda", "McLaren", "Mercedes-Benz", 
-            "MG", "Mini", "Mitsubishi", "Morgan", "Nissan", "Opel", "Peugeot", "Polestar", "Porsche", "Renault", 
-            "Rolls-Royce", "Rover", "Saab", "Seat", "Skoda", "Smart", "SsangYong", "Subaru", "Suzuki", "Tata", 
-            "Tesla", "Toyota", "Volkswagen", "Volvo"
-            // Puedes añadir más hasta 200, pero estas son las más usadas en Europa/España
-        ];
-
-        // Rellenar el datalist para autorelleno
-        const datalist = document.getElementById('marcasLista');
-        marcasTop200.forEach(marca => {
-            let option = document.createElement('option');
-            option.value = marca;
-            datalist.appendChild(option);
-        });
-
-        // --- LÓGICA MODAL ---
-        function openModal() { document.getElementById('modalMaster').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('modalMaster').classList.add('hidden'); }
-
-        // --- DRAG & DROP ---
-        function allowDrop(ev) { ev.preventDefault(); }
-        function handleDrag(ev, id) { ev.dataTransfer.setData("pedidoId", id); }
-        async function handleDrop(ev, newStatus) {
-            ev.preventDefault();
-            const id = ev.dataTransfer.getData("pedidoId");
-            try {
-                const res = await fetch('/api/pedidos/update-status', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id, estado: newStatus })
-                });
-                if (res.ok) loadData();
-            } catch (e) { console.error(e); }
+        async function load() {
+            const res = await fetch('/api/pedidos');
+            const data = await res.json();
+            document.querySelectorAll('[id^="tasks-"]').forEach(c => c.innerHTML = '');
+            data.forEach(p => {
+                const card = `<div data-id="${p.id}" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition cursor-grab active:cursor-grabbing">
+                    <h4 class="font-black text-slate-800 uppercase text-xs mb-1">${p.pieza}</h4>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">${p.marca_coche} ${p.modelo_coche} - ${p.matricula}</p>
+                </div>`;
+                document.getElementById('tasks-'+p.estado).innerHTML += card;
+            });
+            initDrag();
         }
-
-        // --- CARGA DE DATOS (CON BLINDAJE) ---
-        async function loadData() {
-            try {
-                const res = await fetch('/api/pedidos');
-                const ct = res.headers.get("content-type");
-                if (res.ok && ct && ct.includes("application/json")) {
-                    const data = await res.json();
-                    [1,2,3,4,5,6].forEach(i => document.getElementById('tasks-'+i).innerHTML = '');
-                    data.forEach(p => {
-                        const card = `
-                            <div id="card-${p.id}" draggable="true" ondragstart="handleDrag(event, ${p.id})" 
-                                 class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing">
-                                <p class="text-[9px] font-black text-slate-300 mb-2 uppercase">${p.numero_pedido || 'S/N'}</p>
-                                <p class="font-bold text-slate-800 text-sm mb-1">${p.pieza}</p>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">${p.marca_coche || ''} ${p.modelo_coche || ''}</p>
-                            </div>`;
-                        const col = document.getElementById('tasks-' + p.estado);
-                        if(col) col.innerHTML += card;
-                    });
-                }
-            } catch (error) { console.warn("Modo offline o error de servidor"); }
+        function initDrag() {
+            document.querySelectorAll('[id^="tasks-"]').forEach(col => {
+                new Sortable(col, { group: 'pedidos', animation: 200, onEnd: async (evt) => {
+                    const id = evt.item.getAttribute('data-id');
+                    const nuevoEstado = evt.to.id.split('-')[1];
+                    await fetch('/api/pedidos/'+id+'/estado', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({estado: nuevoEstado}) });
+                }});
+            });
         }
-
-        // --- GUARDAR NUEVO PEDIDO ---
-        document.getElementById('masterForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const nuevoPedido = {
-                marca_coche: document.getElementById('marca_coche').value,
-                modelo_coche: document.getElementById('modelo_coche').value,
-                pieza: document.getElementById('pieza').value,
-                matricula: document.getElementById('matricula').value,
-                estado: 1 // Empieza en la columna 1
-            };
-
-            try {
-                const res = await fetch('/api/pedidos/create', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(nuevoPedido)
-                });
-                if (res.ok) {
-                    closeModal();
-                    loadData();
-                    e.target.reset();
-                }
-            } catch (error) { alert("Error al guardar pedido"); }
-        };
-
-        loadData();
+        load();
     </script>
 </body>
 </html>
