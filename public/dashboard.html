@@ -62,7 +62,7 @@
                     <p class="text-[10px] font-black uppercase text-slate-800 dark:text-white leading-none" id="nav-user-name">Administrador</p>
                     <p class="text-[8px] font-bold text-blue-500 uppercase tracking-tighter">Agente Pro</p>
                 </div>
-                <div class="w-10 h-10 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg">AD</div>
+                <div id="userInitials" class="w-10 h-10 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg">AD</div>
             </div>
         </div>
     </nav>
@@ -78,11 +78,14 @@
             </div>
         </div>
 
-        <div class="kanban-container grid grid-cols-1 md:grid-cols-6 gap-4" id="listaPedidos">
+        <div class="kanban-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4" id="listaPedidos">
+            <div class="col-span-full py-20 text-center">
+                <p class="text-slate-400 text-xs uppercase font-black animate-pulse">Cargando base de datos...</p>
             </div>
+        </div>
     </main>
 
-    <button onclick="abrirModalNuevo()" class="fixed bottom-10 right-10 w-16 h-16 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl shadow-2xl flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition-all z-[90]">
+    <button onclick="window.location.href='pedidos-taller.html'" class="fixed bottom-10 right-10 w-16 h-16 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl shadow-2xl flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition-all z-[90]">
         <i class="fas fa-plus"></i>
     </button>
 
@@ -95,5 +98,68 @@
         </p>
     </footer>
 
+    <script>
+        async function cargarPedidosKanban() {
+            try {
+                // Petición al servidor (index.js)
+                const res = await fetch('/api/pedidos');
+                const pedidos = await res.json();
+                
+                const contenedor = document.getElementById('listaPedidos');
+                if (!contenedor) return;
+
+                contenedor.innerHTML = "";
+
+                if (pedidos.length === 0) {
+                    contenedor.innerHTML = `
+                        <div class="col-span-full py-20 text-center">
+                            <i class="fas fa-box-open text-4xl text-slate-200 mb-4 block"></i>
+                            <p class="text-slate-400 text-xs uppercase font-black">No hay pedidos registrados</p>
+                        </div>`;
+                    return;
+                }
+
+                // Dibujar cada tarjeta con datos de DBeaver
+                pedidos.forEach(pedido => {
+                    const tarjeta = `
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+                            <div class="flex justify-between items-start mb-4">
+                                <span class="text-[9px] font-black bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-1 rounded-full uppercase">
+                                    ${pedido.estado || 'Pendiente'}
+                                </span>
+                                <span class="text-[9px] font-bold text-slate-400">#RR-${pedido.id}</span>
+                            </div>
+                            <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase leading-tight mb-1">
+                                ${pedido.pieza_nombre}
+                            </h3>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                                ${pedido.vehiculo_modelo}
+                            </p>
+                            <div class="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
+                                 <div class="flex -space-x-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-800 text-white flex items-center justify-center text-[8px] font-bold border-2 border-white dark:border-slate-900 uppercase">
+                                        ${pedido.pieza_nombre.charAt(0)}
+                                    </div>
+                                 </div>
+                                 <button class="text-slate-300 hover:text-blue-500 transition-colors">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                 </button>
+                            </div>
+                        </div>
+                    `;
+                    contenedor.insertAdjacentHTML('beforeend', tarjeta);
+                });
+            } catch (error) {
+                console.error("Error al cargar pedidos:", error);
+                document.getElementById('listaPedidos').innerHTML = `
+                    <p class="text-red-500 text-xs font-black p-10 col-span-full text-center uppercase">
+                        Error de conexión con la base de datos
+                    </p>`;
+            }
+        }
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', cargarPedidosKanban);
+    </script>
 </body>
 </html>
