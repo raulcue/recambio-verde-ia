@@ -49,7 +49,45 @@ app.get('/api/pedidos', async (req, res) => {
 });
 
 /**
- * 3. RUTA PARA GUARDAR (POST)
+ * 3. NUEVA RUTA DE LOGIN (DINÁMICA PARA TODOS LOS USUARIOS)
+ * Verifica email y password contra la tabla 'usuarios'
+ */
+app.post('/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const query = 'SELECT * FROM usuarios WHERE email = $1 AND password = $2';
+        const result = await pool.query(query, [email, password]);
+
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            
+            // Redirección basada en el rol de la base de datos
+            let redirectPage = 'dashboard.html'; 
+            if (user.rol === 'taller') {
+                redirectPage = 'pedidos-taller.html';
+            }
+
+            return res.json({ 
+                success: true, 
+                rol: user.rol, 
+                email: user.email, 
+                nombre: user.nombre_taller,
+                redirect: redirectPage 
+            });
+        } else {
+            return res.status(401).json({ 
+                success: false, 
+                message: "Usuario o contraseña incorrectos" 
+            });
+        }
+    } catch (err) {
+        console.error("Error en login:", err.message);
+        res.status(500).json({ success: false, error: "Error en el servidor" });
+    }
+});
+
+/**
+ * 4. RUTA PARA GUARDAR (POST)
  */
 app.post('/api/pedidos', async (req, res) => {
     const { pieza, vehiculo, matricula } = req.body;
