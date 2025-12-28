@@ -1,29 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"><title>Login - Recambio Reciclado</title>
+    <meta charset="UTF-8">
+    <title>Login - Recambio Reciclado</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md text-center">
         <img src="/assets/logo.png" class="h-20 mx-auto mb-6">
+        
         <form id="loginForm" class="space-y-4">
             <input type="email" id="email" placeholder="Email" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-green-500" required>
             <input type="password" id="password" placeholder="Contraseña" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-green-500" required>
-            <button class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold uppercase text-xs tracking-widest">Entrar</button>
+            
+            <div class="text-right px-2">
+                <a href="/recuperar" class="text-[10px] font-bold uppercase text-slate-400 hover:text-slate-600 transition-colors italic">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <div class="flex justify-center my-2">
+                <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
+            </div>
+
+            <button class="w-full bg-slate-800 text-white py-4 rounded-2xl font-bold uppercase text-xs tracking-widest hover:bg-slate-700 transition-all">Entrar</button>
         </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-50">
+            <p class="text-slate-400 text-[10px] font-bold uppercase mb-3 italic">¿Eres un nuevo taller?</p>
+            <a href="/registro" class="inline-block w-full py-3 border-2 border-slate-800 text-slate-800 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all">Registrarse</a>
+        </div>
     </div>
+
     <script>
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
+            
+            // Verificamos si el captcha se ha completado
+            const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]').value;
+            if (!turnstileResponse) {
+                alert("Por favor, completa el captcha de seguridad.");
+                return;
+            }
+
             const res = await fetch('/auth/login', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({email: e.target.email.value, password: e.target.password.value})
+                body: JSON.stringify({
+                    email: e.target.email.value, 
+                    password: e.target.password.value,
+                    captcha: turnstileResponse // Enviamos el token al servidor
+                })
             });
+
             const data = await res.json();
-            if(data.success) window.location.href = data.redirect;
-            else alert("Error");
+            if(data.success) {
+                // Importante: Guardar datos de sesión antes de redirigir
+                localStorage.setItem('userRol', data.rol);
+                localStorage.setItem('userEmail', data.email);
+                window.location.href = data.redirect;
+            } else {
+                alert("Error: Credenciales inválidas o captcha fallido");
+            }
         }
     </script>
 </body>
