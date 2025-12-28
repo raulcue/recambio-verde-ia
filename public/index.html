@@ -11,28 +11,38 @@
         <img src="/assets/logo.png" alt="Logo" class="h-20 mx-auto mb-6">
         <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-6">Iniciar Sesión</h2>
         
-        <form id="loginForm" class="space-y-4">
-            <input type="email" id="email" placeholder="Email" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all" required>
-            <input type="password" id="password" placeholder="Contraseña" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all" required>
+        <div class="space-y-4">
+            <input type="email" id="email" placeholder="Email" autocomplete="username" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all">
+            
+            <input type="password" id="password" placeholder="Contraseña" autocomplete="current-password" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all">
             
             <div class="flex justify-center py-2">
                 <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
             </div>
 
-            <button type="button" onclick="enviarLogin()" class="w-full bg-slate-800 text-white p-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-700 shadow-lg transition-all">
+            <button type="button" id="btnEntrar" class="w-full bg-slate-800 text-white p-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-700 shadow-lg transition-all">
                 Entrar
             </button>
-        </form>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-100">
+            <a href="registro.html" class="block py-3 border-2 border-slate-800 text-slate-800 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all">
+                Registrarse como Taller
+            </a>
+        </div>
     </div>
 
     <script>
-        async function enviarLogin() {
+        // Usamos un listener directo sobre el ID del botón
+        document.getElementById('btnEntrar').addEventListener('click', async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const captcha = document.querySelector('[name="cf-turnstile-response"]').value;
+            const captcha = document.querySelector('[name="cf-turnstile-response"]')?.value;
 
             if (!email || !password) return alert("Rellena todos los campos");
             if (!captcha) return alert("Por favor, completa el captcha");
+
+            console.log("Intentando conectar con el servidor...");
 
             try {
                 const res = await fetch('/auth/login', {
@@ -46,15 +56,16 @@
                 if (data.success) {
                     localStorage.setItem('userRol', data.rol);
                     localStorage.setItem('userEmail', data.email);
-                    // Redirección limpia
-                    window.location.href = data.redirect;
+                    console.log("Login OK, redirigiendo a:", data.redirect);
+                    window.location.replace(data.redirect); // window.location.replace es más fuerte que .href
                 } else {
-                    alert(data.message || "Error en el login");
+                    alert("Error: " + (data.message || "Credenciales incorrectas"));
                 }
             } catch (err) {
-                alert("Error de conexión con el servidor");
+                console.error("Error completo:", err);
+                alert("Error de conexión con el servidor. Verifica que el backend esté corriendo.");
             }
-        }
+        });
     </script>
 </body>
 </html>
