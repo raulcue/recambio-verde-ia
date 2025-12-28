@@ -7,29 +7,51 @@
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md text-center">
-        <img src="/assets/logo.png" class="h-20 mx-auto mb-6">
+    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md text-center border border-slate-200">
+        <img src="/assets/logo.png" alt="Logo" class="h-20 mx-auto mb-6">
+        
+        <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-6">Iniciar Sesión</h2>
+
         <form id="loginForm" class="space-y-4">
-            <input type="email" id="email" placeholder="Email" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-green-500" required>
-            <input type="password" id="password" placeholder="Contraseña" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:ring-2 focus:ring-green-500" required>
+            <input type="email" id="email" name="email" placeholder="Email" 
+                class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all" required>
+            
+            <input type="password" id="password" name="password" placeholder="Contraseña" 
+                class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-green-500 transition-all" required>
+            
             <div class="text-right px-2">
                 <a href="#" class="text-[10px] font-bold uppercase text-slate-400 hover:text-slate-600 transition-colors italic">¿Olvidaste tu contraseña?</a>
             </div>
+
             <div class="flex justify-center py-2">
                 <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
             </div>
-            <button type="submit" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg hover:bg-slate-700 transition-all">Entrar</button>
+
+            <button type="submit" 
+                class="w-full bg-slate-800 text-white p-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-700 shadow-lg shadow-slate-200 transition-all">
+                Entrar
+            </button>
         </form>
+
         <div class="mt-8 pt-6 border-t border-slate-100">
-            <a href="registro.html" class="block py-3 border-2 border-slate-800 text-slate-800 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all">Registrarse</a>
+            <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">¿No tienes cuenta?</p>
+            <a href="registro.html" 
+                class="block py-3 border-2 border-slate-800 text-slate-800 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all">
+                Registrarse como Taller
+            </a>
         </div>
     </div>
 
     <script>
         document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
+            
+            // Validación del Captcha
             const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]').value;
-            if (!turnstileResponse) { alert("Completa el captcha"); return; }
+            if (!turnstileResponse) { 
+                alert("Por favor, completa el captcha para continuar."); 
+                return; 
+            }
 
             try {
                 const res = await fetch('/auth/login', {
@@ -43,9 +65,11 @@
                 });
 
                 const contentType = res.headers.get("content-type");
+                
                 if (res.ok && contentType && contentType.includes("application/json")) {
                     const data = await res.json();
+                    
                     if(data.success) {
+                        // Guardamos info básica en el navegador
                         localStorage.setItem('userRol', data.rol);
                         localStorage.setItem('userEmail', data.email);
-                        window.location.href = data.redirect.
