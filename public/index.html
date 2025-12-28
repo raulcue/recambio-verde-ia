@@ -36,22 +36,21 @@
     </div>
 
     <script>
-        // Usamos un listener sobre el ID específico para asegurar que el JS tome el control
         document.getElementById('btnAcceder').addEventListener('click', async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const captcha = document.querySelector('[name="cf-turnstile-response"]')?.value;
+            const turnstileResponse = document.querySelector('[name="cf-turnstile-response"]')?.value;
 
             if (!email || !password) return alert("Rellena todos los campos");
-            if (!captcha) return alert("Por favor, completa el captcha");
-
-            console.log("Enviando petición de login...");
+            
+            // Si el captcha está habilitado, descomenta la siguiente línea:
+            // if (!turnstileResponse) return alert("Por favor, completa el captcha");
 
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, captcha })
+                    body: JSON.stringify({ email, password })
                 });
 
                 const data = await res.json();
@@ -59,15 +58,13 @@
                 if (data.success) {
                     localStorage.setItem('userRol', data.rol);
                     localStorage.setItem('userEmail', data.email);
-                    console.log("Login exitoso, redirigiendo...");
-                    // Usamos replace para que el navegador no pueda volver atrás al login
                     window.location.replace(data.redirect);
                 } else {
                     alert("Error: " + (data.message || "Credenciales incorrectas"));
                 }
             } catch (err) {
-                console.error("Error en el fetch:", err);
-                alert("No se pudo conectar con el servidor. Revisa tu conexión.");
+                console.error("Error:", err);
+                alert("Error de conexión con el servidor.");
             }
         });
     </script>

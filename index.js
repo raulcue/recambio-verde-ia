@@ -3,23 +3,24 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Permite al servidor entender datos JSON (necesario para el login)
+// Middleware para entender JSON
 app.use(express.json());
 
-// Sirve todos los archivos de la carpeta raíz (HTML, JS, Imágenes)
+// Servir archivos estáticos desde la raíz
 app.use(express.static(__dirname));
 
-// --- RUTA PRINCIPAL (Lo que ves al abrir la URL) ---
+// --- RUTA PRINCIPAL ---
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    // Usamos path.resolve para evitar el error ENOENT en Render
+    res.sendFile(path.resolve(__dirname, 'index.html'));
 });
 
-// --- LÓGICA DE LOGIN (Rescatada y Limpia) ---
+// --- LÓGICA DE LOGIN ---
 app.post('/auth/login', (req, res) => {
     const { email, password } = req.body;
 
-    // Aquí puedes poner tus usuarios de prueba
-    if (email === "admin@recambio.com" && password === "1234") {
+    // Credenciales actualizadas según tu petición
+    if (email === "admin@test.com" && password === "123456") {
         return res.json({ 
             success: true, 
             rol: 'admin', 
