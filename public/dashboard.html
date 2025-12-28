@@ -1,53 +1,174 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8"><title>Kanban - Recambio Reciclado IA</title>
+    <meta charset="UTF-8">
+    <title>Dashboard Pro - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="/js/global.js"></script>
+    <style>
+        /* Colores sutiles por columna */
+        .col-1 { border-top: 4px solid #94a3b8; } /* Pedido */
+        .col-2 { border-top: 4px solid #f59e0b; } /* Desguace */
+        .col-3 { border-top: 4px solid #6366f1; } /* Listo */
+        .col-4 { border-top: 4px solid #10b981; } /* Tránsito */
+        .col-5 { border-top: 4px solid #22c55e; } /* Entregado */
+        .col-6 { border-top: 4px solid #ef4444; } /* Incidencia */
+
+        .view-active { background-color: #1e293b !important; color: white !important; }
+        .card-img { height: 100px; width: 100%; object-fit: cover; border-radius: 1rem; margin-bottom: 0.75rem; }
+        
+        .dark-mode { background-color: #0f172a !important; color: #f8fafc; }
+        .dark-mode .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen transition-colors duration-300">
     <div class="p-6 max-w-[1600px] mx-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Panel de Gestión</h1>
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+            <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Panel de Operaciones</h1>
+            
+            <div class="flex items-center gap-4">
+                <div class="bg-slate-200 p-1 rounded-2xl flex gap-1">
+                    <button onclick="changeView('compact')" id="btn-compact" class="px-4 py-2 text-[10px] font-black uppercase rounded-xl transition">Vista Compacta</button>
+                    <button onclick="changeView('extended')" id="btn-extended" class="px-4 py-2 text-[10px] font-black uppercase rounded-xl transition">Vista Extendida</button>
+                </div>
+                <button onclick="document.body.classList.toggle('dark-mode')" class="p-3 bg-white border rounded-2xl hover:bg-slate-100 transition shadow-sm"><i class="fas fa-moon"></i></button>
+            </div>
         </div>
-        <main class="flex gap-6 overflow-x-auto pb-10">
+
+        <main class="flex gap-4 overflow-x-auto pb-10">
             <script>
-                ["Pedido", "En Desguace", "Listo Envío", "En Tránsito", "Entregado", "Incidencia"].forEach((nom, i) => {
+                const estados = ["Pedido", "En Desguace", "Listo Envío", "En Tránsito", "Entregado", "Incidencia"];
+                estados.forEach((nom, i) => {
                     document.write(`
-                        <div class="min-w-[300px] flex-1">
-                            <h3 class="text-[11px] font-black uppercase text-slate-500 tracking-widest mb-4 px-2">${i+1}. ${nom}</h3>
-                            <div id="tasks-${i+1}" class="bg-slate-100/50 min-h-[600px] p-3 rounded-[2rem] border-2 border-dashed border-slate-200 space-y-4"></div>
+                        <div class="min-w-[280px] flex-1">
+                            <div class="col-${i+1} bg-white p-3 rounded-t-2xl border-x border-b border-slate-100 shadow-sm">
+                                <h3 class="text-[10px] font-black uppercase text-slate-500 text-center tracking-widest">${nom}</h3>
+                            </div>
+                            <div id="tasks-${i+1}" class="bg-slate-100/40 min-h-[600px] p-2 rounded-b-2xl border-x border-b border-slate-200 border-dashed space-y-3"></div>
                         </div>`);
                 });
             </script>
         </main>
     </div>
 
+    <div id="modalDetalle" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden items-center justify-center z-[200] p-4">
+        <div class="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden">
+            <div class="p-8 bg-slate-50 border-b flex justify-between items-start">
+                <div>
+                    <span id="pop-taller" class="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase mb-2 inline-block">Taller</span>
+                    <h2 id="pop-pieza" class="text-2xl font-black text-slate-800 uppercase tracking-tighter leading-none">Pieza</h2>
+                </div>
+                <button onclick="cerrarPopup()" class="text-slate-300 hover:text-red-500 transition text-2xl"><i class="fas fa-times-circle"></i></button>
+            </div>
+            <form id="formEdicion" class="p-8 space-y-4">
+                <input type="hidden" id="edit-id">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="edit-marca" placeholder="Marca" class="p-4 bg-slate-50 border rounded-2xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="text" id="edit-modelo" placeholder="Modelo" class="p-4 bg-slate-50 border rounded-2xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="text" id="edit-matricula" placeholder="Matrícula" class="p-4 bg-slate-50 border rounded-2xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="text" id="edit-ref" placeholder="Referencia Pedido" class="p-4 bg-slate-50 border rounded-2xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <input type="text" id="edit-bastidor" placeholder="Número de Bastidor (VIN)" class="w-full p-4 bg-slate-50 border rounded-2xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-400">
+                <textarea id="edit-notas" placeholder="Notas técnicas del pedido..." class="w-full p-4 bg-slate-50 border rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-400" rows="3"></textarea>
+                <button type="submit" class="w-full bg-slate-800 text-white p-5 rounded-[2rem] font-black uppercase text-[11px] hover:bg-black transition-all">Guardar cambios en Base de Datos</button>
+            </form>
+        </div>
+    </div>
+
     <script>
+        let items = [];
+        let viewMode = obtenerPreferenciaVista();
+
+        function changeView(mode) {
+            viewMode = mode;
+            guardarPreferenciaVista(mode);
+            updateUI();
+            render();
+        }
+
+        function updateUI() {
+            document.getElementById('btn-compact').className = viewMode === 'compact' ? 'px-4 py-2 text-[10px] font-black uppercase rounded-xl view-active' : 'px-4 py-2 text-[10px] font-black uppercase rounded-xl hover:bg-slate-300 transition';
+            document.getElementById('btn-extended').className = viewMode === 'extended' ? 'px-4 py-2 text-[10px] font-black uppercase rounded-xl view-active' : 'px-4 py-2 text-[10px] font-black uppercase rounded-xl hover:bg-slate-300 transition';
+        }
+
+        function getImg(pieza) {
+            const p = pieza.toLowerCase();
+            if (p.includes('freno')) return 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=300&q=80';
+            if (p.includes('motor')) return 'https://images.unsplash.com/photo-1597870900944-243763d91631?auto=format&fit=crop&w=300&q=80';
+            if (p.includes('defensa') || p.includes('paragolpes')) return 'https://images.unsplash.com/photo-1621535732111-6638f2972986?auto=format&fit=crop&w=300&q=80';
+            return 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=300&q=80';
+        }
+
         async function load() {
             const res = await fetch('/api/pedidos');
-            const data = await res.json();
-            document.querySelectorAll('[id^="tasks-"]').forEach(c => c.innerHTML = '');
-            data.forEach(p => {
-                const card = `<div data-id="${p.id}" class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-lg transition cursor-grab active:cursor-grabbing">
-                    <h4 class="font-black text-slate-800 uppercase text-xs mb-1">${p.pieza}</h4>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase">${p.marca_coche} ${p.modelo_coche} - ${p.matricula}</p>
-                </div>`;
-                document.getElementById('tasks-'+p.estado).innerHTML += card;
-            });
-            initDrag();
+            items = await res.json();
+            render();
         }
-        function initDrag() {
+
+        function render() {
+            document.querySelectorAll('[id^="tasks-"]').forEach(c => c.innerHTML = '');
+            items.forEach(p => {
+                const card = `
+                <div data-id="${p.id}" onclick="abrirPop(${p.id})" class="bg-white p-4 rounded-[1.8rem] border border-slate-200 shadow-sm hover:shadow-md transition cursor-grab active:cursor-grabbing">
+                    ${viewMode === 'extended' ? `<img src="${getImg(p.pieza)}" class="card-img shadow-inner">` : ''}
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[8px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase truncate max-w-[100px]">${p.nombre_taller || 'Taller'}</span>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">${p.matricula || '---'}</span>
+                    </div>
+                    <h4 class="font-black text-slate-800 uppercase text-[11px] leading-tight mb-1">${p.pieza}</h4>
+                    ${viewMode === 'extended' ? `<p class="text-[8px] font-bold text-slate-300 uppercase mt-2 pt-2 border-t border-slate-50">Vehículo: ${p.marca_coche} ${p.modelo_coche}</p>` : ''}
+                </div>`;
+                const col = document.getElementById('tasks-' + p.estado);
+                if(col) col.innerHTML += card;
+            });
+            initSortable();
+        }
+
+        function initSortable() {
             document.querySelectorAll('[id^="tasks-"]').forEach(col => {
-                new Sortable(col, { group: 'pedidos', animation: 200, onEnd: async (evt) => {
-                    const id = evt.item.getAttribute('data-id');
-                    const nuevoEstado = evt.to.id.split('-')[1];
-                    await fetch('/api/pedidos/'+id+'/estado', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({estado: nuevoEstado}) });
+                new Sortable(col, { group: 'p', animation: 150, onEnd: async (e) => {
+                    const id = e.item.getAttribute('data-id');
+                    const nest = e.to.id.split('-')[1];
+                    await fetch(`/api/pedidos/${id}/estado`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({estado: nest}) });
                 }});
             });
         }
+
+        function abrirPop(id) {
+            const p = items.find(x => x.id == id);
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('pop-taller').innerText = "Solicitante: " + (p.nombre_taller || 'S/N');
+            document.getElementById('pop-pieza').innerText = p.pieza;
+            document.getElementById('edit-marca').value = p.marca_coche || '';
+            document.getElementById('edit-modelo').value = p.modelo_coche || '';
+            document.getElementById('edit-matricula').value = p.matricula || '';
+            document.getElementById('edit-ref').value = p.numero_pedido || '';
+            document.getElementById('edit-bastidor').value = p.bastidor || '';
+            document.getElementById('edit-notas').value = p.notas_tecnicas || '';
+            document.getElementById('modalDetalle').style.display = 'flex';
+        }
+
+        function cerrarPopup() { document.getElementById('modalDetalle').style.display = 'none'; }
+
+        document.getElementById('formEdicion').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const data = {
+                marca_coche: document.getElementById('edit-marca').value,
+                modelo_coche: document.getElementById('edit-modelo').value,
+                matricula: document.getElementById('edit-matricula').value,
+                numero_pedido: document.getElementById('edit-ref').value,
+                bastidor: document.getElementById('edit-bastidor').value,
+                notas_tecnicas: document.getElementById('edit-notas').value
+            };
+            await fetch(`/api/pedidos/${id}/update`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            cerrarPopup();
+            load();
+        };
+
+        updateUI();
         load();
     </script>
 </body>
