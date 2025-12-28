@@ -1,42 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Pedidos - Recambio Reciclado</title>
+    <meta charset="UTF-8"><title>Mis Pedidos</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body class="bg-slate-100 min-h-screen">
-    
     <nav class="h-16 bg-white border-b flex items-center justify-between px-6 sticky top-0 shadow-sm">
         <img src="/assets/logo.png" class="h-8">
-        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white text-[10px] font-bold">T</div>
+        <button onclick="localStorage.clear(); window.location.href='index.html'" class="text-[10px] font-black uppercase text-slate-400">Salir</button>
     </nav>
-
     <main class="p-4 max-w-md mx-auto">
-        <h2 class="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] mb-4 ml-1">Estado de mis piezas</h2>
-        
-        <div id="lista-taller" class="space-y-3">
-            </div>
+        <h2 class="text-slate-400 font-black text-[10px] uppercase tracking-widest mb-4">Mis Recambios</h2>
+        <div id="lista-taller" class="space-y-3"></div>
     </main>
-
     <script>
         async function load() {
-            const res = await fetch('/api/pedidos');
-            const data = await res.json();
-            document.getElementById('lista-taller').innerHTML = data.map(p => `
-                <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-[10px] font-black text-slate-300 uppercase">${p.numero_pedido}</span>
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase ${p.estado === 'ruta' ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}">
-                            ${p.estado}
-                        </span>
-                    </div>
-                    <div class="text-lg font-bold text-slate-800">${p.pieza}</div>
-                    <div class="text-xs text-slate-400 mt-1">Matrícula: <span class="font-bold text-slate-600">${p.matricula}</span></div>
-                </div>
-            `).join('');
+            try {
+                const res = await fetch('/api/pedidos');
+                const ct = res.headers.get("content-type");
+                if (res.ok && ct && ct.includes("application/json")) {
+                    const data = await res.json();
+                    document.getElementById('lista-taller').innerHTML = data.map(p => `
+                        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-[9px] font-black text-slate-300 uppercase">${p.numero_pedido || 'S/N'}</span>
+                                <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase bg-green-50 text-green-600">${p.estado}</span>
+                            </div>
+                            <div class="text-lg font-bold text-slate-800">${p.pieza}</div>
+                        </div>`).join('');
+                }
+            } catch (e) { console.warn("Error pedidos taller"); }
         }
         load();
     </script>
