@@ -1,0 +1,45 @@
+<style>
+    @media (max-width: 640px) {
+        table thead { display: none; } /* Escondemos cabeceras en móvil */
+        table tr { 
+            display: block; 
+            margin-bottom: 1rem; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            padding: 1rem;
+            background: white;
+        }
+        table td { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 0.5rem 0; 
+            border: none !important;
+        }
+        table td::before { 
+            content: attr(data-label); 
+            font-weight: 800; 
+            color: #64748b; 
+            text-transform: uppercase; 
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<div class="p-4">
+    <img src="https://i.ibb.co/L9p8p8p/logo-recambio-reciclado.png" class="h-12 mx-auto mb-6">
+    <h2 class="text-center font-black text-slate-800 uppercase mb-4 text-sm">Mis Pedidos</h2>
+    
+    <table class="w-full">
+        <thead></thead>
+        <tbody id="lista-taller">
+            <tr>
+                <td data-label="Pedido" class="font-bold text-green-600">#9901</td>
+                <td data-label="Pieza">Amortiguador Del.</td>
+                <td data-label="Estado">
+                    <span class="bg-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-bold">EN RUTA</span>
+                </td>
+                <td data-label="Entrega">Hoy ~14:00h</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
