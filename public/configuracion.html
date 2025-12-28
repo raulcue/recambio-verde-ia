@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"><title>Configuración - Recambio Reciclado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body class="bg-slate-50">
+    <nav class="h-16 bg-white border-b flex items-center justify-between px-6 mb-8">
+        <div class="flex items-center gap-4">
+            <img src="/assets/logo.png" class="h-8">
+            <span class="font-black text-slate-800 uppercase text-xs tracking-tighter">Gestión de Usuarios</span>
+        </div>
+        <button onclick="window.location.href='/landing'" class="text-xs font-bold uppercase text-slate-400">Volver</button>
+    </nav>
+
+    <div class="max-w-5xl mx-auto bg-white rounded-3xl shadow-sm border overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
+                <tr><th class="p-5">Taller</th><th class="p-5">Email</th><th class="p-5">Rol</th><th class="p-5">Eliminar</th></tr>
+            </thead>
+            <tbody id="userBody" class="divide-y divide-slate-100 text-sm"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadUsers() {
+            const res = await fetch('/api/usuarios');
+            const users = await res.json();
+            document.getElementById('userBody').innerHTML = users.map(u => `
+                <tr>
+                    <td class="p-5 font-bold">${u.nombre_taller || 'S/N'}</td>
+                    <td class="p-5">${u.email}</td>
+                    <td class="p-5">
+                        <select onchange="updateRol(${u.id}, this.value)" class="text-xs font-bold uppercase bg-slate-100 rounded px-2 py-1">
+                            <option value="admin" ${u.rol==='admin'?'selected':''}>Admin</option>
+                            <option value="gestor" ${u.rol==='gestor'?'selected':''}>Gestor</option>
+                            <option value="taller" ${u.rol==='taller'?'selected':''}>Taller</option>
+                        </select>
+                    </td>
+                    <td class="p-5"><button onclick="deleteUser(${u.id})" class="text-red-400"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+        async function updateRol(id, nuevoRol) { await fetch('/api/usuarios/rol', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, nuevoRol})}); }
+        async function deleteUser(id) { if(confirm('¿Borrar?')) { await fetch('/api/usuarios/delete/'+id, {method:'DELETE'}); loadUsers(); } }
+        loadUsers();
+    </script>
+</body>
+</html>
