@@ -1,47 +1,50 @@
 const express = require('express');
 const path = require('path');
+const { Pool } = require('pg'); // Requerido para conectar a PostgreSQL
+require('dotenv').config();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware para procesar datos JSON en el login
-app.use(express.json());
+// 1. CONFIGURACIÓN DE LA BASE DE DATOS
+// En Render, DATABASE_URL se configura automáticamente o la pegas en Environment
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false // Necesario para la seguridad de Render
+    }
+});
 
-/**
- * 1. CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS
- * Según tu estructura, los archivos están en la carpeta 'public'.
- * Esto permite que el navegador encuentre /assets/logo.png y /js/global.js
- */
+// Middleware para procesar datos JSON
+app.use(express.json());
 app.use(express.static(path.resolve(__dirname, 'public')));
 app.use(express.static(path.resolve(__dirname)));
 
 /**
- * 2. RUTA PRINCIPAL
- * Envía el archivo index.html ubicado dentro de la carpeta public.
+ * 2. RUTA PARA OBTENER PEDIDOS DE LA DDBB (Para el Kanban)
  */
-app.get('/', (req, res) => {
-    const indexPath = path.resolve(__dirname, 'public', 'index.html');
-    res.sendFile(indexPath, (err) => {
-        if (err) {
-            // Si no está en public, intenta en la raíz por seguridad
-            res.sendFile(path.resolve(__dirname, 'index.html'), (err2) => {
-                if (err2) {
-                    res.status(404).send("Error crítico: index.html no encontrado.");
-                }
-            });
-        }
-    });
+app.get('/api/pedidos', async (req, res) => {
+    try {
+        // Ajusta los nombres de las columnas según tu tabla real
+        const query = `
+            SELECT id, pieza_nombre as pieza, vehiculo_modelo as vehiculo, estado 
+            FROM pedidos 
+            ORDER BY fecha_creacion DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Error en DDBB:", err);
+        res.status(500).json({ error: "No se pudieron cargar los datos de la base de datos" });
+    }
 });
 
 /**
- * 3. LÓGICA DE AUTENTICACIÓN
- * Credenciales:
- * - admin@recambio.com / 1234
- * - taller@test.com / 1234
+ * 3. LÓGICA DE AUTENTICACIÓN (Actualizada para que coincida con tus roles)
  */
 app.post('/auth/login', (req, res) => {
     const { email, password } = req.body;
-    console.log(`Intento de acceso: ${email}`);
-
+    
     if (email === "admin@recambio.com" && password === "1234") {
         return res.json({ 
             success: true, 
@@ -64,8 +67,10 @@ app.post('/auth/login', (req, res) => {
     }
 });
 
-// Inicio del servidor
+app.get('/', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor Recambio Reciclado listo en puerto ${PORT}`);
-    console.log(`Directorio base: ${__dirname}`);
+    console.log(`🚀 Servidor con DDBB listo en puerto ${PORT}`);
 });

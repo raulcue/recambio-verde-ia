@@ -20,10 +20,13 @@
                 <i class="fas fa-moon dark:hidden"></i>
                 <i class="fas fa-sun hidden dark:block text-yellow-500"></i>
             </button>
+            
             <div class="relative group">
-                <button class="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300 flex items-center justify-center"><i class="fas fa-th-large"></i></button>
+                <button class="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300 flex items-center justify-center">
+                    <i class="fas fa-th-large"></i>
+                </button>
                 <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 shadow-2xl rounded-3xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-4 border border-slate-100 dark:border-slate-700">
-                    <a href="landing.html" class="block p-3 text-xs font-black uppercase text-slate-600 dark:text-slate-300">Menú Principal</a>
+                    <a href="landing.html" class="block p-3 text-xs font-black uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl">Menú Principal</a>
                 </div>
             </div>
             <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-xs">TA</div>
@@ -35,7 +38,7 @@
             <h1 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Mis Pedidos</h1>
             <p class="text-[10px] font-bold text-blue-500 uppercase tracking-widest" id="contador-piezas">Tablero Activo</p>
         </div>
-        <button onclick="abrirModalNuevo()" class="w-14 h-14 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl shadow-xl flex items-center justify-center">
+        <button onclick="abrirModalNuevo()" class="w-14 h-14 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl shadow-xl flex items-center justify-center hover:scale-105 transition-transform">
             <i class="fas fa-plus text-xl"></i>
         </button>
     </header>
@@ -59,11 +62,11 @@
     <div id="modalPedido" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[200] p-6">
         <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[40px] p-8 shadow-2xl border dark:border-slate-800">
             <h2 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-2">Nuevo Recambio</h2>
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-6">La IA buscará disponibilidad inmediata</p>
+            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-6 text-center">La IA buscará disponibilidad inmediata</p>
             
             <form id="formPedido" onsubmit="procesarNuevoPedido(event)" class="space-y-4">
-                <input type="text" id="nombrePieza" placeholder="¿Qué pieza buscas?" required class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="text" id="vehiculo" placeholder="Modelo y Año del coche" required class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="nombrePieza" placeholder="¿QUÉ PIEZA BUSCAS?" required class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500">
+                <input type="text" id="vehiculo" placeholder="MODELO Y AÑO DEL COCHE" required class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500">
                 
                 <div class="flex gap-3 pt-4">
                     <button type="button" onclick="cerrarModal()" class="flex-1 py-4 text-slate-400 text-[10px] font-black uppercase">Cancelar</button>
@@ -80,7 +83,7 @@
     </footer>
 
     <script>
-        // Función para abrir el modal (Corrige el ReferenceError)
+        // Lógica de apertura/cierre
         function abrirModalNuevo() {
             const modal = document.getElementById('modalPedido');
             if(modal) {
@@ -89,7 +92,6 @@
             }
         }
 
-        // Función para cerrar el modal
         function cerrarModal() {
             const modal = document.getElementById('modalPedido');
             if(modal) {
@@ -98,15 +100,12 @@
             }
         }
 
-        // Función para procesar y añadir la tarjeta al Waffle
         function procesarNuevoPedido(event) {
             event.preventDefault();
-            
             const pieza = document.getElementById('nombrePieza').value;
             const coche = document.getElementById('vehiculo').value;
             const lista = document.getElementById('listaPedidosTaller');
 
-            // HTML de la nueva tarjeta con efecto "procesando"
             const nuevaTarjeta = `
                 <div class="bg-white dark:bg-slate-900 p-5 rounded-[30px] border border-blue-200 dark:border-blue-900 shadow-md animate-pulse">
                     <div class="flex justify-between items-start mb-3">
@@ -118,24 +117,18 @@
                 </div>
             `;
 
-            // Insertar arriba de la lista
             lista.insertAdjacentHTML('afterbegin', nuevaTarjeta);
-            
-            // Cerrar y limpiar
             cerrarModal();
             document.getElementById('formPedido').reset();
-            
-            // Actualizar contador visualmente
             document.getElementById('contador-piezas').innerText = "Solicitud enviada con éxito";
         }
 
-        // Función necesaria para el cambio de modo oscuro
+        // Modo oscuro (lo dejamos aquí también para asegurar que funcione)
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         }
 
-        // Aplicar modo oscuro al cargar
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
         }
