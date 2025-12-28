@@ -12,7 +12,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// 2. FUNCIÓN DE LOGS (Para auditoría de acciones)
+// 2. FUNCIÓN DE LOGS (Auditoría de acciones)
 async function registrarLog(email, accion, pedidoId = null) {
     try {
         await pool.query(
@@ -48,31 +48,40 @@ app.post('/auth/login', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 4. RUTAS DE PEDIDOS (CON JOIN PARA EL NOMBRE DEL TALLER)
+// 4. RUTAS DE PEDIDOS
 app.get('/api/pedidos', async (req, res) => {
+    // Filtro opcional por email para que el taller solo vea lo suyo
+    const email = req.query.email;
     try {
-        // Obtenemos los pedidos y el nombre del taller asociado
-        const result = await pool.query(`
-            SELECT p.*, u.nombre_taller 
+        let query = `
+            SELECT p.*, u.nombre_taller, u.email as email_usuario
             FROM pedidos p 
-            LEFT JOIN usuarios u ON p.usuario_id = u.id 
-            ORDER BY p.id DESC
-        `);
+            LEFT JOIN usuarios u ON p.usuario_id = u.id `;
+        
+        let params = [];
+        if (email) {
+            query += ` WHERE u.email = $1 `;
+            params.push(email);
+        }
+        
+        query += ` ORDER BY p.id DESC`;
+        
+        const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/pedidos', async (req, res) => {
-    const { numero_pedido, marca_coche, modelo_coche, pieza, matricula, email_usuario } = req.body;
+    const { numero_pedido, marca_coche, modelo_coche, pieza, matricula, email_usuario, bastidor } = req.body;
     try {
         const result = await pool.query(
-            `INSERT INTO pedidos (numero_pedido, marca_coche, modelo_coche, pieza, matricula, estado, usuario_id) 
-             VALUES ($1, $2, $3, $4, $5, 1, (SELECT id FROM usuarios WHERE email = $6)) 
+            `INSERT INTO pedidos (numero_pedido, marca_coche, modelo_coche, pieza, matricula, bastidor, estado, usuario_id) 
+             VALUES ($1, $2, $3, $4, $5, $6, 1, (SELECT id FROM usuarios WHERE email = $7)) 
              RETURNING id`,
-            [numero_pedido, marca_coche, modelo_coche, pieza, matricula, email_usuario]
+            [numero_pedido, marca_coche, modelo_coche, pieza, matricula, bastidor, email_usuario]
         );
         
-        if(email_usuario) await registrarLog(email_usuario, "Creó nuevo pedido", result.rows[0].id);
+        if(email_usuario) await registrarLog(email_usuario, `Creó pedido ${numero_pedido}`, result.rows[0].id);
         
         res.json({ success: true, id: result.rows[0].id });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -86,9 +95,9 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Actualización completa (desde el Popup del Dashboard)
+// Actualización completa (Dashboard) - AHORA INCLUYE PRECIO Y BASTIDOR
 app.put('/api/pedidos/:id/update', async (req, res) => {
-    const { marca_coche, modelo_coche, matricula, numero_pedido, bastidor, notas_tecnicas } = req.body;
+    const { marca_coche, modelo_coche, matricula, numero_pedido, bastidor, notas_tecnicas, precio } = req.body;
     try {
         await pool.query(
             `UPDATE pedidos SET 
@@ -97,15 +106,16 @@ app.put('/api/pedidos/:id/update', async (req, res) => {
                 matricula = $3, 
                 numero_pedido = $4, 
                 bastidor = $5, 
-                notas_tecnicas = $6 
-             WHERE id = $7`,
-            [marca_coche, modelo_coche, matricula, numero_pedido, bastidor, notas_tecnicas, req.params.id]
+                notas_tecnicas = $6,
+                precio = $7
+             WHERE id = $8`,
+            [marca_coche, modelo_coche, matricula, numero_pedido, bastidor, notas_tecnicas, precio, req.params.id]
         );
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 5. RUTAS DE USUARIOS (Para configuracion.html)
+// 5. RUTAS DE USUARIOS
 app.get('/api/usuarios', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, email, rol, nombre_taller FROM usuarios ORDER BY id DESC');
@@ -127,6 +137,20 @@ app.delete('/api/usuarios/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 6. INICIO DEL SERVIDOR
+// 6. RUTA DE LOGS PARA ADMIN
+app.get('/api/admin/logs', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT l.fecha, u.email, p.numero_pedido, l.accion 
+            FROM logs l
+            LEFT JOIN usuarios u ON l.usuario_id = u.id
+            LEFT JOIN pedidos p ON l.pedido_id = p.id
+            ORDER BY l.fecha DESC LIMIT 100
+        `);
+        res.json(result.rows);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// 7. INICIO DEL SERVIDOR
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor operativo en puerto ${PORT}`));
