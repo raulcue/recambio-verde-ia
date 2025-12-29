@@ -1,195 +1,316 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Logístico - Recambio Reciclado IA</title>
+    <title>Dashboard Pro - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script>
+        // Mejora 7: Persistencia de Modo Oscuro
+        tailwind.config = { darkMode: 'class' };
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     <style>
-        .dark body { background-color: #020617 !important; color: #f8fafc; }
-        .dark nav { background-color: rgba(15, 23, 42, 0.8) !important; border-color: #1e293b; }
-        .dark .bg-white { background-color: #0f172a !important; color: white; }
-        .kanban-container { display: flex; gap: 1.5rem; overflow-x: auto; padding: 1.5rem; min-height: 70vh; }
-        .column { min-width: 320px; flex-shrink: 0; }
-        /* Estilo para el modal */
-        #modal { backdrop-filter: blur(4px); }
+        .kanban-column { min-width: 320px; transition: all 0.3s ease; }
+        .drag-over { background-color: rgba(59, 130, 246, 0.05); border: 2px dashed #3b82f6 !important; border-radius: 2rem; }
+        .card-pro { display: block; }
+        .card-standard .extra-info { display: none; }
+        .toast { transform: translateY(100px); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .toast.show { transform: translateY(0); }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 transition-all duration-500">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans">
 
-    <nav class="bg-white/80 border-b border-slate-200 px-6 py-3 flex justify-between items-center sticky top-0 z-[100] backdrop-blur-xl">
-        <div class="flex items-center gap-4">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black">R</div>
-            <h1 class="text-slate-800 dark:text-white font-black text-sm uppercase">Recambio Reciclado IA</h1>
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[300] toast">
+        <div class="bg-emerald-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 font-black uppercase text-[10px] tracking-widest">
+            <i class="fas fa-check-circle"></i> <span id="toast-msg">Sincronizado con SQL</span>
         </div>
-        
-        <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                <div id="db-led" class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div>
-                <span class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest text-nowrap">SQL LIVE / AEAT</span>
+    </div>
+
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex justify-between items-center z-50">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black italic">R</div>
+                <h1 class="font-black text-xs uppercase tracking-tighter">Logística IA</h1>
             </div>
-            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl text-slate-500 dark:text-yellow-500 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-all">
-                <i id="dark-icon" class="fas fa-moon text-lg"></i>
-            </button>
-            <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs uppercase">AD</div>
+            <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-[10px] font-black uppercase outline-none">
+                <option value="todos">Todos los Talleres</option>
+            </select>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="hidden md:flex gap-4 mr-6">
+                <div class="text-right">
+                    <p class="text-[8px] font-black text-slate-400 uppercase">Total Columnas</p>
+                    <p id="total-euros" class="text-xs font-black text-emerald-500">0.00€</p>
+                </div>
+            </div>
+            <button onclick="toggleView()" id="viewBtn" class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl text-[10px] font-black uppercase">Standard</button>
+            <button onclick="exportarCSV()" class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl text-[10px] font-black uppercase"><i class="fas fa-download"></i></button>
+            <button onclick="toggleDark()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500"><i class="fas fa-moon"></i></button>
         </div>
     </nav>
 
-    <header class="p-8 max-w-[1800px] mx-auto">
-        <div class="flex justify-between items-end">
-            <div>
-                <h1 class="text-6xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">Control Logístico</h1>
-                <p id="sync-text" class="text-xs font-bold text-blue-500 uppercase mt-4">Conectado al servidor de datos</p>
-            </div>
-            <button onclick="abrirModal()" class="px-8 py-4 bg-blue-600 text-white rounded-[2rem] text-xs font-black uppercase tracking-widest flex items-center gap-3 hover:bg-blue-700 hover:shadow-xl transition-all">
-                <i class="fas fa-plus"></i> Nuevo Pedido
-            </button>
+    <div class="p-6 flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <div class="relative w-full max-w-md">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="buscador" oninput="filtrar()" placeholder="BUSCAR POR MATRÍCULA O PIEZA..." 
+                   class="w-full bg-slate-100 dark:bg-slate-800 rounded-2xl py-3 pl-12 pr-4 text-[10px] font-black uppercase outline-none focus:ring-2 ring-blue-500">
         </div>
+        <button onclick="abrirModal()" class="w-full md:w-auto px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-500/20 transition-all">
+            + Nuevo Registro
+        </button>
+    </div>
 
-        <div class="kanban-container mt-12" id="kanbanBoard">
-            </div>
-    </header>
+    <main class="flex gap-6 p-6 overflow-x-auto h-[calc(100vh-180px)] custom-scrollbar" id="kanbanBoard"></main>
 
-    <div id="modal" class="fixed inset-0 bg-slate-900/60 hidden flex items-center justify-center z-[200] p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[3rem] p-10 shadow-2xl">
-            <h2 id="modal-title" class="text-2xl font-black uppercase tracking-tighter mb-6">Nuevo Pedido</h2>
-            <form id="pedido-form" class="space-y-4">
+    <div id="modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[3rem] p-10 shadow-2xl scale-95 opacity-0 transition-all duration-300" id="modalContent">
+            <h2 id="modal-title" class="text-3xl font-black uppercase tracking-tighter mb-8 italic">Editar Pedido</h2>
+            <form id="pedido-form" class="space-y-6">
                 <input type="hidden" id="pedido-id">
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Pieza</label>
-                    <input type="text" id="pieza" required class="w-full bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl border-none outline-none focus:ring-2 ring-blue-500">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Pieza</label>
+                        <input type="text" id="pieza" required class="w-full bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl border-none font-bold uppercase text-sm focus:ring-2 ring-blue-500">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Matrícula</label>
+                        <input type="text" id="matricula" required class="w-full bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl border-none font-black uppercase text-sm focus:ring-2 ring-blue-500">
+                    </div>
                 </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Vehículo</label>
-                    <input type="text" id="vehiculo" required class="w-full bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl border-none outline-none focus:ring-2 ring-blue-500">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Precio (€)</label>
+                        <input type="number" id="precio" step="0.01" class="w-full bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl border-none font-black text-blue-600">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 ml-2">Estado</label>
+                        <select id="estado" class="w-full bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl border-none font-bold uppercase text-xs">
+                            <option value="solicitado">Solicitado</option>
+                            <option value="desguace">En Desguace</option>
+                            <option value="listo">Listo</option>
+                            <option value="transito">Tránsito</option>
+                            <option value="entregado">Entregado</option>
+                            <option value="incidencia">Incidencia</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Estado</label>
-                    <select id="estado" class="w-full bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl border-none outline-none appearance-none font-bold uppercase text-xs">
-                        <option value="solicitado">Solicitado</option>
-                        <option value="en desguace">En Desguace</option>
-                        <option value="revisado">Revisado</option>
-                        <option value="enviado">Enviado</option>
-                    </select>
-                </div>
-                <div class="flex gap-3 mt-8">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 p-4 bg-slate-200 dark:bg-slate-800 rounded-2xl text-[10px] font-black uppercase">Cancelar</button>
-                    <button type="submit" class="flex-1 p-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase">Guardar Pedido</button>
+                <div class="flex gap-4 pt-6">
+                    <button type="button" onclick="cerrarModal()" class="flex-1 p-5 bg-slate-100 dark:bg-slate-800 rounded-2xl text-[10px] font-black uppercase">Cancelar</button>
+                    <button type="submit" class="flex-1 p-5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-blue-500/20">Guardar en DB</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // MODO OSCURO
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const icon = document.getElementById('dark-icon');
-            icon.classList.toggle('fa-moon');
-            icon.classList.toggle('fa-sun');
+        let db = [];
+        let viewMode = 'pro'; // Mejora 6: Standard vs Pro
+
+        const cols = [
+            { id: 'solicitado', label: 'Solicitado', color: 'border-slate-400' },
+            { id: 'desguace', label: 'En Desguace', color: 'border-amber-500' },
+            { id: 'listo', label: 'Listo/Verificado', color: 'border-purple-500' },
+            { id: 'transito', label: 'En Tránsito', color: 'border-emerald-500' },
+            { id: 'entregado', label: 'Entregado', color: 'border-blue-500' },
+            { id: 'incidencia', label: 'Incidencia', color: 'border-red-500' }
+        ];
+
+        // MEJORA 1: Caché de Talleres (30 min)
+        async function cargarTalleres() {
+            const cache = localStorage.getItem('talleres_cache');
+            const cacheTime = localStorage.getItem('talleres_time');
+            const ahora = new Date().getTime();
+
+            if (cache && cacheTime && (ahora - cacheTime < 1800000)) {
+                llenarComboTalleres(JSON.parse(cache));
+                return;
+            }
+
+            const res = await fetch('/api/usuarios/talleres');
+            const data = await res.json();
+            localStorage.setItem('talleres_cache', JSON.stringify(data));
+            localStorage.setItem('talleres_time', ahora);
+            llenarComboTalleres(data);
         }
 
-        // CARGAR DATOS
-        async function cargarDatos() {
-            try {
-                const res = await fetch('/api/pedidos');
-                if (res.ok) {
-                    const pedidos = await res.json();
-                    document.getElementById('db-led').classList.replace('bg-red-500', 'bg-emerald-500');
-                    document.getElementById('db-led').classList.remove('animate-pulse');
-                    renderizarTablero(pedidos);
-                }
-            } catch (err) { console.error("Error al cargar", err); }
-        }
-
-        function renderizarTablero(pedidos) {
-            const board = document.getElementById('kanbanBoard');
-            const estados = ['solicitado', 'en desguace', 'revisado', 'enviado'];
-            board.innerHTML = '';
-
-            estados.forEach(est => {
-                const col = document.createElement('div');
-                col.className = 'column flex flex-col gap-4';
-                const lista = pedidos.filter(p => p.estado.toLowerCase() === est);
-                
-                col.innerHTML = `
-                    <div class="flex justify-between items-center px-4">
-                        <h3 class="font-black uppercase text-[10px] tracking-widest text-slate-400">${est}</h3>
-                        <span class="bg-blue-100 text-blue-600 dark:bg-blue-900/30 text-[10px] font-black px-2 py-0.5 rounded-full">${lista.length}</span>
-                    </div>
-                    <div class="bg-slate-100/50 dark:bg-slate-900/50 p-4 rounded-[3rem] min-h-[600px] space-y-3 border border-slate-200 dark:border-slate-800">
-                        ${lista.map(p => `
-                            <div onclick="abrirEditar(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="bg-white dark:bg-slate-800 p-6 rounded-[2rem] shadow-sm hover:shadow-xl transition-all cursor-pointer border border-transparent hover:border-blue-500 group">
-                                <div class="flex justify-between items-start mb-2">
-                                    <span class="text-[9px] font-black text-blue-500">ID #${p.id}</span>
-                                    <i class="fas fa-edit text-slate-300 group-hover:text-blue-500 text-[10px]"></i>
-                                </div>
-                                <h4 class="font-black text-sm uppercase leading-tight">${p.pieza}</h4>
-                                <p class="text-[10px] font-bold text-slate-400 mt-2 uppercase italic">${p.vehiculo}</p>
-                            </div>
-                        `).join('')}
-                        <button onclick="abrirModal('${est}')" class="w-full py-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-[2rem] text-slate-400 hover:text-blue-500 hover:border-blue-500 transition-all text-xs font-black uppercase">
-                            <i class="fas fa-plus mr-2"></i> Añadir
-                        </button>
-                    </div>
-                `;
-                board.appendChild(col);
+        function llenarComboTalleres(talleres) {
+            const select = document.getElementById('filtroTaller');
+            talleres.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.email.split('@')[0].toUpperCase();
+                select.appendChild(opt);
             });
         }
 
-        // MODAL LOGIC
-        function abrirModal(estadoPredeterminado = 'solicitado') {
-            document.getElementById('pedido-form').reset();
-            document.getElementById('pedido-id').value = '';
-            document.getElementById('estado').value = estadoPredeterminado;
-            document.getElementById('modal-title').innerText = "Nuevo Pedido";
-            document.getElementById('modal').classList.remove('hidden');
+        // MEJORA 2: Filtro Dinámico
+        function filtrar() {
+            const val = document.getElementById('buscador').value.toLowerCase();
+            document.querySelectorAll('.pedido-card').forEach(card => {
+                card.style.display = card.innerText.toLowerCase().includes(val) ? 'block' : 'none';
+            });
         }
 
-        function abrirEditar(pedido) {
-            document.getElementById('pedido-id').value = pedido.id;
-            document.getElementById('pieza').value = pedido.pieza;
-            document.getElementById('vehiculo').value = pedido.vehiculo;
-            document.getElementById('estado').value = pedido.estado.toLowerCase();
-            document.getElementById('modal-title').innerText = "Editar Pedido";
-            document.getElementById('modal').classList.remove('hidden');
+        // MEJORA 3: Exportar CSV
+        function exportarCSV() {
+            let csv = "ID,Pieza,Matricula,Precio,Estado\n";
+            db.forEach(p => {
+                csv += `${p.id},${p.pieza},${p.matricula},${p.precio},${p.estado}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `logistica_${new Date().toLocaleDateString()}.csv`);
+            a.click();
+        }
+
+        // MEJORA 6: Toggle View
+        function toggleView() {
+            viewMode = viewMode === 'pro' ? 'standard' : 'pro';
+            document.getElementById('viewBtn').innerText = viewMode.toUpperCase();
+            render();
+        }
+
+        // DRAG & DROP LOGIC
+        function start(e, id) { e.dataTransfer.setData("pid", id); }
+        function over(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        function leave(e) { e.currentTarget.classList.remove('drag-over'); }
+        async function drop(e, estado) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const id = e.dataTransfer.getData("pid");
+            const res = await fetch('/api/pedidos/update-status', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, nuevoEstado: estado })
+            });
+            if (res.ok) {
+                showToast("Movimiento registrado con éxito");
+                cargarDatos();
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function cargarDatos() {
+            const tallerId = document.getElementById('filtroTaller').value;
+            const res = await fetch(`/api/pedidos?taller_id=${tallerId}`);
+            db = await res.json();
+            render();
+        }
+
+        function render() {
+            const board = document.getElementById('kanbanBoard');
+            board.innerHTML = '';
+            let totalGeneral = 0;
+
+            cols.forEach(c => {
+                const lista = db.filter(p => p.estado.toLowerCase() === c.id);
+                const sumaCol = lista.reduce((acc, p) => acc + parseFloat(p.precio || 0), 0);
+                totalGeneral += sumaCol;
+
+                const column = document.createElement('div');
+                column.className = `kanban-column flex flex-col gap-4`;
+                column.ondragover = over;
+                column.ondragleave = leave;
+                column.ondrop = (e) => drop(e, c.id);
+
+                column.innerHTML = `
+                    <div class="border-t-4 ${c.color} pt-4 mb-2 flex justify-between items-end px-2">
+                        <div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">${c.label}</p>
+                            <p class="text-lg font-black dark:text-white">${lista.length}</p>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 mb-1">${sumaCol.toFixed(2)}€</p>
+                    </div>
+                    <div class="flex-1 space-y-4 overflow-y-auto pr-2">
+                        ${lista.map(p => `
+                            <div draggable="true" ondragstart="start(event, ${p.id})" onclick='abrirEditar(${JSON.stringify(p)})'
+                                 class="pedido-card card-${viewMode} bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-sm border border-transparent hover:border-blue-500 transition-all cursor-grab active:cursor-grabbing relative group">
+                                <span class="absolute top-6 right-6 font-black text-amber-500 text-[10px] extra-info">${p.precio}€</span>
+                                <p class="text-[8px] font-black text-blue-500 mb-1 uppercase tracking-widest">#${p.id}</p>
+                                <h4 class="text-xs font-black uppercase dark:text-white">${p.pieza}</h4>
+                                <div class="extra-info">
+                                    <p class="text-[9px] font-bold text-slate-400 mt-1 italic uppercase">${p.marca_coche || 'S/M'} ${p.modelo_coche || ''}</p>
+                                </div>
+                                <div class="mt-4 flex justify-between items-center">
+                                    <span class="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg text-[9px] font-black uppercase text-slate-600 dark:text-slate-300">
+                                        ${p.matricula}
+                                    </span>
+                                    <i class="fas fa-ellipsis-v text-slate-200 group-hover:text-slate-400 text-[10px]"></i>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                board.appendChild(column);
+            });
+            document.getElementById('total-euros').innerText = `${totalGeneral.toFixed(2)}€`;
+            filtrar();
+        }
+
+        // MODAL HELPERS
+        function abrirModal() {
+            document.getElementById('pedido-form').reset();
+            document.getElementById('pedido-id').value = '';
+            const m = document.getElementById('modal');
+            m.classList.remove('hidden');
+            setTimeout(() => { document.getElementById('modalContent').classList.replace('scale-95', 'scale-100'); document.getElementById('modalContent').classList.replace('opacity-0', 'opacity-100'); }, 10);
+        }
+
+        function abrirEditar(p) {
+            abrirModal();
+            document.getElementById('pedido-id').value = p.id;
+            document.getElementById('pieza').value = p.pieza;
+            document.getElementById('matricula').value = p.matricula;
+            document.getElementById('precio').value = p.precio;
+            document.getElementById('estado').value = p.estado.toLowerCase();
+            document.getElementById('modal-title').innerText = "Ficha del Pedido";
         }
 
         function cerrarModal() {
-            document.getElementById('modal').classList.add('hidden');
+            const m = document.getElementById('modal');
+            document.getElementById('modalContent').classList.replace('scale-100', 'scale-95');
+            document.getElementById('modalContent').classList.replace('opacity-100', 'opacity-0');
+            setTimeout(() => m.classList.add('hidden'), 300);
         }
 
-        // GUARDAR (CREAR O EDITAR)
         document.getElementById('pedido-form').onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('pedido-id').value;
             const data = {
+                id: id || null,
                 pieza: document.getElementById('pieza').value,
-                vehiculo: document.getElementById('vehiculo').value,
-                estado: document.getElementById('estado').value
+                matricula: document.getElementById('matricula').value,
+                precio: document.getElementById('precio').value,
+                nuevoEstado: document.getElementById('estado').value
             };
-
-            // Aquí decides si llamas a una ruta de "POST" para crear o de "UPDATE"
-            // Por simplicidad, usemos el endpoint de update-status si el id existe
-            let url = id ? '/api/pedidos/update-status' : '/api/pedidos/new';
-            let body = id ? { id, nuevoEstado: data.estado, pieza: data.pieza, vehiculo: data.vehiculo } : data;
-
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                if (res.ok) {
-                    cerrarModal();
-                    cargarDatos();
-                }
-            } catch (err) { alert("Error al guardar"); }
+            const res = await fetch(id ? '/api/pedidos/update-status' : '/api/pedidos/new', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if (res.ok) { showToast("Base de Datos Actualizada"); cerrarModal(); cargarDatos(); }
         };
 
-        window.onload = cargarDatos;
+        function toggleDark() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+
+        window.onload = () => { cargarTalleres(); cargarDatos(); };
     </script>
 </body>
 </html>

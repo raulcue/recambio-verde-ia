@@ -18,105 +18,131 @@ const pool = new Pool({
 });
 
 // ==========================================
-// 1. RUTA DE LOGIN
+// 1. GESTIÓN DE USUARIOS Y TALLERES
 // ==========================================
-app.post('/auth/login', async (req, res) => {
-    const { email, password } = req.body;
+
+// Obtener lista de talleres (Mejora: Cacheable en frontend)
+app.get('/api/usuarios/talleres', async (req, res) => {
     try {
         const result = await pool.query(
-            'SELECT * FROM usuarios WHERE email = $1 AND password = $2',
-            [email, password]
+            "SELECT id, email, nombre_taller FROM usuarios WHERE rol = 'taller' ORDER BY email ASC"
         );
-
-        if (result.rows.length > 0) {
-            const user = result.rows[0];
-            let redirectUrl = 'landing.html'; 
-
-            if (user.rol === 'taller') {
-                redirectUrl = 'pedidos-taller.html';
-            }
-
-            res.json({ 
-                success: true, 
-                redirect: redirectUrl,
-                user: { email: user.email, rol: user.rol }
-            });
-        } else {
-            res.status(401).json({ success: false, message: 'Credenciales inválidas' });
-        }
+        res.json(result.rows);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Error en el servidor' });
+        res.status(500).json({ error: 'Error al obtener talleres' });
     }
 });
 
 // ==========================================
-// 2. RUTAS PARA EL DASHBOARD Y GESTIÓN
+// 2. GESTIÓN DE PEDIDOS (DASHBOARD)
 // ==========================================
 
-// OBTENER TODOS LOS PEDIDOS
+// OBTENER PEDIDOS (Con filtro de taller opcional)
 app.get('/api/pedidos', async (req, res) => {
+    const { taller_id } = req.query;
     try {
-        const result = await pool.query('SELECT * FROM pedidos ORDER BY id DESC');
+        let query = 'SELECT * FROM pedidos';
+        const params = [];
+
+        if (taller_id && taller_id !== 'todos') {
+            query += ' WHERE usuario_id = $1'; 
+            params.push(taller_id);
+        }
+
+        query += ' ORDER BY id DESC';
+        const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// CREAR NUEVO PEDIDO (Para el botón + del Dashboard)
+// CREAR NUEVO PEDIDO
 app.post('/api/pedidos/new', async (req, res) => {
-    const { pieza, vehiculo, estado } = req.body;
+    const { pieza, matricula, estado, precio, usuario_id } = req.body;
     try {
         const result = await pool.query(
-            'INSERT INTO pedidos (pieza, vehiculo, estado) VALUES ($1, $2, $3) RETURNING *',
-            [pieza, vehiculo, estado || 'solicitado']
+            'INSERT INTO pedidos (pieza, matricula, estado, precio, usuario_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [pieza, matricula, estado || 'solicitado', precio || 0, usuario_id]
         );
+
+        // Registro en LOGS para admin-logs.html
+        await pool.query(
+            'INSERT INTO logs (pedido_id, accion, detalle) VALUES ($1, $2, $3)',
+            [result.rows[0].id, 'CREATE_PIEZA', `Alta de ${pieza} para ${matricula}`]
+        );
+
         res.json(result.rows[0]);
     } catch (err) {
-        console.error(err);
         res.status(500).json({ error: 'Error al crear pedido' });
     }
 });
 
-// ACTUALIZAR ESTADO O DATOS (Modificar)
+// ACTUALIZAR ESTADO O DATOS (Optimizado para Drag & Drop y Modal)
 app.post('/api/pedidos/update-status', async (req, res) => {
-    const { id, nuevoEstado, pieza, vehiculo } = req.body;
+    const { id, nuevoEstado, pieza, matricula, precio } = req.body;
     try {
-        // Actualizamos campos (pueden ser solo estado o también pieza/vehiculo)
+        // 1. Obtener estado anterior para el Log (Opcional pero recomendado para auditoría)
+        const current = await pool.query('SELECT estado FROM pedidos WHERE id = $1', [id]);
+        const estadoAnterior = current.rows[0]?.estado;
+
+        // 2. Actualización con COALESCE
         await pool.query(
-            'UPDATE pedidos SET estado = $1, pieza = COALESCE($2, pieza), vehiculo = COALESCE($3, vehiculo), updated_at = CURRENT_TIMESTAMP WHERE id = $4',
-            [nuevoEstado, pieza, vehiculo, id]
+            `UPDATE pedidos SET 
+                estado = COALESCE($1, estado), 
+                pieza = COALESCE($2, pieza), 
+                matricula = COALESCE($3, matricula), 
+                precio = COALESCE($4, precio),
+                updated_at = CURRENT_TIMESTAMP 
+             WHERE id = $5`,
+            [nuevoEstado, pieza, matricula, precio, id]
         );
 
-        // Registro en LOGS
+        // 3. Registro en LOGS especializado para admin-logs.html
+        let accion = 'MODIFICACION';
+        let detalle = `Actualización de datos generales`;
+
+        if (nuevoEstado && nuevoEstado !== estadoAnterior) {
+            accion = 'KANBAN_MOVE';
+            detalle = `Pedido #${id} movido de ${estadoAnterior} a ${nuevoEstado}`;
+        }
+
         await pool.query(
             'INSERT INTO logs (pedido_id, accion, detalle) VALUES ($1, $2, $3)',
-            [id, 'MODIFICACION', `Estado: ${nuevoEstado.toUpperCase()}`]
+            [id, accion, detalle]
         );
 
         res.json({ success: true });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Error al actualizar' });
+        res.status(500).json({ error: 'Error al actualizar SQL' });
     }
 });
 
-// OBTENER LOGS
-app.get('/api/pedidos/:id/logs', async (req, res) => {
+// ==========================================
+// 3. SISTEMA DE AUDITORÍA (LOGS)
+// ==========================================
+
+// OBTENER TODOS LOS LOGS (Para admin-logs.html)
+app.get('/api/logs', async (req, res) => {
     try {
-        const result = await pool.query(
-            'SELECT * FROM logs WHERE pedido_id = $1 ORDER BY fecha DESC',
-            [req.params.id]
-        );
+        const result = await pool.query(`
+            SELECT l.*, p.matricula, p.pieza 
+            FROM logs l 
+            LEFT JOIN pedidos p ON l.pedido_id = p.id 
+            ORDER BY l.fecha DESC 
+            LIMIT 100
+        `);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: 'Error al cargar logs' });
+        res.status(500).json({ error: 'Error al cargar historial' });
     }
 });
 
-// INICIAR SERVIDOR
+// ==========================================
+// INICIO DEL SERVIDOR
+// ==========================================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
+    console.log(`🚀 Servidor Logístico IA corriendo en puerto ${PORT}`);
 });
