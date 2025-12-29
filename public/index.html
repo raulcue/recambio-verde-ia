@@ -2,31 +2,58 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Recambio Verde IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
 <body class="bg-slate-50 h-screen flex items-center justify-center p-6">
+
     <div class="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-10 border border-slate-100">
         <div class="text-center mb-8">
-            <h1 class="text-2xl font-black text-slate-800 uppercase">Recambio<span class="text-green-600">Verde</span></h1>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Acceso al Sistema IA</p>
+            <div class="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-200">
+                <i class="fas fa-recycle text-white text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Recambio<span class="text-green-600">Verde</span></h1>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Acceso al Sistema IA</p>
         </div>
+
         <form id="loginForm" class="space-y-4">
-            <input type="email" id="email" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none" placeholder="Email">
-            <input type="password" id="password" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none" placeholder="Contraseña">
-            <button type="submit" id="btnLogin" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-green-600 transition-all">Entrar al Panel</button>
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Email Autorizado</label>
+                <input type="email" id="email" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-green-500 transition-all" placeholder="admin@recambioverde.es">
+            </div>
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Contraseña</label>
+                <input type="password" id="password" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-green-500 transition-all" placeholder="••••••••">
+            </div>
+            <button type="submit" id="btnLogin" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-green-600 transition-all shadow-xl shadow-slate-200">
+                Entrar al Sistema
+            </button>
         </form>
+
+        <div id="errorMsg" class="hidden mt-4 p-4 bg-red-50 text-red-500 text-[10px] font-bold rounded-xl text-center uppercase"></div>
+        
+        <p class="text-center mt-8 text-[9px] text-slate-300 font-bold uppercase tracking-widest">Protección de Datos v2.1</p>
     </div>
 
     <script>
+        // 1. MANEJO DEL LOGIN
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const btn = document.getElementById('btnLogin');
+            const errorMsg = document.getElementById('errorMsg');
 
             btn.innerText = "VERIFICANDO...";
+            btn.disabled = true;
+            errorMsg.classList.add('hidden');
+
             try {
                 const res = await fetch('/auth/login', {
                     method: 'POST',
@@ -34,15 +61,31 @@
                     body: JSON.stringify({ email, password })
                 });
                 const data = await res.json();
+
                 if (data.success) {
-                    window.location.href = data.redirect; // Esto te lleva a dashboard.html
+                    // El servidor decide si vas a pedidos-taller.html o dashboard.html
+                    window.location.href = data.redirect;
                 } else {
-                    alert("Credenciales incorrectas");
-                    btn.innerText = "ENTRAR AL PANEL";
+                    errorMsg.innerText = "Acceso denegado: Credenciales incorrectas";
+                    errorMsg.classList.remove('hidden');
                 }
             } catch (err) {
-                alert("Error de conexión");
-                btn.innerText = "ENTRAR AL PANEL";
+                errorMsg.innerText = "Error crítico de conexión";
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.innerText = "ENTRAR AL SISTEMA";
+                btn.disabled = false;
+            }
+        });
+
+        // 2. EL BLINDAJE CONTRA EL ERROR DE CACHÉ / LÍNEA 52
+        // Este bloque evita que el JS se detenga si Render busca el buscador aquí
+        document.addEventListener('DOMContentLoaded', () => {
+            const buscador = document.getElementById('searchInput');
+            if (buscador) {
+                buscador.addEventListener('input', () => {
+                    console.log("Buscador detectado y operativo");
+                });
             }
         });
     </script>
