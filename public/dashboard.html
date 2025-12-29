@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        /* CONFIGURACIÓN KANBAN & SCROLL */
         .kanban-column { min-width: 320px; max-width: 320px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .kanban-container { 
             display: flex; 
@@ -21,7 +20,6 @@
         .kanban-container::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 20px; }
         .kanban-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; border: 3px solid transparent; background-clip: content-box; }
         
-        /* ESTADOS UI */
         .modal-active { display: flex !important; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 900; }
@@ -39,14 +37,9 @@
         
         <div class="flex items-center gap-3">
             <div id="db-status" class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
-                <div id="db-led" class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]"></div>
+                <div id="db-led" class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
                 <span class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">SQL LIVE</span>
             </div>
-
-            <button class="relative w-10 h-10 text-slate-400 hover:text-blue-600 transition-colors">
-                <i class="fas fa-bell"></i>
-                <span id="notif-dot" class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900 hidden"></span>
-            </button>
 
             <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center">
                 <i class="fas fa-moon dark:hidden"></i>
@@ -60,13 +53,17 @@
                 <div class="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 shadow-2xl rounded-[2rem] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-5 border border-slate-100 dark:border-slate-800 z-[200]">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Aplicaciones</p>
                     <div class="space-y-1">
-                        <a href="dashboard.html" class="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-2xl border border-green-100 dark:border-green-800/50">
-                            <div class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-xs"><i class="fas fa-columns"></i></div>
+                        <a href="dashboard.html" class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/50">
+                            <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-xs"><i class="fas fa-columns"></i></div>
                             <div><p class="text-[10px] font-black dark:text-white uppercase">Gestión Kanban</p></div>
                         </a>
+                        <a href="talleres.html" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
+                            <div class="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-users-cog"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Gestión Equipo</p></div>
+                        </a>
                         <a href="pedidos-taller.html" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
-                            <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-tools"></i></div>
-                            <div><p class="text-[10px] font-black dark:text-white uppercase">Panel Talleres</p></div>
+                            <div class="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-tools"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Vista Taller</p></div>
                         </a>
                     </div>
                 </div>
@@ -79,7 +76,7 @@
         <div class="flex flex-col md:flex-row justify-between items-end gap-6">
             <div>
                 <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Control Logístico</h1>
-                <p id="sync-text" class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Sincronización en tiempo real activa</p>
+                <p id="sync-text" class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Conectando con Render...</p>
             </div>
             
             <div class="flex gap-3">
@@ -94,258 +91,11 @@
             </div>
         </div>
 
-        <div class="kanban-container mt-8" id="kanbanBoard">
-            </div>
+        <div class="kanban-container mt-8" id="kanbanBoard"></div>
     </header>
 
-    <button onclick="abrirModalNuevo()" class="fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[100] group">
+    <button onclick="openNewPedido()" class="fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-[100] group">
         <i class="fas fa-plus text-xl group-hover:rotate-90 transition-transform"></i>
     </button>
 
-    <div id="popupDetalle" class="fixed inset-0 bg-slate-900/90 backdrop-blur-xl hidden items-center justify-center z-[500] p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[3rem] overflow-hidden shadow-2xl border dark:border-slate-800">
-            <div class="flex border-b dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900">
-                <button onclick="cambiarTab('log')" id="tab-log" class="flex-1 py-5 text-[9px] font-black uppercase tracking-widest tab-active">1. Logística</button>
-                <button onclick="cambiarTab('veh')" id="tab-veh" class="flex-1 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">2. Vehículo</button>
-                <button onclick="cambiarTab('neg')" id="tab-neg" class="flex-1 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">3. Finanzas & Notas</button>
-            </div>
-            
-            <form id="formMaster" onsubmit="handleUpdate(event)" class="p-8">
-                <input type="hidden" id="edit-id">
-                
-                <div id="sec-log" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[8px] font-black text-slate-400 uppercase ml-2">Taller Destino</label>
-                            <select id="db-usuario-id" class="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-[10px] font-black uppercase outline-none text-blue-600"></select>
-                        </div>
-                        <div>
-                            <label class="text-[8px] font-black text-slate-400 uppercase ml-2">Estado Flujo</label>
-                            <select id="db-estado" class="w-full mt-1 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-[10px] font-black uppercase outline-none text-amber-600">
-                                <option value="solicitado">SOLICITADO</option>
-                                <option value="desguace">EN DESGUACE</option>
-                                <option value="transito">EN TRÁNSITO</option>
-                                <option value="listo">LISTO / ENTREGADO</option>
-                                <option value="incidencia">INCIDENCIA</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[8px] font-black text-slate-400 uppercase ml-2">Nombre Pieza</label>
-                        <input type="text" id="db-pieza" required class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none font-bold uppercase text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
-
-                <div id="sec-veh" class="hidden space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="text" id="db-marca-coche" placeholder="MARCA MOTOR" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none">
-                        <input type="text" id="db-modelo-coche" placeholder="MODELO COCHE" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none">
-                        <input type="text" id="db-matricula" placeholder="MATRÍCULA" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none">
-                        <input type="text" id="db-bastidor" placeholder="Nº BASTIDOR (VIN)" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none font-mono text-xs uppercase outline-none">
-                    </div>
-                </div>
-
-                <div id="sec-neg" class="hidden space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <input type="number" id="db-precio-coste" placeholder="COSTE COMPRA (€)" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-mono outline-none">
-                        <input type="number" id="db-precio" placeholder="VENTA TALLER (€)" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border-none text-xs font-mono outline-none">
-                    </div>
-                    <textarea id="db-notas" placeholder="NOTAS DE SEGUIMIENTO..." rows="3" class="w-full p-4 bg-slate-50 dark:bg-slate-800 rounded-3xl border-none text-xs outline-none resize-none"></textarea>
-                </div>
-
-                <div class="flex gap-3 mt-8">
-                    <button type="button" onclick="handleDelete()" class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash"></i></button>
-                    <button type="button" onclick="cerrarPopup()" class="flex-1 py-4 text-slate-400 text-[10px] font-black uppercase">Cancelar</button>
-                    <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl shadow-blue-500/30">Actualizar SQL</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        let pedidos = [];
-        let talleres = [];
-        const estados = ['solicitado', 'desguace', 'transito', 'listo', 'incidencia'];
-        let columnasOcultas = JSON.parse(localStorage.getItem('kanban_hidden')) || [];
-
-        // --- 1. CARGA INICIAL ---
-        async function load() {
-            try {
-                const [resP, resT] = await Promise.all([
-                    fetch('/api/pedidos'),
-                    fetch('/api/talleres')
-                ]);
-                pedidos = await resP.json();
-                talleres = await resT.json();
-                
-                renderKanban();
-                renderFilters();
-                fillSelectTalleres();
-                updateSyncStatus(true);
-            } catch (e) {
-                updateSyncStatus(false);
-            }
-        }
-
-        // --- 2. RENDERIZADO ---
-        function renderKanban() {
-            const container = document.getElementById('kanbanBoard');
-            container.innerHTML = '';
-            
-            estados.forEach(est => {
-                const estaOculta = columnasOcultas.includes(est);
-                const itemsFiltrados = pedidos.filter(p => p.estado === est);
-                
-                const colHtml = `
-                    <div id="col-${est}" class="kanban-column flex flex-col gap-4 ${estaOculta ? 'hidden-col' : ''}" 
-                         ondrop="drop(event, '${est}')" ondragover="allowDrop(event)">
-                        <div class="flex justify-between items-center px-4">
-                            <h2 class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">${est}</h2>
-                            <span class="bg-slate-200 dark:bg-slate-800 text-[9px] font-black px-2 py-0.5 rounded-full">${itemsFiltrados.length}</span>
-                        </div>
-                        <div class="flex-1 space-y-3 min-h-[600px] p-2 bg-slate-100/40 dark:bg-slate-800/20 rounded-[3rem]">
-                            ${itemsFiltrados.map(p => `
-                                <div draggable="true" ondragstart="drag(event, ${p.id})" onclick="openEdit(${p.id})" 
-                                     class="card bg-white dark:bg-slate-900 p-5 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all cursor-grab active:cursor-grabbing">
-                                    <p class="text-[9px] font-black text-blue-500 uppercase mb-1">${p.nombre_taller || 'SIN TALLER'}</p>
-                                    <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase leading-tight">${p.pieza}</h3>
-                                    <div class="mt-4 flex flex-wrap gap-1">
-                                        <span class="text-[7px] font-black bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded text-slate-400 uppercase tracking-tighter">${p.marca_coche || '---'}</span>
-                                        <span class="text-[7px] font-black bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded text-slate-400 uppercase tracking-tighter">${p.matricula || 'S/M'}</span>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', colHtml);
-            });
-        }
-
-        // --- 3. DRAG & DROP LOGIC ---
-        function allowDrop(ev) { ev.preventDefault(); }
-        function drag(ev, id) { 
-            ev.dataTransfer.setData("text", id); 
-            ev.target.classList.add('dragging');
-        }
-
-        async function drop(ev, nuevoEstado) {
-            ev.preventDefault();
-            const id = ev.dataTransfer.getData("text");
-            
-            // UI Update inmediata
-            const idx = pedidos.findIndex(p => p.id == id);
-            if (idx > -1) {
-                const oldEstado = pedidos[idx].estado;
-                pedidos[idx].estado = nuevoEstado;
-                renderKanban();
-                
-                // SQL Update
-                try {
-                    await fetch(`/api/pedidos/${id}/estado`, {
-                        method: 'PATCH',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ estado: nuevoEstado })
-                    });
-                    showNotification();
-                } catch (err) {
-                    load(); // Revertir si falla
-                }
-            }
-        }
-
-        // --- 4. CRUD & POPUP ---
-        function openEdit(id) {
-            const p = pedidos.find(x => x.id === id);
-            document.getElementById('edit-id').value = p.id;
-            document.getElementById('db-pieza').value = p.pieza || '';
-            document.getElementById('db-usuario-id').value = p.usuario_id || '';
-            document.getElementById('db-estado').value = p.estado || 'solicitado';
-            document.getElementById('db-marca-coche').value = p.marca_coche || '';
-            document.getElementById('db-modelo-coche').value = p.modelo_coche || '';
-            document.getElementById('db-matricula').value = p.matricula || '';
-            document.getElementById('db-bastidor').value = p.bastidor || '';
-            document.getElementById('db-precio-coste').value = p.precio_coste || '';
-            document.getElementById('db-precio').value = p.precio || '';
-            document.getElementById('db-notas').value = p.notas_tecnicas || '';
-            
-            document.getElementById('popupDetalle').classList.add('modal-active');
-            cambiarTab('log');
-        }
-
-        async function handleUpdate(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-id').value;
-            const body = {
-                pieza: document.getElementById('db-pieza').value,
-                usuario_id: document.getElementById('db-usuario-id').value,
-                estado: document.getElementById('db-estado').value,
-                marca_coche: document.getElementById('db-marca-coche').value,
-                modelo_coche: document.getElementById('db-modelo-coche').value,
-                matricula: document.getElementById('db-matricula').value,
-                bastidor: document.getElementById('db-bastidor').value,
-                precio_coste: document.getElementById('db-precio-coste').value,
-                precio: document.getElementById('db-precio').value,
-                notas_tecnicas: document.getElementById('db-notas').value
-            };
-            await fetch(`/api/pedidos/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
-            cerrarPopup(); load();
-        }
-
-        async function handleDelete() {
-            if(!confirm("¿Borrar definitivamente de PostgreSQL?")) return;
-            const id = document.getElementById('edit-id').value;
-            await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
-            cerrarPopup(); load();
-        }
-
-        // --- 5. HELPERS UI ---
-        function renderFilters() {
-            const container = document.getElementById('columnToggles');
-            container.innerHTML = estados.map(est => `
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" ${!columnasOcultas.includes(est) ? 'checked' : ''} onchange="toggleCol('${est}')" class="w-4 h-4 rounded border-slate-300 text-blue-600">
-                    <span class="text-[9px] font-black uppercase text-slate-500 group-hover:text-blue-600 transition-colors">${est}</span>
-                </label>
-            `).join('');
-        }
-
-        function toggleCol(est) {
-            if(columnasOcultas.includes(est)) columnasOcultas = columnasOcultas.filter(c => c !== est);
-            else columnasOcultas.push(est);
-            localStorage.setItem('kanban_hidden', JSON.stringify(columnasOcultas));
-            renderKanban();
-        }
-
-        function fillSelectTalleres() {
-            const select = document.getElementById('db-usuario-id');
-            select.innerHTML = '<option value="">SIN ASIGNAR</option>' + 
-                talleres.map(t => `<option value="${t.id}">${t.nombre_taller || t.email}</option>`).join('');
-        }
-
-        function cambiarTab(tab) {
-            ['log', 'veh', 'neg'].forEach(t => {
-                document.getElementById(`sec-${t}`).classList.toggle('hidden', t !== tab);
-                document.getElementById(`tab-${t}`).classList.toggle('tab-active', t === tab);
-                if(t !== tab) document.getElementById(`tab-${t}`).classList.replace('tab-active', 'text-slate-400');
-            });
-        }
-
-        function updateSyncStatus(ok) {
-            const led = document.getElementById('db-led');
-            led.className = `w-2.5 h-2.5 rounded-full animate-pulse ${ok ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]'}`;
-        }
-
-        function showNotification() {
-            const dot = document.getElementById('notif-dot');
-            dot.classList.remove('hidden');
-            setTimeout(() => dot.classList.add('hidden'), 3000);
-        }
-
-        function cerrarPopup() { document.getElementById('popupDetalle').classList.remove('modal-active'); }
-        function abrirModalNuevo() { /* Implementar modal similar a pedidos-taller */ }
-
-        document.addEventListener('DOMContentLoaded', load);
-    </script>
-</body>
-</html>
+    <div id
