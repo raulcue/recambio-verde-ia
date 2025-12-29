@@ -5,11 +5,25 @@
     <title>Admin - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="/js/global.js"></script>
 </head>
 <body class="bg-slate-50 min-h-screen">
-    <main class="max-w-6xl mx-auto py-16 px-6">
+
+    <nav class="bg-white/80 border-b border-slate-200 px-6 py-3 flex justify-between items-center sticky top-0 z-[100] backdrop-blur-xl">
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black">R</div>
+            <h1 class="text-slate-800 font-black text-sm uppercase tracking-tighter">Recambio Reciclado IA</h1>
+        </div>
         
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200">
+                <div class="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">SQL LIVE / AEAT</span>
+            </div>
+            <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto py-16 px-6">
         <div class="text-center mb-12">
             <h1 class="text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] mb-2">Consola de Administración Central</h1>
             <div class="flex justify-center gap-2">
@@ -19,7 +33,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
             <a href="dashboard.html" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-indigo-500 transition-all text-center group">
                 <div class="w-20 h-20 bg-indigo-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-indigo-500 transition-colors">
                     <i class="fas fa-columns text-3xl text-indigo-600 group-hover:text-white transition"></i>
@@ -28,15 +41,15 @@
                 <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Control de Operaciones Kanban</p>
             </a>
 
-            <a href="stats.html" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-emerald-500 transition-all text-center group">
-                <div class="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-500 transition-colors">
-                    <i class="fas fa-chart-line text-3xl text-emerald-600 group-hover:text-white transition"></i>
+            <a href="#" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-emerald-500 transition-all text-center group opacity-50 cursor-not-allowed">
+                <div class="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-chart-line text-3xl text-emerald-600"></i>
                 </div>
                 <span class="block font-black text-slate-800 uppercase text-[11px] tracking-widest">Inteligencia BI</span>
-                <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Márgenes, KPIs y Rentabilidad</p>
+                <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Próximamente</p>
             </a>
 
-            <a href="configuracion.html" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-blue-500 transition-all text-center group">
+            <a href="talleres.html" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-blue-500 transition-all text-center group">
                 <div class="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-500 transition-colors">
                     <i class="fas fa-users-gear text-3xl text-blue-600 group-hover:text-white transition"></i>
                 </div>
@@ -44,7 +57,7 @@
                 <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Control de Acceso y Roles</p>
             </a>
 
-            <a href="pedidos-taller.html" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-purple-500 transition-all text-center group">
+            <a href="#" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-purple-500 transition-all text-center group">
                 <div class="w-20 h-20 bg-purple-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500 transition-colors">
                     <i class="fas fa-list-check text-3xl text-purple-600 group-hover:text-white transition"></i>
                 </div>
@@ -52,7 +65,7 @@
                 <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Vista Directa del Cliente</p>
             </a>
 
-            <a href="admin-logs.html" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-slate-800 transition-all text-center group">
+            <a href="#" class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:border-slate-800 transition-all text-center group">
                 <div class="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-slate-800 transition-colors">
                     <i class="fas fa-history text-3xl text-slate-400 group-hover:text-white transition"></i>
                 </div>
@@ -67,11 +80,6 @@
                 <span class="block font-black text-slate-800 uppercase text-[11px] tracking-widest">Salir del Sistema</span>
                 <p class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Desconexión Segura</p>
             </a>
-
-        </div>
-
-        <div class="mt-20 text-center">
-            <p class="text-[8px] font-black text-slate-300 uppercase tracking-[0.5em]">Recambio Reciclado IA &bull; Enterprise Edition 2025</p>
         </div>
     </main>
 </body>

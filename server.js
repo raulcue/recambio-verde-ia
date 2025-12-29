@@ -5,18 +5,20 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
+
+// MIDDLEWARES
 app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
-// Configuración de la base de datos
+// CONFIGURACIÓN DE LA BASE DE DATOS
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
 });
 
 // ==========================================
-// 1. RUTA DE LOGIN (MANTENIDA EXACTAMENTE)
+// 1. RUTA DE LOGIN
 // ==========================================
 app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
@@ -49,10 +51,10 @@ app.post('/auth/login', async (req, res) => {
 });
 
 // ==========================================
-// 2. RUTAS PARA EL DASHBOARD PRO (69 MEJORAS)
+// 2. RUTAS PARA EL DASHBOARD Y GESTIÓN
 // ==========================================
 
-// OBTENER TODOS LOS PEDIDOS (Con campos extendidos)
+// OBTENER TODOS LOS PEDIDOS
 app.get('/api/pedidos', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM pedidos ORDER BY id DESC');
@@ -62,30 +64,45 @@ app.get('/api/pedidos', async (req, res) => {
     }
 });
 
-// ACTUALIZAR ESTADO (Para el Drag & Drop)
-app.post('/api/pedidos/update-status', async (req, res) => {
-    const { id, nuevoEstado } = req.body;
+// CREAR NUEVO PEDIDO (Para el botón + del Dashboard)
+app.post('/api/pedidos/new', async (req, res) => {
+    const { pieza, vehiculo, estado } = req.body;
     try {
-        // Actualizamos estado y fecha
+        const result = await pool.query(
+            'INSERT INTO pedidos (pieza, vehiculo, estado) VALUES ($1, $2, $3) RETURNING *',
+            [pieza, vehiculo, estado || 'solicitado']
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al crear pedido' });
+    }
+});
+
+// ACTUALIZAR ESTADO O DATOS (Modificar)
+app.post('/api/pedidos/update-status', async (req, res) => {
+    const { id, nuevoEstado, pieza, vehiculo } = req.body;
+    try {
+        // Actualizamos campos (pueden ser solo estado o también pieza/vehiculo)
         await pool.query(
-            'UPDATE pedidos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-            [nuevoEstado, id]
+            'UPDATE pedidos SET estado = $1, pieza = COALESCE($2, pieza), vehiculo = COALESCE($3, vehiculo), updated_at = CURRENT_TIMESTAMP WHERE id = $4',
+            [nuevoEstado, pieza, vehiculo, id]
         );
 
-        // Registro automático en LOGS (Trazabilidad)
+        // Registro en LOGS
         await pool.query(
             'INSERT INTO logs (pedido_id, accion, detalle) VALUES ($1, $2, $3)',
-            [id, 'MOVIMIENTO', `Cambiado a ${nuevoEstado.toUpperCase()}`]
+            [id, 'MODIFICACION', `Estado: ${nuevoEstado.toUpperCase()}`]
         );
 
         res.json({ success: true });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Error al actualizar el estado' });
+        res.status(500).json({ error: 'Error al actualizar' });
     }
 });
 
-// OBTENER LOGS DE UN PEDIDO (Para el Popup Avanzado)
+// OBTENER LOGS
 app.get('/api/pedidos/:id/logs', async (req, res) => {
     try {
         const result = await pool.query(
@@ -98,7 +115,7 @@ app.get('/api/pedidos/:id/logs', async (req, res) => {
     }
 });
 
-// Iniciar servidor
+// INICIAR SERVIDOR
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
