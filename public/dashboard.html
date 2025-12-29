@@ -6,7 +6,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script>
-        // Mejora 7: Persistencia de Modo Oscuro
         tailwind.config = { darkMode: 'class' };
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -21,6 +20,8 @@
         .card-standard .extra-info { display: none; }
         .toast { transform: translateY(100px); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
         .toast.show { transform: translateY(0); }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans">
@@ -109,8 +110,12 @@
     </div>
 
     <script>
+        // --- VARIABLES DE IDENTIDAD ---
+        const USUARIO_ACTUAL = "Raul C."; 
+        const INICIALES_ACTUAL = "RC";
+
         let db = [];
-        let viewMode = 'pro'; // Mejora 6: Standard vs Pro
+        let viewMode = 'pro';
 
         const cols = [
             { id: 'solicitado', label: 'Solicitado', color: 'border-slate-400' },
@@ -121,7 +126,6 @@
             { id: 'incidencia', label: 'Incidencia', color: 'border-red-500' }
         ];
 
-        // MEJORA 1: Caché de Talleres (30 min)
         async function cargarTalleres() {
             const cache = localStorage.getItem('talleres_cache');
             const cacheTime = localStorage.getItem('talleres_time');
@@ -149,7 +153,6 @@
             });
         }
 
-        // MEJORA 2: Filtro Dinámico
         function filtrar() {
             const val = document.getElementById('buscador').value.toLowerCase();
             document.querySelectorAll('.pedido-card').forEach(card => {
@@ -157,7 +160,6 @@
             });
         }
 
-        // MEJORA 3: Exportar CSV
         function exportarCSV() {
             let csv = "ID,Pieza,Matricula,Precio,Estado\n";
             db.forEach(p => {
@@ -171,28 +173,35 @@
             a.click();
         }
 
-        // MEJORA 6: Toggle View
         function toggleView() {
             viewMode = viewMode === 'pro' ? 'standard' : 'pro';
             document.getElementById('viewBtn').innerText = viewMode.toUpperCase();
             render();
         }
 
-        // DRAG & DROP LOGIC
+        // --- DRAG & DROP ACTUALIZADO CON AUDITORÍA ---
         function start(e, id) { e.dataTransfer.setData("pid", id); }
         function over(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
         function leave(e) { e.currentTarget.classList.remove('drag-over'); }
+        
         async function drop(e, estado) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
             const id = e.dataTransfer.getData("pid");
+            
             const res = await fetch('/api/pedidos/update-status', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ id, nuevoEstado: estado })
+                body: JSON.stringify({ 
+                    id, 
+                    nuevoEstado: estado,
+                    admin_user: USUARIO_ACTUAL, // <--- ENVIAMOS EL USUARIO
+                    iniciales: INICIALES_ACTUAL
+                })
             });
+            
             if (res.ok) {
-                showToast("Movimiento registrado con éxito");
+                showToast("Movimiento registrado y auditado");
                 cargarDatos();
             }
         }
@@ -235,7 +244,7 @@
                         </div>
                         <p class="text-[10px] font-black text-slate-400 mb-1">${sumaCol.toFixed(2)}€</p>
                     </div>
-                    <div class="flex-1 space-y-4 overflow-y-auto pr-2">
+                    <div class="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
                         ${lista.map(p => `
                             <div draggable="true" ondragstart="start(event, ${p.id})" onclick='abrirEditar(${JSON.stringify(p)})'
                                  class="pedido-card card-${viewMode} bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-sm border border-transparent hover:border-blue-500 transition-all cursor-grab active:cursor-grabbing relative group">
@@ -261,10 +270,10 @@
             filtrar();
         }
 
-        // MODAL HELPERS
         function abrirModal() {
             document.getElementById('pedido-form').reset();
             document.getElementById('pedido-id').value = '';
+            document.getElementById('modal-title').innerText = "Nuevo Registro";
             const m = document.getElementById('modal');
             m.classList.remove('hidden');
             setTimeout(() => { document.getElementById('modalContent').classList.replace('scale-95', 'scale-100'); document.getElementById('modalContent').classList.replace('opacity-0', 'opacity-100'); }, 10);
@@ -287,6 +296,7 @@
             setTimeout(() => m.classList.add('hidden'), 300);
         }
 
+        // --- SUBMIT ACTUALIZADO CON AUDITORÍA ---
         document.getElementById('pedido-form').onsubmit = async (e) => {
             e.preventDefault();
             const id = document.getElementById('pedido-id').value;
@@ -295,14 +305,24 @@
                 pieza: document.getElementById('pieza').value,
                 matricula: document.getElementById('matricula').value,
                 precio: document.getElementById('precio').value,
-                nuevoEstado: document.getElementById('estado').value
+                nuevoEstado: document.getElementById('estado').value,
+                admin_user: USUARIO_ACTUAL, // <--- IMPORTANTE
+                usuario_id: document.getElementById('filtroTaller').value
             };
-            const res = await fetch(id ? '/api/pedidos/update-status' : '/api/pedidos/new', {
+
+            const endpoint = id ? '/api/pedidos/update-status' : '/api/pedidos/new';
+            
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
-            if (res.ok) { showToast("Base de Datos Actualizada"); cerrarModal(); cargarDatos(); }
+
+            if (res.ok) { 
+                showToast(id ? "Cambios guardados y auditados" : "Nuevo registro creado"); 
+                cerrarModal(); 
+                cargarDatos(); 
+            }
         };
 
         function toggleDark() {
