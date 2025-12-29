@@ -15,7 +15,9 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
-// RUTA DE LOGIN
+// ==========================================
+// 1. RUTA DE LOGIN (MANTENIDA EXACTAMENTE)
+// ==========================================
 app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -26,9 +28,8 @@ app.post('/auth/login', async (req, res) => {
 
         if (result.rows.length > 0) {
             const user = result.rows[0];
-            let redirectUrl = 'landing.html'; // Por defecto para admin y gestor
+            let redirectUrl = 'landing.html'; 
 
-            // Si es taller, va a su página específica
             if (user.rol === 'taller') {
                 redirectUrl = 'pedidos-taller.html';
             }
@@ -47,13 +48,53 @@ app.post('/auth/login', async (req, res) => {
     }
 });
 
-// RUTA PARA OBTENER PEDIDOS (Usada por el Dashboard)
+// ==========================================
+// 2. RUTAS PARA EL DASHBOARD PRO (69 MEJORAS)
+// ==========================================
+
+// OBTENER TODOS LOS PEDIDOS (Con campos extendidos)
 app.get('/api/pedidos', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM pedidos ORDER BY id DESC');
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// ACTUALIZAR ESTADO (Para el Drag & Drop)
+app.post('/api/pedidos/update-status', async (req, res) => {
+    const { id, nuevoEstado } = req.body;
+    try {
+        // Actualizamos estado y fecha
+        await pool.query(
+            'UPDATE pedidos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [nuevoEstado, id]
+        );
+
+        // Registro automático en LOGS (Trazabilidad)
+        await pool.query(
+            'INSERT INTO logs (pedido_id, accion, detalle) VALUES ($1, $2, $3)',
+            [id, 'MOVIMIENTO', `Cambiado a ${nuevoEstado.toUpperCase()}`]
+        );
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al actualizar el estado' });
+    }
+});
+
+// OBTENER LOGS DE UN PEDIDO (Para el Popup Avanzado)
+app.get('/api/pedidos/:id/logs', async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM logs WHERE pedido_id = $1 ORDER BY fecha DESC',
+            [req.params.id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al cargar logs' });
     }
 });
 
