@@ -1,51 +1,58 @@
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
-const path = require('path'); // FALTA ESTO PARA LAS RUTAS
-require('dotenv').config(); // RECOMENDADO PARA LOCAL
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// USAR VARIABLE DE ENTORNO
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, 
   ssl: { rejectUnauthorized: false }
 });
 
-// --- CLAVE PARA EL ERROR CANNOT GET / ---
-// 1. Indica que los archivos están en la carpeta 'public'
+// Servir archivos estáticos desde la carpeta /public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 2. Ruta raíz: envía el index.html (Login)
+// RUTAS DE NAVEGACIÓN
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 3. Ruta para el Dashboard (asegura que cargue el HTML)
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// --- TUS RUTAS DE API ---
+// API: Obtener pedidos para el Kanban
 app.get('/api/pedidos', async (req, res) => {
   try {
     const query = `
       SELECT p.*, u.nombre_taller 
       FROM pedidos p 
       LEFT JOIN usuarios u ON p.usuario_id = u.id
-      ORDER BY p.id DESC;
-    `;
+      ORDER BY p.id DESC;`;
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Error en el servidor');
+    res.status(500).json({ error: err.message });
   }
 });
 
-// --- RUTA DE LOGIN (La necesitas para entrar) ---
+// API: Crear nuevo pedido (Indispensable para pedidos-taller.html)
+app.post('/api/pedidos', async (req, res) => {
+    const { matricula, pieza, bastidor, notas_tecnicas, estado } = req.body;
+    try {
+        const query = 'INSERT INTO pedidos (matricula, pieza, bastidor, notas_tecnicas, estado) VALUES ($1, $2, $3, $4, $5) RETURNING *';
+        const result = await pool.query(query, [matricula, pieza, bastidor, notas_tecnicas, estado || 'solicitado']);
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// API: Login
 app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
