@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Kanban - Recambio Reciclado IA</title>
+    <title>Gestión de Flujos - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -38,7 +38,7 @@
         <div class="flex items-center gap-3">
             <div id="db-status" class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
                 <div id="db-led" class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
-                <span class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">SQL LIVE</span>
+                <span class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">SQL LIVE / AEAT</span>
             </div>
 
             <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center">
@@ -53,17 +53,42 @@
                 <div class="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 shadow-2xl rounded-[2rem] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-5 border border-slate-100 dark:border-slate-800 z-[200]">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Aplicaciones</p>
                     <div class="space-y-1">
+                        
+                        <a href="landing.html" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
+                            <div class="w-8 h-8 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-home"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Menú Principal</p></div>
+                        </a>
+
                         <a href="dashboard.html" class="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/50">
                             <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-xs"><i class="fas fa-columns"></i></div>
-                            <div><p class="text-[10px] font-black dark:text-white uppercase">Gestión Kanban</p></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Gestión de Flujos</p></div>
                         </a>
+
+                        <a href="#" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
+                            <div class="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-chart-line"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Inteligencia BI</p></div>
+                        </a>
+
                         <a href="talleres.html" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
-                            <div class="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-users-cog"></i></div>
-                            <div><p class="text-[10px] font-black dark:text-white uppercase">Gestión Equipo</p></div>
+                            <div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-users-cog"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Equipo y Talleres</p></div>
                         </a>
+
                         <a href="pedidos-taller.html" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
-                            <div class="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-tools"></i></div>
-                            <div><p class="text-[10px] font-black dark:text-white uppercase">Vista Taller</p></div>
+                            <div class="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-list-check"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Panel de Pedidos</p></div>
+                        </a>
+
+                        <a href="#" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
+                            <div class="w-8 h-8 bg-slate-100 text-slate-500 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-history"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Historial de Logs</p></div>
+                        </a>
+
+                        <hr class="my-2 border-slate-100 dark:border-slate-800">
+
+                        <a href="index.html" class="flex items-center gap-3 p-3 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all group/exit">
+                            <div class="w-8 h-8 bg-red-100 text-red-600 rounded-lg flex items-center justify-center text-xs group-hover/exit:bg-red-600 group-hover/exit:text-white transition-colors"><i class="fas fa-power-off"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Salir del Sistema</p></div>
                         </a>
                     </div>
                 </div>
@@ -76,7 +101,7 @@
         <div class="flex flex-col md:flex-row justify-between items-end gap-6">
             <div>
                 <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Control Logístico</h1>
-                <p id="sync-text" class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Conectando con Render...</p>
+                <p id="sync-text" class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Sincronizado con Trazabilidad AEAT</p>
             </div>
             
             <div class="flex gap-3">
@@ -98,4 +123,5 @@
         <i class="fas fa-plus text-xl group-hover:rotate-90 transition-transform"></i>
     </button>
 
-    <div id
+</body>
+</html>
