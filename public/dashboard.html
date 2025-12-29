@@ -2,7 +2,7 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <title>Logística IA - Enterprise Pro</title>
+    <title>Logística IA - v4.0 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script>
@@ -10,188 +10,492 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: { darkBg: '#0f172a', cardDark: '#1e293b' }
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardDark: '#1e293b'
+                    }
                 }
             }
         };
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
     </script>
     <style>
-        .kanban-column { min-width: 350px; }
-        .drag-over { border: 2px dashed #3b82f6 !important; background: rgba(59, 130, 246, 0.05); }
+        .kanban-column { min-width: 340px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .drag-over { background-color: rgba(59, 130, 246, 0.1); border: 2px dashed #3b82f6 !important; border-radius: 2.5rem; transform: scale(1.02); }
+        .card-pro .extra-info { display: block; }
+        .card-standard .extra-info { display: none; }
+        
+        .toast { 
+            transform: translate(-50%, -200%); 
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
+            opacity: 0; 
+            pointer-events: none;
+        }
+        .toast.show { 
+            transform: translate(-50%, 0); 
+            opacity: 1; 
+        }
+
+        /* Estilo para errores en el bastidor */
+        .input-error { border: 2px solid #ef4444 !important; background-color: #fef2f2 !important; }
+        .dark .input-error { background-color: #450a0a !important; }
+        
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .tab-active { background: #2563eb !important; color: white !important; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 overflow-hidden font-sans">
+<body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 overflow-hidden font-sans antialiased">
 
-    <div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[300] opacity-0 transition-all duration-500 pointer-events-none">
-        <div id="toast-container" class="bg-emerald-600 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-xs uppercase tracking-widest">
-            <i id="toast-icon" class="fas fa-check-circle"></i> <span id="toast-msg">Sincronizado</span>
+    <div id="toast" class="fixed top-6 left-1/2 z-[300] toast">
+        <div id="toast-container" class="bg-emerald-500/90 backdrop-blur-md text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px] tracking-widest border border-white/20">
+            <i id="toast-icon" class="fas fa-database animate-pulse"></i> <span id="toast-msg">Sincronizado con SQL</span>
         </div>
     </div>
 
-    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-6 py-3 flex justify-between items-center z-50">
-        <div class="flex items-center gap-6">
-            <button class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-500">
-                <i class="fas fa-th text-lg"></i>
-            </button>
-            <img src="/assets/logo.png" alt="Logo" class="h-8 dark:brightness-0 dark:invert">
-            <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
-            <select id="filtroTaller" onchange="cargarDatos()" class="bg-transparent border-none font-black uppercase text-[10px] tracking-widest outline-none cursor-pointer">
-                <option value="todos text-dark">Todos los Talleres</option>
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex justify-between items-center z-50">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black italic shadow-lg shadow-blue-500/30">R</div>
+                <h1 class="font-black text-sm uppercase tracking-tighter italic">Logística IA</h1>
+            </div>
+            <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase outline-none focus:ring-2 ring-blue-500 transition-all cursor-pointer">
+                <option value="todos">Todos los Talleres</option>
             </select>
         </div>
 
         <div class="flex items-center gap-4">
-            <div class="flex flex-col items-end px-4 border-r border-slate-200 dark:border-slate-700 cursor-pointer" onclick="toggleStock()">
-                <p class="text-[8px] font-bold text-slate-500 uppercase">Valor Stock</p>
-                <div class="flex items-center gap-2">
-                    <span id="total-euros" class="text-sm font-black text-emerald-500">0.00€</span>
-                    <i id="eye-icon" class="fas fa-eye text-[10px] text-slate-400"></i>
-                </div>
+            <div class="hidden md:flex flex-col items-end mr-6">
+                <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Valor Total Stock</p>
+                <p id="total-euros" class="text-sm font-black text-emerald-500 tracking-tighter">0.00€</p>
             </div>
-            <button onclick="toggleDark()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500"><i class="fas fa-moon"></i></button>
-            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">RC</div>
+            <button onclick="toggleView()" id="viewBtn" class="bg-slate-100 dark:bg-slate-800 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all">PRO VIEW</button>
+            <button onclick="toggleDark()" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-500 transition-all"><i class="fas fa-moon"></i></button>
         </div>
     </nav>
 
-    <div class="px-8 py-6 bg-white dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 justify-between items-center">
-        <div class="relative w-full max-w-lg">
-            <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-            <input type="text" id="buscador" oninput="filtrar()" placeholder="Buscar en 24 campos (VIN, Matrícula, Cliente...)" 
-                   class="w-full bg-slate-100 dark:bg-slate-800/50 rounded-2xl py-3 pl-12 pr-6 text-xs font-bold outline-none focus:ring-2 ring-blue-500 transition-all">
+    <div class="px-8 py-6 flex flex-col md:flex-row gap-6 justify-between items-center bg-white dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
+        <div class="relative w-full max-w-xl">
+            <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="text" id="buscador" oninput="filtrar()" placeholder="Buscar por matrícula, pieza o bastidor..." 
+                   class="w-full bg-slate-100 dark:bg-slate-800/50 rounded-[2rem] py-4 pl-14 pr-6 text-[11px] font-bold uppercase outline-none focus:ring-2 ring-blue-500/50 transition-all border border-transparent focus:border-blue-500">
         </div>
-        <button onclick="abrirModal()" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all">
-            + Nuevo Registro Enterprise
+        <button onclick="abrirModal()" class="w-full md:w-auto px-12 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl shadow-blue-500/40 hover:-translate-y-1 transition-all">
+            + Nuevo Registro
         </button>
     </div>
 
-    <main class="flex gap-6 p-8 overflow-x-auto h-[calc(100vh-180px)] custom-scrollbar" id="kanbanBoard"></main>
+    <main class="flex gap-6 p-8 overflow-x-auto h-[calc(100vh-190px)] custom-scrollbar" id="kanbanBoard"></main>
 
-    <div id="modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden z-[200] flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden" id="modalContent">
+    <div id="modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-[3.5rem] p-10 shadow-2xl scale-95 opacity-0 transition-all duration-300 border border-white/5 overflow-hidden flex flex-col max-h-[90vh]" id="modalContent">
             
-            <div class="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                <h2 id="modal-title" class="text-2xl font-black italic uppercase tracking-tighter">Ficha Logística Pro</h2>
-                <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                    <button onclick="switchTab('tab-1')" id="btn-tab-1" class="px-6 py-2 rounded-lg text-[10px] font-bold uppercase transition-all tab-active">Pedido & Coche</button>
-                    <button onclick="switchTab('tab-2')" id="btn-tab-2" class="px-6 py-2 rounded-lg text-[10px] font-bold uppercase transition-all text-slate-400">Taller & Cliente</button>
-                    <button onclick="switchTab('tab-3')" id="btn-tab-3" class="px-6 py-2 rounded-lg text-[10px] font-bold uppercase transition-all text-slate-400">Logística & Costes</button>
+            <div class="flex justify-between items-center mb-10">
+                <h2 id="modal-title" class="text-3xl font-black uppercase tracking-tighter italic dark:text-white">Ficha del Pedido</h2>
+                <div class="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-[1.5rem]">
+                    <button onclick="switchTab('tab-pedido')" id="btn-tab-pedido" class="px-8 py-3 rounded-2xl text-[10px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all">Datos Pedido</button>
+                    <button onclick="switchTab('tab-taller')" id="btn-tab-taller" class="px-8 py-3 rounded-2xl text-[10px] font-black uppercase text-slate-400 transition-all">Info Taller</button>
                 </div>
             </div>
 
-            <form id="pedido-form" class="p-8 overflow-y-auto custom-scrollbar flex-1">
+            <form id="pedido-form" class="space-y-8 overflow-y-auto pr-4 custom-scrollbar">
                 <input type="hidden" id="pedido-id">
                 
-                <div id="tab-1" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="col-span-2"><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Pieza</label><input type="text" id="pieza" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none font-bold uppercase border-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Matrícula</label><input type="text" id="matricula" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none font-bold uppercase border-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Bastidor (VIN)</label><input type="text" id="bastidor" maxlength="17" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none font-bold uppercase border-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Marca</label><input type="text" id="marca" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Modelo</label><input type="text" id="modelo" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Motorización</label><input type="text" id="motor" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Año</label><input type="number" id="anyo" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none focus:ring-2 ring-blue-500"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Referencia OEM</label><input type="text" id="ref_oem" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none focus:ring-2 ring-blue-500"></div>
-                </div>
-
-                <div id="tab-2" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Nombre Taller</label><input type="text" id="nombre_taller" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Teléfono Taller</label><input type="text" id="tel_taller" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Nombre Cliente Final</label><input type="text" id="cliente_final" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Dirección de Entrega</label><input type="text" id="direccion" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Provincia</label><input type="text" id="provincia" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Email</label><input type="email" id="email" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                </div>
-
-                <div id="tab-3" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Precio Venta (€)</label><input type="number" step="0.01" id="precio" class="w-full bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl outline-none border-none text-blue-600 font-black"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Coste Compra (€)</label><input type="number" step="0.01" id="coste" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Estado Pedido</label>
-                        <select id="estado" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none font-bold uppercase text-[10px]">
+                <div id="tab-pedido" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="space-y-2 col-span-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Nombre de la Pieza</label>
+                        <input type="text" id="pieza" required class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-bold uppercase text-sm focus:ring-2 ring-blue-500 outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Matrícula</label>
+                        <input type="text" id="matricula" required class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-black uppercase text-sm focus:ring-2 ring-blue-500 outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between px-4">
+                            <label class="text-[9px] font-black uppercase text-slate-500">Nº Bastidor</label>
+                            <span id="bastidor-count" class="text-[9px] font-black text-blue-500">0/17</span>
+                        </div>
+                        <input type="text" id="bastidor" oninput="validarInputBastidor(this)" placeholder="17 CARACTERES (O 7-12 CLÁSICOS)" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-bold uppercase text-sm outline-none transition-all">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Precio Venta (€)</label>
+                        <input type="number" id="precio" step="0.01" class="w-full bg-blue-50 dark:bg-blue-900/20 p-5 rounded-[2rem] border-none font-black text-blue-600 text-sm outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Estado Actual</label>
+                        <select id="estado" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-black uppercase text-[10px] outline-none appearance-none cursor-pointer">
                             <option value="solicitado">Solicitado</option>
-                            <option value="desguace">Desguace</option>
+                            <option value="desguace">En Desguace</option>
                             <option value="listo">Listo</option>
                             <option value="transito">Tránsito</option>
                             <option value="entregado">Entregado</option>
                             <option value="incidencia">Incidencia</option>
                         </select>
                     </div>
-                    <div><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Agencia Transporte</label><input type="text" id="agencia" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                    <div class="col-span-2"><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Número de Seguimiento (Tracking)</label><input type="text" id="tracking" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></div>
-                    <div class="col-span-3"><label class="text-[9px] font-bold uppercase text-slate-400 ml-2">Notas Técnicas e Incidencias</label><textarea id="notas" rows="3" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl outline-none border-none"></textarea></div>
+                    <div class="col-span-3 space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Notas Técnicas e Incidencias</label>
+                        <textarea id="notas_tecnicas" rows="3" class="w-full bg-slate-50 dark:bg-slate-800 p-6 rounded-[2.5rem] border-none text-sm outline-none" placeholder="Escribe aquí cualquier detalle extra..."></textarea>
+                    </div>
                 </div>
 
-                <div class="flex gap-4 mt-10">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 p-4 bg-slate-100 dark:bg-slate-800 rounded-xl font-bold uppercase text-[10px]">Cancelar</button>
-                    <button type="submit" id="btnGuardar" class="flex-1 p-4 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] shadow-xl shadow-blue-500/20">Sincronizar SQL</button>
+                <div id="tab-taller" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Nombre Comercial</label>
+                        <input type="text" id="nombre_taller" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">WhatsApp Logística</label>
+                        <input type="text" id="telefono_whatsapp" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
+                    </div>
+                    <div class="col-span-2 space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Dirección Fiscal / Entrega</label>
+                        <input type="text" id="direccion" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Provincia</label>
+                        <input type="text" id="provincia" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Email de Cuenta</label>
+                        <input type="text" id="email_taller" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="button" onclick="cerrarModal()" class="flex-1 p-6 bg-slate-100 dark:bg-slate-800 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Cerrar</button>
+                    <button type="submit" id="btnGuardar" class="flex-1 p-6 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:scale-[1.02] transition-all">Guardar Cambios SQL</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // Lógica de Tabs
-        function switchTab(tabId) {
-            ['tab-1', 'tab-2', 'tab-3'].forEach(id => document.getElementById(id).classList.add('hidden'));
-            document.getElementById(tabId).classList.remove('hidden');
-            ['btn-tab-1', 'btn-tab-2', 'btn-tab-3'].forEach(id => {
-                document.getElementById(id).classList.remove('tab-active');
-                document.getElementById(id).classList.add('text-slate-400');
-            });
-            const activeBtn = 'btn-' + tabId;
-            document.getElementById(activeBtn).classList.add('tab-active');
-            document.getElementById(activeBtn).classList.remove('text-slate-400');
+        const USUARIO_ACTUAL = "Raul C."; 
+        const INICIALES_ACTUAL = "RC";
+
+        let db = [];
+        let viewMode = 'pro';
+
+        const cols = [
+            { id: 'solicitado', label: 'Solicitado', color: 'border-slate-400' },
+            { id: 'desguace', label: 'En Desguace', color: 'border-amber-500' },
+            { id: 'listo', label: 'Listo/Verificado', color: 'border-purple-500' },
+            { id: 'transito', label: 'En Tránsito', color: 'border-emerald-500' },
+            { id: 'entregado', label: 'Entregado', color: 'border-blue-500' },
+            { id: 'incidencia', label: 'Incidencia', color: 'border-red-500' }
+        ];
+
+        // --- NUEVAS FUNCIONES DE VALIDACIÓN ---
+        function validarInputBastidor(input) {
+            const val = input.value.trim().toUpperCase();
+            document.getElementById('bastidor-count').innerText = `${val.length}/17`;
+            input.classList.remove('input-error');
         }
 
-        // Lógica de Persistencia SQL
-        async function guardarEnSQL(data) {
-            showToast("Conectando con SQL...", "info");
-            try {
-                const endpoint = data.id ? '/api/pedidos/update' : '/api/pedidos/create';
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if(res.ok) {
-                    showToast("Base de Datos Actualizada", "success");
-                    cerrarModal();
-                    cargarDatos();
+        function validarBastidorFinal(vin) {
+            const limpio = vin.trim().toUpperCase();
+            const len = limpio.length;
+
+            if (len === 0) return true; // Permitir si no se conoce
+
+            // Caso 1: Estándar ISO (17 caracteres)
+            if (len === 17) {
+                if (/[IOQ]/.test(limpio)) {
+                    showToast("ERROR: El VIN de 17 dígitos no admite I, O, Q", "error");
+                    return false;
                 }
-            } catch (e) {
-                showToast("Error de conexión SQL", "error");
+                return true;
+            }
+
+            // Caso 2: Clásicos / Motos (7 a 12 caracteres)
+            if (len >= 7 && len <= 12) {
+                return true;
+            }
+
+            // Error de longitud
+            showToast(`ERROR: Bastidor inválido (${len} caracteres). Use 17 (Moderno) o 7-12 (Clásico)`, "error");
+            return false;
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('tab-pedido').classList.add('hidden');
+            document.getElementById('tab-taller').classList.add('hidden');
+            document.getElementById(tabId).classList.remove('hidden');
+            const btnP = document.getElementById('btn-tab-pedido');
+            const btnT = document.getElementById('btn-tab-taller');
+            if(tabId === 'tab-pedido') {
+                btnP.className = "px-8 py-3 rounded-2xl text-[10px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all";
+                btnT.className = "px-8 py-3 rounded-2xl text-[10px] font-black uppercase text-slate-400 transition-all";
+            } else {
+                btnT.className = "px-8 py-3 rounded-2xl text-[10px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all";
+                btnP.className = "px-8 py-3 rounded-2xl text-[10px] font-black uppercase text-slate-400 transition-all";
             }
         }
 
-        function showToast(msg, type) {
-            const t = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            t.classList.remove('opacity-0', '-translate-y-4');
-            t.classList.add('opacity-100', 'translate-y-0');
-            setTimeout(() => t.classList.add('opacity-0'), 3000);
+        function start(e, id) { 
+            e.dataTransfer.setData("text/plain", id);
+            e.dataTransfer.effectAllowed = "move";
+            e.target.style.opacity = "0.4";
+            e.target.classList.add('dragging');
+        }
+        
+        function end(e) { 
+            e.target.style.opacity = "1"; 
+            e.target.classList.remove('dragging');
         }
 
-        // ... Resto de lógica de renderizado y filtros (similar a la anterior pero adaptada a los 24 campos)
+        function over(e) { 
+            e.preventDefault(); 
+            e.dataTransfer.dropEffect = "move";
+            e.currentTarget.classList.add('drag-over'); 
+        }
         
+        function leave(e) { e.currentTarget.classList.remove('drag-over'); }
+        
+        async function drop(e, estado) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const id = e.dataTransfer.getData("text/plain");
+            if (!id) return;
+
+            showToast(`Actualizando Pieza #${id}...`);
+            try {
+                const res = await fetch('/api/pedidos/update-status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        id: id, 
+                        nuevoEstado: estado,
+                        admin_user: USUARIO_ACTUAL,
+                        iniciales: INICIALES_ACTUAL
+                    })
+                });
+                if (res.ok) {
+                    showToast(`Éxito: Pieza #${id} en ${estado.toUpperCase()}`);
+                    cargarDatos();
+                } else {
+                    showToast("Error al guardar en base de datos", "error");
+                }
+            } catch (error) {
+                showToast("Fallo de conexión con SQL", "error");
+            }
+        }
+
+        // Modificamos showToast para aceptar colores
+        function showToast(msg, type = "success") {
+            const t = document.getElementById('toast');
+            const container = document.getElementById('toast-container');
+            const icon = document.getElementById('toast-icon');
+            
+            if(type === "error") {
+                container.classList.replace('bg-emerald-500/90', 'bg-red-500/90');
+                icon.className = "fas fa-exclamation-triangle";
+            } else {
+                container.classList.replace('bg-red-500/90', 'bg-emerald-500/90');
+                icon.className = "fas fa-database animate-pulse";
+            }
+
+            document.getElementById('toast-msg').innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 4000);
+        }
+
+        async function cargarDatos() {
+            const tallerId = document.getElementById('filtroTaller').value;
+            try {
+                const res = await fetch(`/api/pedidos?taller_id=${tallerId}`);
+                db = await res.json();
+                render();
+                showToast("Base de Datos SQL Conectada");
+            } catch (e) { 
+                showToast("Error: Sin conexión con el servidor", "error");
+            }
+        }
+
+        function render() {
+            const board = document.getElementById('kanbanBoard');
+            board.innerHTML = '';
+            let totalGeneral = 0;
+
+            cols.forEach(c => {
+                const lista = db.filter(p => p.estado && p.estado.toLowerCase() === c.id);
+                const sumaCol = lista.reduce((acc, p) => acc + parseFloat(p.precio || 0), 0);
+                totalGeneral += sumaCol;
+
+                const column = document.createElement('div');
+                column.className = `kanban-column flex flex-col gap-5`;
+                column.ondragover = over;
+                column.ondragleave = leave;
+                column.ondrop = (e) => drop(e, c.id);
+
+                column.innerHTML = `
+                    <div class="border-t-4 ${c.color} pt-5 mb-3 flex justify-between items-end px-3">
+                        <div>
+                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">${c.label}</p>
+                            <p class="text-2xl font-black dark:text-white">${lista.length}</p>
+                        </div>
+                        <p class="text-xs font-black text-slate-400 mb-1 italic">${sumaCol.toLocaleString()}€</p>
+                    </div>
+                    <div class="flex-1 space-y-5 overflow-y-auto pr-2 custom-scrollbar">
+                        ${lista.map(p => `
+                            <div draggable="true" 
+                                 ondragstart="start(event, ${p.id})" 
+                                 ondragend="end(event)"
+                                 onclick='abrirEditar(${JSON.stringify(p)})'
+                                 class="pedido-card card-${viewMode} bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-transparent hover:border-blue-500 transition-all cursor-grab active:cursor-grabbing relative group overflow-hidden">
+                                
+                                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-all"></div>
+                                <span class="absolute top-7 right-7 font-black text-blue-600 dark:text-blue-400 text-xs extra-info">${p.precio}€</span>
+                                <p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-tighter">ID #${p.id}</p>
+                                <h4 class="text-xs font-black uppercase dark:text-white leading-tight mb-2">${p.pieza}</h4>
+                                <div class="extra-info mb-4">
+                                    <p class="text-[10px] font-bold text-slate-500 italic uppercase">
+                                        <i class="fas fa-car-side mr-1"></i> ${p.marca_coche || ''} ${p.modelo_coche || ''}
+                                    </p>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                    <span class="bg-slate-100 dark:bg-slate-800 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase text-slate-700 dark:text-slate-300">
+                                        ${p.matricula}
+                                    </span>
+                                    <div class="flex gap-2">
+                                        ${p.bastidor ? '<i class="fas fa-fingerprint text-slate-300 text-[10px]"></i>' : ''}
+                                        <i class="fas fa-chevron-right text-slate-200 group-hover:text-blue-500 transition-all"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                board.appendChild(column);
+            });
+            document.getElementById('total-euros').innerText = `${totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2})}€`;
+        }
+
         function abrirModal() {
-            document.getElementById('modal').classList.remove('hidden');
-            switchTab('tab-1');
+            document.getElementById('pedido-form').reset();
+            document.getElementById('pedido-id').value = '';
+            document.getElementById('bastidor-count').innerText = '0/17';
+            document.getElementById('bastidor').classList.remove('input-error');
+            document.getElementById('modal-title').innerText = "Nuevo Registro";
+            switchTab('tab-pedido');
+            const m = document.getElementById('modal');
+            m.classList.remove('hidden');
+            setTimeout(() => { 
+                document.getElementById('modalContent').classList.replace('scale-95', 'scale-100'); 
+                document.getElementById('modalContent').classList.replace('opacity-0', 'opacity-100'); 
+            }, 10);
+        }
+
+        function abrirEditar(p) {
+            abrirModal();
+            document.getElementById('modal-title').innerText = "Ficha del Pedido";
+            document.getElementById('pedido-id').value = p.id;
+            document.getElementById('pieza').value = p.pieza;
+            document.getElementById('matricula').value = p.matricula;
+            document.getElementById('precio').value = p.precio;
+            document.getElementById('estado').value = p.estado.toLowerCase();
+            document.getElementById('bastidor').value = p.bastidor || '';
+            document.getElementById('bastidor-count').innerText = `${(p.bastidor || '').length}/17`;
+            document.getElementById('notas_tecnicas').value = p.notas_tecnicas || p.notas_incidencia || '';
+            document.getElementById('nombre_taller').value = p.nombre_taller || 'Taller Central';
+            document.getElementById('telefono_whatsapp').value = p.telefono_whatsapp || '';
+            document.getElementById('direccion').value = p.direccion || '';
+            document.getElementById('provincia').value = p.provincia || '';
+            document.getElementById('email_taller').value = p.email || '';
         }
 
         function cerrarModal() {
-            document.getElementById('modal').classList.add('hidden');
+            const m = document.getElementById('modal');
+            document.getElementById('modalContent').classList.replace('scale-100', 'scale-95');
+            document.getElementById('modalContent').classList.replace('opacity-100', 'opacity-0');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        }
+
+        // --- SUBMIT ACTUALIZADO CON BLOQUEO DE BASTIDOR ---
+        document.getElementById('pedido-form').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const bastidorVal = document.getElementById('bastidor').value;
+            
+            // VALIDACIÓN CRÍTICA
+            if (!validarBastidorFinal(bastidorVal)) {
+                document.getElementById('bastidor').classList.add('input-error');
+                return; // NO SE ENVÍA NADA A SQL
+            }
+
+            const id = document.getElementById('pedido-id').value;
+            const btn = document.getElementById('btnGuardar');
+            
+            const data = {
+                id: id || null,
+                pieza: document.getElementById('pieza').value.toUpperCase(),
+                matricula: document.getElementById('matricula').value.toUpperCase(),
+                precio: document.getElementById('precio').value,
+                nuevoEstado: document.getElementById('estado').value,
+                bastidor: bastidorVal.toUpperCase(),
+                notas_tecnicas: document.getElementById('notas_tecnicas').value,
+                admin_user: USUARIO_ACTUAL,
+                usuario_id: document.getElementById('filtroTaller').value !== 'todos' ? document.getElementById('filtroTaller').value : 1
+            };
+
+            btn.innerText = "ENVIANDO...";
+            btn.classList.add('opacity-50', 'pointer-events-none');
+
+            const endpoint = id ? '/api/pedidos/update-status' : '/api/pedidos/new';
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) { 
+                    showToast(id ? "SQL Actualizado" : "Registro Creado"); 
+                    cerrarModal(); 
+                    cargarDatos(); 
+                }
+            } catch (err) { 
+                showToast("Error de conexión", "error"); 
+            } finally {
+                btn.innerText = "Guardar Cambios SQL";
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        };
+
+        function toggleView() {
+            viewMode = viewMode === 'pro' ? 'standard' : 'pro';
+            document.getElementById('viewBtn').innerText = viewMode === 'pro' ? 'PRO VIEW' : 'STD VIEW';
+            render();
         }
 
         function toggleDark() {
             document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         }
 
-        let stockVis = true;
-        function toggleStock() {
-            stockVis = !stockVis;
-            document.getElementById('total-euros').classList.toggle('blur-sm');
+        function filtrar() {
+            const val = document.getElementById('buscador').value.toLowerCase();
+            document.querySelectorAll('.pedido-card').forEach(card => {
+                card.style.display = card.innerText.toLowerCase().includes(val) ? 'block' : 'none';
+            });
         }
+
+        async function cargarTalleres() {
+            try {
+                const res = await fetch('/api/usuarios/talleres');
+                const talleres = await res.json();
+                const select = document.getElementById('filtroTaller');
+                talleres.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = (t.nombre_taller || t.email.split('@')[0]).toUpperCase();
+                    select.appendChild(opt);
+                });
+            } catch(e) {}
+        }
+
+        window.onload = () => { cargarTalleres(); cargarDatos(); };
     </script>
 </body>
 </html>
