@@ -27,7 +27,6 @@
         .card-pro .extra-info { display: block; }
         .card-standard .extra-info { display: none; }
         
-        /* Toast corregido: Posición superior y animación de caída */
         .toast { 
             transform: translate(-50%, -200%); 
             transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
@@ -38,6 +37,10 @@
             transform: translate(-50%, 0); 
             opacity: 1; 
         }
+
+        /* Estilo para errores en el bastidor */
+        .input-error { border: 2px solid #ef4444 !important; background-color: #fef2f2 !important; }
+        .dark .input-error { background-color: #450a0a !important; }
         
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
@@ -47,8 +50,8 @@
 <body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 overflow-hidden font-sans antialiased">
 
     <div id="toast" class="fixed top-6 left-1/2 z-[300] toast">
-        <div class="bg-emerald-500/90 backdrop-blur-md text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px] tracking-widest border border-white/20">
-            <i class="fas fa-database animate-pulse"></i> <span id="toast-msg">Sincronizado con SQL</span>
+        <div id="toast-container" class="bg-emerald-500/90 backdrop-blur-md text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px] tracking-widest border border-white/20">
+            <i id="toast-icon" class="fas fa-database animate-pulse"></i> <span id="toast-msg">Sincronizado con SQL</span>
         </div>
     </div>
 
@@ -110,8 +113,11 @@
                         <input type="text" id="matricula" required class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-black uppercase text-sm focus:ring-2 ring-blue-500 outline-none">
                     </div>
                     <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Nº Bastidor</label>
-                        <input type="text" id="bastidor" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-bold uppercase text-sm outline-none">
+                        <div class="flex justify-between px-4">
+                            <label class="text-[9px] font-black uppercase text-slate-500">Nº Bastidor</label>
+                            <span id="bastidor-count" class="text-[9px] font-black text-blue-500">0/17</span>
+                        </div>
+                        <input type="text" id="bastidor" oninput="validarInputBastidor(this)" placeholder="17 CARACTERES (O 7-12 CLÁSICOS)" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-bold uppercase text-sm outline-none transition-all">
                     </div>
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Precio Venta (€)</label>
@@ -159,7 +165,7 @@
 
                 <div class="flex gap-4 pt-4">
                     <button type="button" onclick="cerrarModal()" class="flex-1 p-6 bg-slate-100 dark:bg-slate-800 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Cerrar</button>
-                    <button type="submit" class="flex-1 p-6 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:scale-[1.02] transition-all">Guardar Cambios SQL</button>
+                    <button type="submit" id="btnGuardar" class="flex-1 p-6 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:scale-[1.02] transition-all">Guardar Cambios SQL</button>
                 </div>
             </form>
         </div>
@@ -180,6 +186,38 @@
             { id: 'entregado', label: 'Entregado', color: 'border-blue-500' },
             { id: 'incidencia', label: 'Incidencia', color: 'border-red-500' }
         ];
+
+        // --- NUEVAS FUNCIONES DE VALIDACIÓN ---
+        function validarInputBastidor(input) {
+            const val = input.value.trim().toUpperCase();
+            document.getElementById('bastidor-count').innerText = `${val.length}/17`;
+            input.classList.remove('input-error');
+        }
+
+        function validarBastidorFinal(vin) {
+            const limpio = vin.trim().toUpperCase();
+            const len = limpio.length;
+
+            if (len === 0) return true; // Permitir si no se conoce
+
+            // Caso 1: Estándar ISO (17 caracteres)
+            if (len === 17) {
+                if (/[IOQ]/.test(limpio)) {
+                    showToast("ERROR: El VIN de 17 dígitos no admite I, O, Q", "error");
+                    return false;
+                }
+                return true;
+            }
+
+            // Caso 2: Clásicos / Motos (7 a 12 caracteres)
+            if (len >= 7 && len <= 12) {
+                return true;
+            }
+
+            // Error de longitud
+            showToast(`ERROR: Bastidor inválido (${len} caracteres). Use 17 (Moderno) o 7-12 (Clásico)`, "error");
+            return false;
+        }
 
         function switchTab(tabId) {
             document.getElementById('tab-pedido').classList.add('hidden');
@@ -238,18 +276,30 @@
                     showToast(`Éxito: Pieza #${id} en ${estado.toUpperCase()}`);
                     cargarDatos();
                 } else {
-                    showToast("Error al guardar en base de datos");
+                    showToast("Error al guardar en base de datos", "error");
                 }
             } catch (error) {
-                showToast("Fallo de conexión con SQL");
+                showToast("Fallo de conexión con SQL", "error");
             }
         }
 
-        function showToast(msg) {
+        // Modificamos showToast para aceptar colores
+        function showToast(msg, type = "success") {
             const t = document.getElementById('toast');
+            const container = document.getElementById('toast-container');
+            const icon = document.getElementById('toast-icon');
+            
+            if(type === "error") {
+                container.classList.replace('bg-emerald-500/90', 'bg-red-500/90');
+                icon.className = "fas fa-exclamation-triangle";
+            } else {
+                container.classList.replace('bg-red-500/90', 'bg-emerald-500/90');
+                icon.className = "fas fa-database animate-pulse";
+            }
+
             document.getElementById('toast-msg').innerText = msg;
             t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
+            setTimeout(() => t.classList.remove('show'), 4000);
         }
 
         async function cargarDatos() {
@@ -258,11 +308,9 @@
                 const res = await fetch(`/api/pedidos?taller_id=${tallerId}`);
                 db = await res.json();
                 render();
-                // Notificación visual de conexión exitosa
                 showToast("Base de Datos SQL Conectada");
             } catch (e) { 
-                console.error("Error cargando datos");
-                showToast("Error: Sin conexión con el servidor");
+                showToast("Error: Sin conexión con el servidor", "error");
             }
         }
 
@@ -328,6 +376,8 @@
         function abrirModal() {
             document.getElementById('pedido-form').reset();
             document.getElementById('pedido-id').value = '';
+            document.getElementById('bastidor-count').innerText = '0/17';
+            document.getElementById('bastidor').classList.remove('input-error');
             document.getElementById('modal-title').innerText = "Nuevo Registro";
             switchTab('tab-pedido');
             const m = document.getElementById('modal');
@@ -347,6 +397,7 @@
             document.getElementById('precio').value = p.precio;
             document.getElementById('estado').value = p.estado.toLowerCase();
             document.getElementById('bastidor').value = p.bastidor || '';
+            document.getElementById('bastidor-count').innerText = `${(p.bastidor || '').length}/17`;
             document.getElementById('notas_tecnicas').value = p.notas_tecnicas || p.notas_incidencia || '';
             document.getElementById('nombre_taller').value = p.nombre_taller || 'Taller Central';
             document.getElementById('telefono_whatsapp').value = p.telefono_whatsapp || '';
@@ -362,20 +413,36 @@
             setTimeout(() => m.classList.add('hidden'), 300);
         }
 
+        // --- SUBMIT ACTUALIZADO CON BLOQUEO DE BASTIDOR ---
         document.getElementById('pedido-form').onsubmit = async (e) => {
             e.preventDefault();
+            
+            const bastidorVal = document.getElementById('bastidor').value;
+            
+            // VALIDACIÓN CRÍTICA
+            if (!validarBastidorFinal(bastidorVal)) {
+                document.getElementById('bastidor').classList.add('input-error');
+                return; // NO SE ENVÍA NADA A SQL
+            }
+
             const id = document.getElementById('pedido-id').value;
+            const btn = document.getElementById('btnGuardar');
+            
             const data = {
                 id: id || null,
-                pieza: document.getElementById('pieza').value,
-                matricula: document.getElementById('matricula').value,
+                pieza: document.getElementById('pieza').value.toUpperCase(),
+                matricula: document.getElementById('matricula').value.toUpperCase(),
                 precio: document.getElementById('precio').value,
                 nuevoEstado: document.getElementById('estado').value,
-                bastidor: document.getElementById('bastidor').value,
+                bastidor: bastidorVal.toUpperCase(),
                 notas_tecnicas: document.getElementById('notas_tecnicas').value,
                 admin_user: USUARIO_ACTUAL,
-                usuario_id: document.getElementById('filtroTaller').value
+                usuario_id: document.getElementById('filtroTaller').value !== 'todos' ? document.getElementById('filtroTaller').value : 1
             };
+
+            btn.innerText = "ENVIANDO...";
+            btn.classList.add('opacity-50', 'pointer-events-none');
+
             const endpoint = id ? '/api/pedidos/update-status' : '/api/pedidos/new';
             try {
                 const res = await fetch(endpoint, {
@@ -388,7 +455,12 @@
                     cerrarModal(); 
                     cargarDatos(); 
                 }
-            } catch (err) { showToast("Error de conexión"); }
+            } catch (err) { 
+                showToast("Error de conexión", "error"); 
+            } finally {
+                btn.innerText = "Guardar Cambios SQL";
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+            }
         };
 
         function toggleView() {
