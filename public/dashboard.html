@@ -27,7 +27,6 @@
         .card-pro .extra-info { display: block; }
         .card-standard .extra-info { display: none; }
         
-        /* Toast arriba según pedido */
         .toast { transform: translateY(-150%); transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); opacity: 0; }
         .toast.show { transform: translateY(0); opacity: 1; }
         
@@ -61,7 +60,6 @@
                 <p id="total-euros" class="text-sm font-black text-emerald-500 tracking-tighter">0.00€</p>
             </div>
             <button onclick="toggleView()" id="viewBtn" class="bg-slate-100 dark:bg-slate-800 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all">PRO VIEW</button>
-            <button onclick="exportarCSV()" class="bg-slate-100 dark:bg-slate-800 w-11 h-11 rounded-2xl text-[10px] flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"><i class="fas fa-file-export"></i></button>
             <button onclick="toggleDark()" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-500 transition-all"><i class="fas fa-moon"></i></button>
         </div>
     </nav>
@@ -192,16 +190,22 @@
             }
         }
 
-        // --- DRAG & DROP REPARADO ---
+        // --- LÓGICA DRAG & DROP MEJORADA PARA SQL ---
         function start(e, id) { 
-            e.dataTransfer.setData("pid", id); 
+            e.dataTransfer.setData("text/plain", id); // ID enviado como texto plano
+            e.dataTransfer.effectAllowed = "move";
             e.target.style.opacity = "0.4";
+            e.target.classList.add('dragging');
         }
         
-        function end(e) { e.target.style.opacity = "1"; }
+        function end(e) { 
+            e.target.style.opacity = "1"; 
+            e.target.classList.remove('dragging');
+        }
 
         function over(e) { 
             e.preventDefault(); 
+            e.dataTransfer.dropEffect = "move";
             e.currentTarget.classList.add('drag-over'); 
         }
         
@@ -210,24 +214,34 @@
         async function drop(e, estado) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
-            const id = e.dataTransfer.getData("pid");
             
+            const id = e.dataTransfer.getData("text/plain");
             if (!id) return;
 
-            const res = await fetch('/api/pedidos/update-status', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    id, 
-                    nuevoEstado: estado,
-                    admin_user: USUARIO_ACTUAL,
-                    iniciales: INICIALES_ACTUAL
-                })
-            });
-            
-            if (res.ok) {
-                showToast(`Pieza #${id} movida a ${estado.toUpperCase()}`);
-                cargarDatos();
+            // Mostrar estado visual inmediato (opcional, para mejor UX)
+            showToast(`Actualizando Pieza #${id}...`);
+
+            try {
+                const res = await fetch('/api/pedidos/update-status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        id: id, 
+                        nuevoEstado: estado,
+                        admin_user: USUARIO_ACTUAL,
+                        iniciales: INICIALES_ACTUAL
+                    })
+                });
+                
+                if (res.ok) {
+                    showToast(`Éxito: Pieza #${id} en ${estado.toUpperCase()}`);
+                    cargarDatos(); // Recargar de la DB para confirmar
+                } else {
+                    showToast("Error al guardar en base de datos");
+                }
+            } catch (error) {
+                console.error("Error en drop:", error);
+                showToast("Fallo de conexión con SQL");
             }
         }
 
@@ -253,7 +267,7 @@
             let totalGeneral = 0;
 
             cols.forEach(c => {
-                const lista = db.filter(p => p.estado.toLowerCase() === c.id);
+                const lista = db.filter(p => p.estado && p.estado.toLowerCase() === c.id);
                 const sumaCol = lista.reduce((acc, p) => acc + parseFloat(p.precio || 0), 0);
                 totalGeneral += sumaCol;
 
@@ -287,7 +301,7 @@
                                 
                                 <div class="extra-info mb-4">
                                     <p class="text-[10px] font-bold text-slate-500 italic uppercase">
-                                        <i class="fas fa-car-side mr-1"></i> ${p.marca_coche || 'S/M'} ${p.modelo_coche || ''}
+                                        <i class="fas fa-car-side mr-1"></i> ${p.marca_coche || ''} ${p.modelo_coche || ''}
                                     </p>
                                 </div>
 
@@ -307,7 +321,6 @@
                 board.appendChild(column);
             });
             document.getElementById('total-euros').innerText = `${totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2})}€`;
-            filtrar();
         }
 
         function abrirModal() {
@@ -326,8 +339,6 @@
         function abrirEditar(p) {
             abrirModal();
             document.getElementById('modal-title').innerText = "Ficha del Pedido";
-            
-            // Datos Pedido
             document.getElementById('pedido-id').value = p.id;
             document.getElementById('pieza').value = p.pieza;
             document.getElementById('matricula').value = p.matricula;
@@ -335,13 +346,11 @@
             document.getElementById('estado').value = p.estado.toLowerCase();
             document.getElementById('bastidor').value = p.bastidor || '';
             document.getElementById('notas_tecnicas').value = p.notas_tecnicas || p.notas_incidencia || '';
-
-            // Datos Taller (Simulando que vienen en el objeto pedido p)
             document.getElementById('nombre_taller').value = p.nombre_taller || 'Taller Central';
-            document.getElementById('telefono_whatsapp').value = p.telefono_whatsapp || '600000000';
-            document.getElementById('direccion').value = p.direccion || 'C/ Logística 40, Madrid';
-            document.getElementById('provincia').value = p.provincia || 'Madrid';
-            document.getElementById('email_taller').value = p.email || 'info@taller.com';
+            document.getElementById('telefono_whatsapp').value = p.telefono_whatsapp || '';
+            document.getElementById('direccion').value = p.direccion || '';
+            document.getElementById('provincia').value = p.provincia || '';
+            document.getElementById('email_taller').value = p.email || '';
         }
 
         function cerrarModal() {
@@ -367,17 +376,19 @@
             };
 
             const endpoint = id ? '/api/pedidos/update-status' : '/api/pedidos/new';
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
 
-            if (res.ok) { 
-                showToast(id ? "SQL Actualizado correctamente" : "Registro creado en DB"); 
-                cerrarModal(); 
-                cargarDatos(); 
-            }
+                if (res.ok) { 
+                    showToast(id ? "SQL Actualizado" : "Registro Creado"); 
+                    cerrarModal(); 
+                    cargarDatos(); 
+                }
+            } catch (err) { showToast("Error de conexión"); }
         };
 
         function toggleView() {
