@@ -2,7 +2,7 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <title>Logística IA - v4.0 Pro</title>
+    <title>Logística IA - v4.8 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script>
@@ -10,10 +10,7 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        darkBg: '#0f172a',
-                        cardDark: '#1e293b'
-                    }
+                    colors: { darkBg: '#0f172a', cardDark: '#1e293b' }
                 }
             }
         };
@@ -23,115 +20,117 @@
     </script>
     <style>
         .kanban-column { min-width: 340px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .drag-over { background-color: rgba(59, 130, 246, 0.1); border: 2px dashed #3b82f6 !important; border-radius: 2.5rem; transform: scale(1.02); }
+        .drag-over { background-color: rgba(59, 130, 246, 0.1); border: 2px dashed #3b82f6 !important; border-radius: 2.5rem; transform: scale(1.01); }
+        
         .card-pro .extra-info { display: block; }
         .card-standard .extra-info { display: none; }
         
+        /* TOAST FIX: Z-INDEX 10000 para estar sobre el modal siempre */
         .toast { 
-            transform: translate(-50%, -200%); 
+            position: fixed; top: 1.5rem; left: 50%; transform: translate(-50%, -200%); 
             transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
-            opacity: 0; 
-            pointer-events: none;
+            opacity: 0; pointer-events: none; z-index: 10000;
         }
-        .toast.show { 
-            transform: translate(-50%, 0); 
-            opacity: 1; 
-        }
+        .toast.show { transform: translate(-50%, 0); opacity: 1; }
 
-        /* Estilo para errores en el bastidor */
         .input-error { border: 2px solid #ef4444 !important; background-color: #fef2f2 !important; }
         .dark .input-error { background-color: #450a0a !important; }
         
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        body { display: flex; flex-direction: column; height: 100vh; }
+        main { flex: 1; }
+
+        /* Mejora arrastre */
+        .pedido-card.dragging { opacity: 0.2; transform: scale(0.95); }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 overflow-hidden font-sans antialiased">
 
-    <div id="toast" class="fixed top-6 left-1/2 z-[300] toast">
+    <div id="toast" class="toast">
         <div id="toast-container" class="bg-emerald-500/90 backdrop-blur-md text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px] tracking-widest border border-white/20">
-            <i id="toast-icon" class="fas fa-database animate-pulse"></i> <span id="toast-msg">Sincronizado con SQL</span>
+            <i id="toast-icon" class="fas fa-database animate-pulse"></i> 
+            <span id="toast-msg">Sincronizado con SQL</span>
         </div>
     </div>
 
     <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex justify-between items-center z-50">
         <div class="flex items-center gap-8">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black italic shadow-lg shadow-blue-500/30">R</div>
-                <h1 class="font-black text-sm uppercase tracking-tighter italic">Logística IA</h1>
+                <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black italic shadow-lg">R</div>
+                <h1 class="font-black text-sm uppercase italic">Logística IA</h1>
             </div>
-            <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase outline-none focus:ring-2 ring-blue-500 transition-all cursor-pointer">
+            <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-5 py-2.5 text-[10px] font-black uppercase outline-none focus:ring-2 ring-blue-500 cursor-pointer">
                 <option value="todos">Todos los Talleres</option>
             </select>
         </div>
-
         <div class="flex items-center gap-4">
-            <div class="hidden md:flex flex-col items-end mr-6">
-                <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Valor Total Stock</p>
-                <p id="total-euros" class="text-sm font-black text-emerald-500 tracking-tighter">0.00€</p>
+            <div class="hidden md:flex flex-col items-end mr-4">
+                <p class="text-[8px] font-black text-slate-500 uppercase">Valor Stock</p>
+                <p id="total-euros" class="text-sm font-black text-emerald-500">0.00€</p>
             </div>
             <button onclick="toggleView()" id="viewBtn" class="bg-slate-100 dark:bg-slate-800 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all">PRO VIEW</button>
             <button onclick="toggleDark()" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-500 transition-all"><i class="fas fa-moon"></i></button>
-            
-            <button class="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-500 transition-all">
-                <i class="fas fa-th text-lg"></i>
-            </button>
-            
-            <div class="w-11 h-11 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-blue-500/20">RC</div>
+            <div class="w-11 h-11 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-xs">RC</div>
         </div>
     </nav>
 
     <div class="px-8 py-6 flex flex-col md:flex-row gap-6 justify-between items-center bg-white dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
         <div class="relative w-full max-w-xl">
             <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-            <input type="text" id="buscador" oninput="filtrar()" placeholder="Buscar por matrícula, pieza o bastidor..." 
-                   class="w-full bg-slate-100 dark:bg-slate-800/50 rounded-[2rem] py-4 pl-14 pr-6 text-[11px] font-bold uppercase outline-none focus:ring-2 ring-blue-500/50 transition-all border border-transparent focus:border-blue-500">
+            <input type="text" id="buscador" oninput="filtrar()" placeholder="Buscar matrícula, pieza o bastidor..." class="w-full bg-slate-100 dark:bg-slate-800/50 rounded-[2rem] py-4 pl-14 pr-6 text-[11px] font-bold uppercase outline-none focus:ring-2 ring-blue-500/50 transition-all border border-transparent">
         </div>
-        <button onclick="abrirModal()" class="w-full md:w-auto px-12 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl shadow-blue-500/40 hover:-translate-y-1 transition-all">
+        <button onclick="abrirModal()" class="w-full md:w-auto px-12 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-[2rem] font-black uppercase text-[10px] tracking-[0.2em] shadow-2xl transition-all">
             + Nuevo Registro
         </button>
     </div>
 
-    <main class="flex gap-6 p-8 overflow-x-auto h-[calc(100vh-190px)] custom-scrollbar" id="kanbanBoard"></main>
+    <main class="flex gap-6 p-8 overflow-x-auto custom-scrollbar" id="kanbanBoard"></main>
+
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-8 py-3 flex flex-col md:flex-row justify-between items-center gap-2">
+        <div class="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase tracking-wider">
+            Desarrollado por <span class="text-blue-600 font-black">Raul C.</span> | <a href="mailto:raulcue@gmail.com" class="hover:underline">raulcue@gmail.com</a> | Versión Pro 4.8
+        </div>
+        <div class="text-slate-400 text-[9px] font-medium italic">
+            © Copyright 2026-2030 - Recambio Reciclado IA | Política de Privacidad
+        </div>
+    </footer>
 
     <div id="modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden z-[200] flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-[3.5rem] p-10 shadow-2xl scale-95 opacity-0 transition-all duration-300 border border-white/5 overflow-hidden flex flex-col max-h-[90vh]" id="modalContent">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-[3.5rem] p-10 shadow-2xl scale-95 opacity-0 transition-all duration-300 flex flex-col max-h-[90vh]" id="modalContent">
             
-            <div class="flex justify-between items-center mb-10">
-                <h2 id="modal-title" class="text-3xl font-black uppercase tracking-tighter italic dark:text-white">Ficha del Pedido</h2>
+            <div class="flex justify-between items-center mb-8">
+                <h2 id="modal-title" class="text-2xl font-black uppercase italic dark:text-white tracking-tighter">Ficha Pedido</h2>
                 <div class="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-[1.5rem]">
-                    <button type="button" onclick="switchTab('tab-pedido')" id="btn-tab-pedido" class="px-8 py-3 rounded-2xl text-[10px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all">Datos Pedido</button>
-                    <button type="button" onclick="switchTab('tab-taller')" id="btn-tab-taller" class="px-8 py-3 rounded-2xl text-[10px] font-black uppercase text-slate-400 transition-all">Info Taller</button>
+                    <button type="button" onclick="switchTab('tab-pedido')" id="btn-tab-pedido" class="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all">Datos Pedido</button>
+                    <button type="button" onclick="switchTab('tab-taller')" id="btn-tab-taller" class="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all">Info Taller</button>
                 </div>
             </div>
 
-            <form id="pedido-form" class="space-y-8 overflow-y-auto pr-4 custom-scrollbar">
+            <form id="pedido-form" class="space-y-6 overflow-y-auto pr-4 custom-scrollbar">
                 <input type="hidden" id="pedido-id">
                 
                 <div id="tab-pedido" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="space-y-2 col-span-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Nombre de la Pieza</label>
-                        <input type="text" id="pieza" required class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-bold uppercase text-sm focus:ring-2 ring-blue-500 outline-none">
+                    <div class="space-y-1 col-span-2">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Pieza</label>
+                        <input type="text" id="pieza" required class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-bold uppercase text-xs outline-none focus:ring-2 ring-blue-500">
                     </div>
-                    <div class="space-y-2">
+                    <div class="space-y-1">
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Matrícula</label>
-                        <input type="text" id="matricula" required class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-black uppercase text-sm focus:ring-2 ring-blue-500 outline-none">
+                        <input type="text" id="matricula" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-black uppercase text-xs outline-none focus:ring-2 ring-blue-500">
                     </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between px-4">
-                            <label class="text-[9px] font-black uppercase text-slate-500">Nº Bastidor</label>
-                            <span id="bastidor-count" class="text-[9px] font-black text-blue-500">0/17</span>
-                        </div>
-                        <input type="text" id="bastidor" oninput="validarInputBastidor(this)" placeholder="17 CARACTERES (O 7-12 CLÁSICOS)" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-bold uppercase text-sm outline-none transition-all">
+                    <div class="space-y-1">
+                        <div class="flex justify-between px-4"><label class="text-[9px] font-black uppercase text-slate-500">Bastidor</label><span id="bastidor-count" class="text-[9px] font-black text-blue-500">0/17</span></div>
+                        <input type="text" id="bastidor" oninput="validarInputBastidor(this)" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-bold uppercase text-xs outline-none">
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Precio Venta (€)</label>
-                        <input type="number" id="precio" step="0.01" class="w-full bg-blue-50 dark:bg-blue-900/20 p-5 rounded-[2rem] border-none font-black text-blue-600 text-sm outline-none">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Precio (€)</label>
+                        <input type="number" id="precio" step="0.01" class="w-full bg-blue-50 dark:bg-blue-900/10 p-4 rounded-[1.5rem] font-black text-xs outline-none text-blue-600">
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Estado Actual</label>
-                        <select id="estado" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] border-none font-black uppercase text-[10px] outline-none appearance-none cursor-pointer">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Estado</label>
+                        <select id="estado" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-black uppercase text-[10px] outline-none">
                             <option value="solicitado">Solicitado</option>
                             <option value="desguace">En Desguace</option>
                             <option value="listo">Listo</option>
@@ -140,38 +139,26 @@
                             <option value="incidencia">Incidencia</option>
                         </select>
                     </div>
-                    <div class="col-span-3 space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Notas Técnicas e Incidencias</label>
-                        <textarea id="notas_tecnicas" rows="3" class="w-full bg-slate-50 dark:bg-slate-800 p-6 rounded-[2.5rem] border-none text-sm outline-none" placeholder="Escribe aquí cualquier detalle extra..."></textarea>
+                    <div class="col-span-3 space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Notas e Incidencias</label>
+                        <textarea id="notas_tecnicas" rows="2" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] text-xs outline-none" placeholder="Detalles extra..."></textarea>
                     </div>
                 </div>
 
                 <div id="tab-taller" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Nombre Comercial</label>
-                        <input type="text" id="nombre_taller" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Taller</label>
+                        <input type="text" id="nombre_taller" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl text-xs font-bold text-slate-500 outline-none">
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">WhatsApp Logística</label>
-                        <input type="text" id="telefono_whatsapp" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
-                    </div>
-                    <div class="col-span-2 space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Dirección Fiscal / Entrega</label>
-                        <input type="text" id="direccion" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Provincia</label>
-                        <input type="text" id="provincia" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Email de Cuenta</label>
-                        <input type="text" id="email_taller" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-5 rounded-[2rem] border-none font-bold text-slate-500 text-sm outline-none">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">WhatsApp</label>
+                        <input type="text" id="telefono_whatsapp" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl text-xs font-bold text-slate-500 outline-none">
                     </div>
                 </div>
 
                 <div class="flex gap-4 pt-4">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 p-6 bg-slate-100 dark:bg-slate-800 rounded-[2rem] text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Cerrar</button>
-                    <button type="submit" id="btnGuardar" class="flex-1 p-6 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:scale-[1.02] transition-all">Guardar Cambios SQL</button>
+                    <button type="button" onclick="cerrarModal()" class="flex-1 p-5 bg-slate-100 dark:bg-slate-800 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all">Cerrar</button>
+                    <button type="submit" id="btnGuardar" class="flex-1 p-5 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:scale-[1.02] transition-all">Sincronizar SQL</button>
                 </div>
             </form>
         </div>
@@ -179,122 +166,26 @@
 
     <script>
         const USUARIO_ACTUAL = "Raul C."; 
-        const INICIALES_ACTUAL = "RC";
-
         let db = [];
         let viewMode = 'pro';
 
         const cols = [
             { id: 'solicitado', label: 'Solicitado', color: 'border-slate-400' },
             { id: 'desguace', label: 'En Desguace', color: 'border-amber-500' },
-            { id: 'listo', label: 'Listo/Verificado', color: 'border-purple-500' },
-            { id: 'transito', label: 'En Tránsito', color: 'border-emerald-500' },
+            { id: 'listo', label: 'Listo/Stock', color: 'border-purple-500' },
+            { id: 'transito', label: 'Tránsito', color: 'border-emerald-500' },
             { id: 'entregado', label: 'Entregado', color: 'border-blue-500' },
             { id: 'incidencia', label: 'Incidencia', color: 'border-red-500' }
         ];
 
-        function validarInputBastidor(input) {
-            const val = input.value.trim().toUpperCase();
-            document.getElementById('bastidor-count').innerText = `${val.length}/17`;
-            input.classList.remove('input-error');
-        }
-
-        function validarBastidorFinal(vin) {
-            const limpio = vin.trim().toUpperCase();
-            const len = limpio.length;
-            if (len === 0) return true;
-            if (len === 17) {
-                if (/[IOQ]/.test(limpio)) {
-                    showToast("ERROR: El VIN de 17 dígitos no admite I, O, Q", "error");
-                    return false;
-                }
-                return true;
-            }
-            if (len >= 7 && len <= 12) return true;
-            showToast(`ERROR: Bastidor inválido (${len} caracteres). Use 17 (Moderno) o 7-12 (Clásico)`, "error");
-            return false;
-        }
-
-        function switchTab(tabId) {
-            document.getElementById('tab-pedido').classList.add('hidden');
-            document.getElementById('tab-taller').classList.add('hidden');
-            document.getElementById(tabId).classList.remove('hidden');
-            const btnP = document.getElementById('btn-tab-pedido');
-            const btnT = document.getElementById('btn-tab-taller');
-            if(tabId === 'tab-pedido') {
-                btnP.className = "px-8 py-3 rounded-2xl text-[10px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all";
-                btnT.className = "px-8 py-3 rounded-2xl text-[10px] font-black uppercase text-slate-400 transition-all";
-            } else {
-                btnT.className = "px-8 py-3 rounded-2xl text-[10px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all";
-                btnP.className = "px-8 py-3 rounded-2xl text-[10px] font-black uppercase text-slate-400 transition-all";
-            }
-        }
-
-        function start(e, id) { 
-            e.dataTransfer.setData("text/plain", id);
-            e.dataTransfer.effectAllowed = "move";
-            e.target.style.opacity = "0.4";
-            e.target.classList.add('dragging');
-        }
-        
-        function end(e) { 
-            e.target.style.opacity = "1"; 
-            e.target.classList.remove('dragging');
-        }
-
-        function over(e) { 
-            e.preventDefault(); 
-            e.dataTransfer.dropEffect = "move";
-            e.currentTarget.classList.add('drag-over'); 
-        }
-        
-        function leave(e) { e.currentTarget.classList.remove('drag-over'); }
-        
-        async function drop(e, estado) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
-            const id = e.dataTransfer.getData("text/plain");
-            if (!id) return;
-
-            showToast(`Actualizando Pieza #${id}...`);
-            try {
-                const res = await fetch('/api/pedidos/update-status', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        id: id, 
-                        nuevoEstado: estado,
-                        admin_user: USUARIO_ACTUAL,
-                        iniciales: INICIALES_ACTUAL
-                    })
-                });
-                if (res.ok) {
-                    showToast(`Éxito: Pieza #${id} en ${estado.toUpperCase()}`);
-                    cargarDatos();
-                } else {
-                    showToast("Error al guardar en base de datos", "error");
-                }
-            } catch (error) {
-                showToast("Fallo de conexión con SQL", "error");
-            }
-        }
-
         function showToast(msg, type = "success") {
             const t = document.getElementById('toast');
             const container = document.getElementById('toast-container');
-            const icon = document.getElementById('toast-icon');
-            
-            if(type === "error") {
-                container.classList.replace('bg-emerald-500/90', 'bg-red-500/90');
-                icon.className = "fas fa-exclamation-triangle";
-            } else {
-                container.classList.replace('bg-red-500/90', 'bg-emerald-500/90');
-                icon.className = "fas fa-database animate-pulse";
-            }
-
+            container.classList.toggle('bg-red-500', type === 'error');
+            container.classList.toggle('bg-emerald-500', type !== 'error');
             document.getElementById('toast-msg').innerText = msg;
             t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 4000);
+            setTimeout(() => t.classList.remove('show'), 3000); // 3 segundos
         }
 
         async function cargarDatos() {
@@ -304,9 +195,7 @@
                 db = await res.json();
                 render();
                 showToast("Base de Datos SQL Conectada");
-            } catch (e) { 
-                showToast("Error: Sin conexión con el servidor", "error");
-            }
+            } catch (e) { showToast("Error de conexión SQL", "error"); }
         }
 
         function render() {
@@ -321,43 +210,28 @@
 
                 const column = document.createElement('div');
                 column.className = `kanban-column flex flex-col gap-5`;
-                column.ondragover = over;
-                column.ondragleave = leave;
-                column.ondrop = (e) => drop(e, c.id);
-
                 column.innerHTML = `
                     <div class="border-t-4 ${c.color} pt-5 mb-3 flex justify-between items-end px-3">
                         <div>
-                            <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">${c.label}</p>
+                            <p class="text-[9px] font-black text-slate-500 uppercase">${c.label}</p>
                             <p class="text-2xl font-black dark:text-white">${lista.length}</p>
                         </div>
-                        <p class="text-xs font-black text-slate-400 mb-1 italic">${sumaCol.toLocaleString()}€</p>
+                        <p class="text-xs font-black text-slate-400 mb-1">${sumaCol.toFixed(0)}€</p>
                     </div>
-                    <div class="flex-1 space-y-5 overflow-y-auto pr-2 custom-scrollbar">
+                    <div class="flex-1 space-y-5 overflow-y-auto pr-2 custom-scrollbar" 
+                         ondragover="event.preventDefault(); this.parentElement.classList.add('drag-over')" 
+                         ondragleave="this.parentElement.classList.remove('drag-over')"
+                         ondrop="this.parentElement.classList.remove('drag-over'); drop(event, '${c.id}')">
                         ${lista.map(p => `
-                            <div draggable="true" 
-                                 ondragstart="start(event, ${p.id})" 
-                                 ondragend="end(event)"
+                            <div draggable="true" ondragstart="start(event, ${p.id})" 
                                  onclick='abrirEditar(${JSON.stringify(p)})'
-                                 class="pedido-card card-${viewMode} bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-transparent hover:border-blue-500 transition-all cursor-grab active:cursor-grabbing relative group overflow-hidden">
-                                
-                                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-all"></div>
-                                <span class="absolute top-7 right-7 font-black text-blue-600 dark:text-blue-400 text-xs extra-info">${p.precio}€</span>
-                                <p class="text-[9px] font-black text-slate-400 mb-2 uppercase tracking-tighter">ID #${p.id}</p>
+                                 class="pedido-card card-${viewMode} bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl border border-transparent hover:border-blue-500 transition-all cursor-grab active:cursor-grabbing relative group">
+                                <span class="absolute top-7 right-7 font-black text-blue-600 text-xs extra-info">${p.precio}€</span>
+                                <p class="text-[8px] font-black text-slate-400 mb-1 uppercase">ID #${p.id}</p>
                                 <h4 class="text-xs font-black uppercase dark:text-white leading-tight mb-2">${p.pieza}</h4>
-                                <div class="extra-info mb-4">
-                                    <p class="text-[10px] font-bold text-slate-500 italic uppercase">
-                                        <i class="fas fa-car-side mr-1"></i> ${p.marca_coche || ''} ${p.modelo_coche || ''}
-                                    </p>
-                                </div>
-                                <div class="flex justify-between items-center mt-2">
-                                    <span class="bg-slate-100 dark:bg-slate-800 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase text-slate-700 dark:text-slate-300">
-                                        ${p.matricula}
-                                    </span>
-                                    <div class="flex gap-2">
-                                        ${p.bastidor ? '<i class="fas fa-fingerprint text-slate-300 text-[10px]"></i>' : ''}
-                                        <i class="fas fa-chevron-right text-slate-200 group-hover:text-blue-500 transition-all"></i>
-                                    </div>
+                                <div class="flex justify-between items-center mt-3">
+                                    <span class="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-xl text-[9px] font-black text-slate-700 dark:text-slate-300">${p.matricula || '---'}</span>
+                                    <i class="fas fa-chevron-right text-slate-200 group-hover:text-blue-500 transition-all"></i>
                                 </div>
                             </div>
                         `).join('')}
@@ -365,75 +239,80 @@
                 `;
                 board.appendChild(column);
             });
-            document.getElementById('total-euros').innerText = `${totalGeneral.toLocaleString(undefined, {minimumFractionDigits: 2})}€`;
+            document.getElementById('total-euros').innerText = `${totalGeneral.toLocaleString()}€`;
+        }
+
+        function start(e, id) { 
+            e.dataTransfer.setData("text/plain", id);
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        }
+
+        async function drop(e, estado) {
+            e.preventDefault();
+            const id = e.dataTransfer.getData("text/plain");
+            if (!id) return;
+            try {
+                const res = await fetch('/api/pedidos/update-status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id, nuevoEstado: estado, admin_user: USUARIO_ACTUAL })
+                });
+                if (res.ok) { showToast("Movimiento sincronizado"); cargarDatos(); }
+            } catch (e) { showToast("Error al mover", "error"); }
+        }
+
+        function switchTab(tabId) {
+            document.getElementById('tab-pedido').classList.toggle('hidden', tabId !== 'tab-pedido');
+            document.getElementById('tab-taller').classList.toggle('hidden', tabId !== 'tab-taller');
+            document.getElementById('btn-tab-pedido').className = tabId === 'tab-pedido' ? "px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all" : "px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all";
+            document.getElementById('btn-tab-taller').className = tabId === 'tab-taller' ? "px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all" : "px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all";
         }
 
         function abrirModal() {
             document.getElementById('pedido-form').reset();
             document.getElementById('pedido-id').value = '';
-            document.getElementById('bastidor-count').innerText = '0/17';
-            document.getElementById('bastidor').classList.remove('input-error');
             document.getElementById('modal-title').innerText = "Nuevo Registro";
-            switchTab('tab-pedido');
-            const m = document.getElementById('modal');
-            m.classList.remove('hidden');
+            document.getElementById('modal').classList.remove('hidden');
             setTimeout(() => { 
                 document.getElementById('modalContent').classList.replace('scale-95', 'scale-100'); 
                 document.getElementById('modalContent').classList.replace('opacity-0', 'opacity-100'); 
-            }, 10);
+            }, 50);
         }
 
         function abrirEditar(p) {
             abrirModal();
-            document.getElementById('modal-title').innerText = "Ficha del Pedido";
+            document.getElementById('modal-title').innerText = "Editar Pieza #" + p.id;
             document.getElementById('pedido-id').value = p.id;
             document.getElementById('pieza').value = p.pieza;
             document.getElementById('matricula').value = p.matricula;
             document.getElementById('precio').value = p.precio;
             document.getElementById('estado').value = p.estado.toLowerCase();
             document.getElementById('bastidor').value = p.bastidor || '';
-            document.getElementById('bastidor-count').innerText = `${(p.bastidor || '').length}/17`;
-            document.getElementById('notas_tecnicas').value = p.notas_tecnicas || p.notas_incidencia || '';
-            document.getElementById('nombre_taller').value = p.nombre_taller || 'Taller Central';
+            document.getElementById('notas_tecnicas').value = p.notas_tecnicas || '';
+            document.getElementById('nombre_taller').value = p.nombre_taller || 'S/N';
             document.getElementById('telefono_whatsapp').value = p.telefono_whatsapp || '';
-            document.getElementById('direccion').value = p.direccion || '';
-            document.getElementById('provincia').value = p.provincia || '';
-            document.getElementById('email_taller').value = p.email || '';
         }
 
         function cerrarModal() {
-            const m = document.getElementById('modal');
             document.getElementById('modalContent').classList.replace('scale-100', 'scale-95');
             document.getElementById('modalContent').classList.replace('opacity-100', 'opacity-0');
-            setTimeout(() => m.classList.add('hidden'), 300);
+            setTimeout(() => document.getElementById('modal').classList.add('hidden'), 300);
         }
 
         document.getElementById('pedido-form').onsubmit = async (e) => {
             e.preventDefault();
-            const bastidorVal = document.getElementById('bastidor').value;
-            if (!validarBastidorFinal(bastidorVal)) {
-                document.getElementById('bastidor').classList.add('input-error');
-                return;
-            }
-
             const id = document.getElementById('pedido-id').value;
-            const btn = document.getElementById('btnGuardar');
-            
             const data = {
                 id: id || null,
                 pieza: document.getElementById('pieza').value.toUpperCase(),
                 matricula: document.getElementById('matricula').value.toUpperCase(),
                 precio: document.getElementById('precio').value,
                 nuevoEstado: document.getElementById('estado').value,
-                bastidor: bastidorVal.toUpperCase(),
+                bastidor: document.getElementById('bastidor').value.toUpperCase(),
                 notas_tecnicas: document.getElementById('notas_tecnicas').value,
                 admin_user: USUARIO_ACTUAL,
                 usuario_id: document.getElementById('filtroTaller').value !== 'todos' ? document.getElementById('filtroTaller').value : 1
             };
-
-            btn.innerText = "ENVIANDO...";
-            btn.classList.add('opacity-50', 'pointer-events-none');
-
             const endpoint = id ? '/api/pedidos/update-status' : '/api/pedidos/new';
             try {
                 const res = await fetch(endpoint, {
@@ -441,52 +320,18 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(data)
                 });
-                if (res.ok) { 
-                    showToast(id ? "SQL Actualizado" : "Registro Creado"); 
-                    cerrarModal(); 
-                    cargarDatos(); 
-                }
-            } catch (err) { 
-                showToast("Error de conexión", "error"); 
-            } finally {
-                btn.innerText = "Guardar Cambios SQL";
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-            }
+                if (res.ok) { cerrarModal(); cargarDatos(); showToast(id ? "SQL Actualizado" : "Creado con éxito"); }
+            } catch (e) { showToast("Error de red", "error"); }
         };
 
-        function toggleView() {
-            viewMode = viewMode === 'pro' ? 'standard' : 'pro';
-            document.getElementById('viewBtn').innerText = viewMode === 'pro' ? 'PRO VIEW' : 'STD VIEW';
-            render();
-        }
-
-        function toggleDark() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-        }
-
+        function toggleView() { viewMode = viewMode === 'pro' ? 'standard' : 'pro'; render(); }
+        function toggleDark() { document.documentElement.classList.toggle('dark'); localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light'; }
         function filtrar() {
             const val = document.getElementById('buscador').value.toLowerCase();
-            document.querySelectorAll('.pedido-card').forEach(card => {
-                card.style.display = card.innerText.toLowerCase().includes(val) ? 'block' : 'none';
-            });
+            document.querySelectorAll('.pedido-card').forEach(card => card.style.display = card.innerText.toLowerCase().includes(val) ? 'block' : 'none');
         }
 
-        async function cargarTalleres() {
-            try {
-                const res = await fetch('/api/usuarios/talleres');
-                const talleres = await res.json();
-                const select = document.getElementById('filtroTaller');
-                talleres.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t.id;
-                    opt.textContent = (t.nombre_taller || t.email.split('@')[0]).toUpperCase();
-                    select.appendChild(opt);
-                });
-            } catch(e) {}
-        }
-
-        window.onload = () => { cargarTalleres(); cargarDatos(); };
+        window.onload = () => { cargarDatos(); };
     </script>
 </body>
 </html>
