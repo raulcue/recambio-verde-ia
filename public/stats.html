@@ -3,139 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Estadísticas BI - Recambio Reciclado IA</title>
+    <title>Business Intelligence - Recambio Reciclado IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="/js/global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Animación y comportamiento de Tooltips */
-        .tooltip-container:hover .tooltip-box,
-        .tooltip-container:focus-within .tooltip-box {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-        .tooltip-box {
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        /* Ajuste para pantallas pequeñas */
-        @media (max-width: 640px) {
-            .tooltip-box {
-                width: 260px !important;
-                right: -20px !important;
-                position: fixed !important;
-                bottom: 20px !important;
-                left: 50% !important;
-                transform: translateX(-50%) translateY(20px) !important;
-            }
-            .tooltip-container:hover .tooltip-box,
-            .tooltip-container:focus-within .tooltip-box {
-                transform: translateX(-50%) translateY(0) !important;
-            }
+        .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 2.5rem; transition: all 0.3s ease; }
+        .dark .glass-card { background: #0f172a; border-color: #1e293b; }
+        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        
+        /* Estilo para los selectores consistente con Talleres/Dashboard */
+        .select-custom {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='C19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors pb-10">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors pb-10 font-sans">
 
-    <nav class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-4 md:px-6 py-3 flex justify-between items-center sticky top-0 z-[100]">
-        <div class="flex items-center gap-3">
-            <img src="/assets/logo.png" alt="Logo" class="h-7 md:h-8 dark:brightness-0 dark:invert">
-            <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-            <h1 class="text-slate-800 dark:text-white font-black text-[10px] md:text-sm uppercase tracking-tighter">Inteligencia BI</h1>
+    <nav class="bg-white dark:bg-slate-900 border-b dark:border-slate-800 px-6 py-3 flex justify-between items-center sticky top-0 z-[100]">
+        <div class="flex items-center gap-4">
+            <img src="/assets/logo.png" alt="Logo" class="h-8 dark:brightness-0 dark:invert">
+            <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+            <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter hidden sm:block">Recambio Reciclado IA</h1>
         </div>
 
-        <div class="flex items-center gap-2">
-            <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 flex items-center justify-center transition-colors">
+        <div class="flex items-center gap-3">
+            <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 <i class="fas fa-moon dark:hidden"></i>
                 <i class="fas fa-sun hidden dark:block text-yellow-500"></i>
             </button>
+
+            <button class="w-10 h-10 text-slate-400 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl relative">
+                <i class="fas fa-bell"></i>
+                <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+            </button>
+
             <div class="relative group">
-                <button class="w-9 h-9 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300 flex items-center justify-center">
+                <button class="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-blue-50 transition-all">
                     <i class="fas fa-th-large"></i>
                 </button>
-                <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 shadow-2xl rounded-2xl border border-slate-100 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-2 z-[110]">
-                    <a href="dashboard.html" class="flex items-center gap-3 p-3 text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl">
-                        <i class="fas fa-columns text-blue-500"></i> Dashboard
-                    </a>
-                    <a href="docs.html" class="flex items-center gap-3 p-3 text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl">
-                        <i class="fas fa-book text-emerald-500"></i> Documentación
-                    </a>
+                <div class="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 shadow-2xl rounded-[2rem] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-5 border border-slate-100 dark:border-slate-800 z-[200]">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Navegación BI</p>
+                    <div class="space-y-1">
+                        <a href="dashboard.html" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
+                            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-columns"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Gestión Kanban</p></div>
+                        </a>
+                        <a href="talleres.html" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
+                            <div class="w-8 h-8 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-tools"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Panel Talleres</p></div>
+                        </a>
+                        <a href="admin-logs.html" class="flex items-center gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all">
+                            <div class="w-8 h-8 bg-slate-100 dark:bg-slate-800 text-slate-600 rounded-lg flex items-center justify-center text-xs"><i class="fas fa-terminal"></i></div>
+                            <div><p class="text-[10px] font-black dark:text-white uppercase">Logs del Sistema</p></div>
+                        </a>
+                    </div>
                 </div>
             </div>
-            <div class="w-9 h-9 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-full flex items-center justify-center font-black text-[10px]">AD</div>
+
+            <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
         </div>
     </nav>
 
-    <main class="p-4 md:p-8 max-w-7xl mx-auto">
-        <header class="mb-8 md:mb-12">
-            <h2 class="text-2xl md:text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">Análisis de Rendimiento</h2>
-            <p class="text-[9px] md:text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-2">Métricas de eficiencia y rentabilidad</p>
+    <main class="p-6 md:p-10 max-w-[1500px] mx-auto">
+        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
+            <div>
+                <h2 class="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Business <span class="text-blue-600">Intelligence</span></h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">IA Engine Active v6.0</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-3 w-full lg:w-auto">
+                <select class="select-custom flex-1 lg:w-48 bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl px-5 py-3 text-[10px] font-black uppercase shadow-sm outline-none text-slate-500">
+                    <option>Todo el año 2025</option>
+                    <option>Último Trimestre</option>
+                </select>
+                <select id="filtroTaller" class="select-custom flex-1 lg:w-56 bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-2xl px-5 py-3 text-[10px] font-black uppercase shadow-sm outline-none text-slate-500">
+                    <option>Todos los talleres</option>
+                </select>
+                <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+                    <i class="fas fa-file-export"></i> Exportar
+                </button>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
+            <div class="xl:col-span-5 bg-[#1e1b4b] p-10 rounded-[3.5rem] text-white relative overflow-hidden shadow-2xl">
+                <div class="relative z-10">
+                    <p class="text-[11px] font-black uppercase tracking-[0.3em] opacity-60">IA Forecast (Mes Próx.)</p>
+                    <h3 class="text-6xl font-black mt-4 tracking-tighter">4,088€</h3>
+                    <p class="text-[10px] mt-2 opacity-50 uppercase font-bold italic">Proyección basada en tendencia histórica</p>
+                </div>
+                <i class="fas fa-brain absolute right-[-20px] bottom-[-20px] text-white/5 text-[15rem]"></i>
+            </div>
             
-            <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative group">
-                <div class="flex justify-between items-start mb-6">
-                    <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-history text-lg"></i>
-                    </div>
-                    
-                    <div class="tooltip-container relative">
-                        <button class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700 hover:text-blue-500 transition-colors focus:outline-none">
-                            <i class="fas fa-info-circle text-xl"></i>
-                        </button>
-                        <div class="tooltip-box absolute right-0 bottom-full mb-4 w-64 p-5 bg-slate-900 text-white rounded-[1.5rem] shadow-2xl z-50 pointer-events-none">
-                            <p class="text-[9px] font-black uppercase tracking-widest text-blue-400 mb-2">Lead Time Medio</p>
-                            <p class="text-[11px] text-slate-300 leading-relaxed mb-4 text-left">Tiempo medio desde la solicitud inicial hasta la entrega final.</p>
-                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
-                                <p class="text-[8px] font-mono text-slate-500 uppercase mb-1">Fórmula Técnica:</p>
-                                <code class="text-[10px] text-emerald-400 font-mono">$Media(Fecha_{Entrega} - Fecha_{Solicitud})$</code>
-                            </div>
+            <div class="xl:col-span-7 bg-white dark:bg-slate-900 p-10 rounded-[3.5rem] border dark:border-slate-800 relative shadow-sm">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Punto de Equilibrio</p>
+                        <h3 class="text-4xl font-black text-slate-900 dark:text-white mt-2">
+                            3,555€ / <span class="text-blue-600" id="manual-cost">1,200€</span>
+                        </h3>
+                        <div id="status-rentabilidad" class="mt-3 inline-flex items-center gap-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 px-4 py-1.5 rounded-full">
+                            <i class="fas fa-check-circle text-[10px]"></i>
+                            <span class="text-[10px] font-black uppercase">Operación Rentable</span>
                         </div>
                     </div>
+                    <button onclick="setCosteFijo()" class="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:rotate-90 transition-all">
+                        <i class="fas fa-cog text-xl"></i>
+                    </button>
                 </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Lead Time Medio</p>
-                <h3 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">3.2 <span class="text-sm md:text-lg text-slate-300">Días</span></h3>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden mt-8">
+                    <div id="progress-bar" class="bg-blue-600 h-full transition-all duration-1000" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="glass-card p-8 border-b-4 border-blue-500">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventas Brutas</p>
+                    <i class="fas fa-info-circle text-slate-200"></i>
+                </div>
+                <h4 class="text-3xl font-black text-slate-900 dark:text-white">3,555€</h4>
             </div>
 
-            <div class="bg-white dark:bg-slate-900 p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative group">
-                <div class="flex justify-between items-start mb-6">
-                    <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-chart-line text-lg"></i>
-                    </div>
-                    
-                    <div class="tooltip-container relative">
-                        <button class="w-8 h-8 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-700 hover:text-emerald-500 transition-colors focus:outline-none">
-                            <i class="fas fa-info-circle text-xl"></i>
-                        </button>
-                        <div class="tooltip-box absolute right-0 bottom-full mb-4 w-64 p-5 bg-slate-900 text-white rounded-[1.5rem] shadow-2xl z-50 pointer-events-none text-left">
-                            <p class="text-[9px] font-black uppercase tracking-widest text-emerald-400 mb-2">Margen Bruto</p>
-                            <p class="text-[11px] text-slate-300 leading-relaxed mb-4">Rentabilidad porcentual basada en el coste y el PVP final.</p>
-                            <div class="bg-white/5 p-3 rounded-xl border border-white/10">
-                                <p class="text-[8px] font-mono text-slate-500 uppercase mb-1">Fórmula Técnica:</p>
-                                <code class="text-[10px] text-emerald-400 font-mono">$\frac{PVP - Coste}{PVP} \times 100$</code>
-                            </div>
-                        </div>
-                    </div>
+            <div class="glass-card p-8 border-b-4 border-emerald-500">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Margen Neto</p>
+                    <i class="fas fa-info-circle text-slate-200"></i>
                 </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Margen Bruto</p>
-                <h3 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tighter">28.5 <span class="text-sm md:text-lg text-slate-300">%</span></h3>
+                <h4 class="text-3xl font-black text-emerald-500">3,555€</h4>
             </div>
 
+            <div class="glass-card p-8 border-b-4 border-purple-500">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lead Time Medio</p>
+                    <i class="fas fa-info-circle text-slate-200"></i>
+                </div>
+                <h4 class="text-3xl font-black text-slate-900 dark:text-white">0.0d</h4>
             </div>
+
+            <div class="glass-card p-8 border-b-4 border-orange-500">
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tasa Conversión</p>
+                    <i class="fas fa-info-circle text-slate-200"></i>
+                </div>
+                <h4 class="text-3xl font-black text-orange-600">100.0%</h4>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[3.5rem] border dark:border-slate-800 shadow-sm">
+                <h5 class="text-[11px] font-black text-slate-400 uppercase tracking-widest italic mb-8">Evolución de Márgenes</h5>
+                <div class="chart-container">
+                    <canvas id="chartEvolucion"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-8 rounded-[3.5rem] border dark:border-slate-800 shadow-sm">
+                <h5 class="text-[11px] font-black text-slate-400 uppercase tracking-widest italic mb-8">Incidencias y Rechazos</h5>
+                <div class="chart-container">
+                    <canvas id="chartIncidencias"></canvas>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <footer class="mt-20 py-10 border-t border-slate-100 dark:border-slate-800 text-center px-6">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            Desarrollado por <span class="text-slate-900 dark:text-white font-black italic">Raul C.</span> | raulcue@gmail.com | Versión Beta 1.2
-        </p>
-        <p class="text-[9px] text-slate-300 uppercase mt-2">
-            © Copyright 2026-2030 - Recambio Reciclado IA | <a href="#" class="underline">Política de Privacidad</a>
-        </p>
-    </footer>
+    <script>
+        // Lógica de Punto de Equilibrio
+        function setCosteFijo() {
+            const cost = prompt("Introduce tus costes fijos mensuales (€):", "1200");
+            if(cost) {
+                document.getElementById('manual-cost').innerText = cost + "€";
+                const ventas = 3555;
+                const porcentaje = Math.min((ventas / cost) * 100, 100);
+                document.getElementById('progress-bar').style.width = porcentaje + "%";
+            }
+        }
 
+        // Cargar talleres para filtro (Sincronizado con server.js)
+        async function cargarTalleres() {
+            try {
+                const res = await fetch('/api/talleres');
+                const talleres = await res.json();
+                const select = document.getElementById('filtroTaller');
+                talleres.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.nombre.toUpperCase();
+                    select.appendChild(opt);
+                });
+            } catch (e) { console.error("Error al cargar talleres"); }
+        }
+
+        // Configuración de Gráficos
+        const initCharts = () => {
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+
+            // Gráfico de Evolución
+            new Chart(document.getElementById('chartEvolucion'), {
+                type: 'line',
+                data: {
+                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                    datasets: [{
+                        label: 'Ventas',
+                        data: [800, 1700, 1400, 1755],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true, tension: 0.4
+                    }, {
+                        label: 'Beneficio',
+                        data: [300, 900, 600, 800],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true, tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // Gráfico de Incidencias
+            new Chart(document.getElementById('chartIncidencias'), {
+                type: 'bar',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'],
+                    datasets: [{
+                        label: 'Rechazos Precio',
+                        data: [0.2, 0.8, 0.4, 0.5, 0.3],
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 8
+                    }, {
+                        label: 'Devoluciones',
+                        data: [0.1, 0.3, 0.6, 0.2, 0.1],
+                        backgroundColor: '#ef4444',
+                        borderRadius: 8
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarTalleres();
+            initCharts();
+        });
+    </script>
 </body>
 </html>

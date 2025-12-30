@@ -2,7 +2,7 @@
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <title>Logística IA - v4.8 Pro</title>
+    <title>Logística IA - v6 Ultimate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script>
@@ -21,21 +21,16 @@
     <style>
         .kanban-column { min-width: 340px; transition: all 0.4s ease; }
         .drag-over { background-color: rgba(59, 130, 246, 0.1); border: 2px dashed #3b82f6 !important; border-radius: 2.5rem; }
-        .card-pro .extra-info { display: flex !important; }
-        .card-standard .extra-info { display: none !important; }
-        
+        .amount-blur.is-hidden { filter: blur(8px); user-select: none; pointer-events: none; }
         .toast { 
             position: fixed; top: 1.5rem; left: 50%; transform: translate(-50%, -200%); 
             transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
             opacity: 0; z-index: 10000;
         }
         .toast.show { transform: translate(-50%, 0); opacity: 1; }
-
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        
         body { display: flex; flex-direction: column; height: 100vh; }
-        main { flex: 1; }
         .pedido-card.dragging { opacity: 0.2; transform: scale(0.95); }
     </style>
 </head>
@@ -43,15 +38,20 @@
 
     <div id="toast" class="toast">
         <div id="toast-container" class="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px] tracking-widest border border-white/20">
-            <i class="fas fa-database animate-pulse"></i> <span id="toast-msg">Sincronizado</span>
+            <i id="toast-icon" class="fas fa-database animate-pulse"></i> <span id="toast-msg">Sincronizado</span>
         </div>
     </div>
 
     <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex justify-between items-center z-50">
         <div class="flex items-center gap-8">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black italic shadow-lg">R</div>
-                <h1 class="font-black text-sm uppercase italic">Logística IA</h1>
+            <div class="flex items-center gap-4">
+                <button class="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-500">
+                    <i class="fas fa-th text-lg"></i>
+                </button>
+                <div class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-800 pl-4">
+                    <img src="assets/logo.png" alt="Logo" class="w-10 h-10 object-contain dark:invert transition-all">
+                    <h1 class="font-black text-sm uppercase italic tracking-tighter">Logística <span class="text-blue-600">IA</span></h1>
+                </div>
             </div>
             
             <div class="relative">
@@ -59,17 +59,22 @@
                     class="appearance-none bg-slate-100 dark:bg-slate-800 border-none rounded-2xl pl-6 pr-10 py-2.5 text-[10px] font-black uppercase outline-none focus:ring-2 ring-blue-500 cursor-pointer">
                     <option value="todos">Todos los Talleres</option>
                 </select>
-                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[8px] text-slate-400 pointer-events-none"></i>
+                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-[8px] text-slate-400"></i>
             </div>
         </div>
 
         <div class="flex items-center gap-4">
             <div class="hidden md:flex flex-col items-end mr-4">
-                <p class="text-[8px] font-black text-slate-500 uppercase">Valor Stock</p>
-                <p id="total-euros" class="text-sm font-black text-emerald-500">0.00€</p>
+                <p class="text-[8px] font-black text-slate-500 uppercase">Stock Total</p>
+                <p id="total-euros" class="text-sm font-black text-emerald-500 amount-blur is-hidden transition-all">0.00€</p>
             </div>
+            
+            <button onclick="togglePrivacy()" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all">
+                <i id="eye-icon" class="fas fa-eye-slash"></i>
+            </button>
+            
             <button onclick="toggleView()" id="viewBtn" class="bg-slate-100 dark:bg-slate-800 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition-all">PRO VIEW</button>
-            <button onclick="toggleDark()" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-500 transition-all"><i class="fas fa-moon"></i></button>
+            <button onclick="toggleDark()" class="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500"><i class="fas fa-moon"></i></button>
             <div class="w-11 h-11 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-xs shadow-md">RC</div>
         </div>
     </nav>
@@ -84,17 +89,16 @@
         </button>
     </div>
 
-    <main class="flex gap-6 p-8 overflow-x-auto custom-scrollbar" id="kanbanBoard"></main>
+    <main class="flex-1 flex gap-6 p-8 overflow-x-auto custom-scrollbar" id="kanbanBoard"></main>
 
     <div id="modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden z-[200] flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-[3.5rem] p-10 shadow-2xl flex flex-col max-h-[92vh]" id="modalContent">
-            
+        <div class="bg-white dark:bg-slate-900 w-full max-w-5xl rounded-[3.5rem] p-10 shadow-2xl flex flex-col max-h-[92vh] opacity-0 transition-opacity duration-300" id="modalContent">
             <div class="flex justify-between items-center mb-8">
-                <h2 id="modal-title" class="text-2xl font-black uppercase italic dark:text-white">Ficha Técnica</h2>
+                <h2 id="modal-title" class="text-2xl font-black uppercase italic dark:text-white">Ficha Pedido</h2>
                 <div class="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-[1.5rem] gap-1">
-                    <button type="button" onclick="switchTab('tab-pedido')" id="btn-tab-pedido" class="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase bg-blue-600 text-white transition-all">1. Datos Pieza</button>
-                    <button type="button" onclick="switchTab('tab-logistica')" id="btn-tab-logistica" class="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all">2. Logística</button>
-                    <button type="button" onclick="switchTab('tab-taller')" id="btn-tab-taller" class="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all">3. Info Taller</button>
+                    <button type="button" onclick="switchTab('tab-pedido')" id="btn-tab-pedido" class="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase bg-blue-600 text-white transition-all">1. Pieza & Coche</button>
+                    <button type="button" onclick="switchTab('tab-logistica')" id="btn-tab-logistica" class="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all">2. Negocio</button>
+                    <button type="button" onclick="switchTab('tab-taller')" id="btn-tab-taller" class="px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all">3. Incidencias</button>
                 </div>
             </div>
 
@@ -103,64 +107,76 @@
                 
                 <div id="tab-pedido" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="col-span-2 space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Nombre de la Pieza</label>
-                        <input type="text" id="pieza" required class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-bold uppercase text-xs outline-none focus:ring-2 ring-blue-500">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Precio Venta (€)</label>
-                        <input type="number" id="precio" step="0.01" class="w-full bg-blue-50 dark:bg-blue-900/10 p-4 rounded-[1.5rem] font-black text-xs text-blue-600 outline-none">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Nombre Pieza</label>
+                        <input type="text" id="pieza" required class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-bold text-xs outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Matrícula</label>
                         <input type="text" id="matricula" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-black uppercase text-xs outline-none">
                     </div>
-                    <div class="col-span-2 space-y-1">
-                        <div class="flex justify-between px-4"><label class="text-[9px] font-black uppercase text-slate-500">Nº Bastidor (VIN)</label><span id="bastidor-count" class="text-[9px] font-black text-blue-500">0/17</span></div>
-                        <input type="text" id="bastidor" maxlength="17" oninput="validarVIN(this)" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-mono text-xs outline-none uppercase">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Marca</label>
+                        <input type="text" id="marca_coche" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] text-xs outline-none">
                     </div>
-                    <div class="col-span-3 space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Notas Técnicas</label>
-                        <textarea id="notas_tecnicas" rows="2" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] text-xs outline-none"></textarea>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Modelo</label>
+                        <input type="text" id="modelo_coche" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] text-xs outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Bastidor</label>
+                        <input type="text" id="bastidor" maxlength="17" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-mono text-xs outline-none uppercase">
                     </div>
                 </div>
 
-                <div id="tab-logistica" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div id="tab-logistica" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Ubicación en Almacén</label>
-                        <input type="text" id="ubicacion" placeholder="Ej: Estantería B2" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] text-xs font-bold uppercase outline-none">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Precio Venta</label>
+                        <input type="number" id="precio" class="w-full bg-blue-50 dark:bg-blue-900/10 p-4 rounded-[1.5rem] font-black text-xs text-blue-600 outline-none">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Estado Limpieza</label>
-                        <select id="limpieza" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] font-black uppercase text-[10px] outline-none">
-                            <option value="pendiente">Pendiente</option>
-                            <option value="ok">Listo para envío</option>
-                        </select>
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Coste</label>
+                        <input type="number" id="precio_coste" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] text-xs outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Proveedor</label>
+                        <input type="text" id="proveedor" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] text-xs outline-none">
                     </div>
                 </div>
 
                 <div id="tab-taller" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Taller Solicitante</label>
-                        <input type="text" id="nombre_taller" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl text-xs font-bold text-slate-500 outline-none">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Taller (Usuario)</label>
+                        <select id="usuario_id" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-[1.5rem] text-xs outline-none">
+                            <option value="">Seleccionar taller...</option>
+                        </select>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">WhatsApp Contacto</label>
-                        <input type="text" id="telefono_whatsapp" readonly class="w-full bg-slate-100 dark:bg-slate-800/50 p-4 rounded-2xl text-xs font-bold text-slate-500 outline-none">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Incidencia</label>
+                        <select id="sub_estado_incidencia" class="w-full bg-red-50 dark:bg-red-900/10 p-4 rounded-[1.5rem] text-xs outline-none text-red-600 font-bold">
+                            <option value="">Ninguna</option>
+                            <option value="rotura">Rotura Transporte</option>
+                            <option value="equivocado">Error Referencia</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-4">Notas de Incidencia</label>
+                        <textarea id="notas_incidencia" rows="3" class="w-full bg-slate-50 dark:bg-slate-800 p-5 rounded-[2rem] text-xs outline-none"></textarea>
                     </div>
                 </div>
 
                 <div class="flex gap-4 pt-4 sticky bottom-0 bg-white dark:bg-slate-900">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 p-5 bg-slate-100 dark:bg-slate-800 rounded-[2rem] text-[10px] font-black uppercase tracking-widest">Cancelar</button>
-                    <button type="submit" class="flex-1 p-5 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-all">Sincronizar SQL</button>
+                    <button type="button" onclick="cerrarModal()" class="flex-1 p-5 bg-slate-100 dark:bg-slate-800 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all">Cancelar</button>
+                    <button type="submit" class="flex-1 p-5 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-blue-700 transition-all">Sincronizar SQL</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        const USUARIO_ACTUAL = "Raul C."; 
+        const USUARIO_SESION = "Raul C."; 
         let db = [];
         let viewMode = 'pro';
+        let isPrivate = true;
 
         const cols = [
             { id: 'solicitado', label: 'Solicitado', color: 'border-slate-400' },
@@ -173,25 +189,26 @@
 
         function showToast(msg, type = "success") {
             const t = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
             document.getElementById('toast-msg').innerText = msg;
             document.getElementById('toast-container').className = type === 'error' ? 'bg-red-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px]' : 'bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px]';
+            icon.className = type === 'error' ? 'fas fa-exclamation-triangle' : 'fas fa-database animate-pulse';
             t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        // --- FUNCIONALIDAD TALLERES (REVISADO) ---
         async function cargarTalleres() {
             try {
-                const res = await fetch('/api/talleres'); // Endpoint para el selector
+                const res = await fetch('/api/talleres');
                 const talleres = await res.json();
-                const select = document.getElementById('filtroTaller');
+                const selectFiltro = document.getElementById('filtroTaller');
+                const selectModal = document.getElementById('usuario_id');
                 talleres.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t.id;
-                    opt.innerText = t.nombre;
-                    select.appendChild(opt);
+                    const opt = new Option(t.nombre, t.id);
+                    selectFiltro.add(opt.cloneNode(true));
+                    selectModal.add(opt);
                 });
-            } catch (e) { console.log("Usando talleres por defecto"); }
+            } catch (e) { console.warn("Modo demo: Fallo carga de talleres SQL"); }
         }
 
         async function cargarDatos() {
@@ -200,7 +217,7 @@
                 const res = await fetch(`/api/pedidos?taller_id=${tId}`);
                 db = await res.json();
                 render();
-            } catch (e) { showToast("Error de conexión SQL", "error"); }
+            } catch (e) { showToast("Error de sincronización", "error"); }
         }
 
         function render() {
@@ -209,37 +226,42 @@
             let totalGeneral = 0;
 
             cols.forEach(c => {
-                const lista = db.filter(p => p.estado && p.estado.toLowerCase() === c.id);
+                const lista = db.filter(p => p.estado?.toLowerCase() === c.id);
                 const sumaCol = lista.reduce((acc, p) => acc + parseFloat(p.precio || 0), 0);
                 totalGeneral += sumaCol;
 
                 const column = document.createElement('div');
                 column.className = `kanban-column flex flex-col gap-5`;
                 column.innerHTML = `
-                    <div class="border-t-4 ${c.color} pt-5 mb-2 flex justify-between items-end px-3">
+                    <div class="border-t-4 ${c.color} pt-5 px-3 flex justify-between items-end">
                         <div>
                             <p class="text-[9px] font-black text-slate-500 uppercase">${c.label}</p>
                             <p class="text-2xl font-black dark:text-white">${lista.length}</p>
                         </div>
-                        <p class="text-xs font-black text-slate-400 mb-1">${sumaCol.toFixed(0)}€</p>
+                        <p class="text-xs font-black text-slate-400 mb-1 amount-blur ${isPrivate ? 'is-hidden' : ''}">${sumaCol.toFixed(0)}€</p>
                     </div>
-                    <div class="flex-1 space-y-5 overflow-y-auto pr-2 custom-scrollbar" ondragover="event.preventDefault()" ondrop="drop(event, '${c.id}')">
+                    <div class="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar" ondragover="event.preventDefault()" ondrop="drop(event, '${c.id}')">
                         ${lista.map(p => `
                             <div draggable="true" ondragstart="start(event, ${p.id})" onclick='abrirEditar(${JSON.stringify(p)})'
-                                 class="pedido-card card-${viewMode} bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl border border-transparent hover:border-blue-500 transition-all cursor-grab active:cursor-grabbing relative group">
+                                 class="pedido-card bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-xl border border-transparent hover:border-blue-500 transition-all cursor-grab active:cursor-grabbing group relative">
                                 
-                                <span class="absolute top-7 right-8 font-black text-blue-600 text-sm extra-info">${p.precio}€</span>
-                                <p class="text-[8px] font-black text-slate-400 mb-1 uppercase tracking-widest">ID #${p.id}</p>
-                                <h4 class="text-xs font-black uppercase dark:text-white leading-tight mb-3">${p.pieza}</h4>
+                                <div class="absolute top-6 right-6 flex gap-1">
+                                    ${!p.usuario_id ? '<i class="fas fa-store text-red-400 text-[8px]" title="Falta Taller"></i>' : ''}
+                                    ${!p.precio || p.precio == 0 ? '<i class="fas fa-dollar-sign text-amber-400 text-[8px]"></i>' : ''}
+                                </div>
+
+                                <p class="text-[8px] font-black text-slate-400 mb-1 tracking-widest uppercase">ID #${p.id}</p>
+                                <h4 class="text-xs font-black uppercase dark:text-white leading-tight mb-1">${p.pieza}</h4>
                                 
-                                <div class="flex items-center gap-2 mb-4 extra-info text-slate-400">
-                                    <i class="fas fa-car text-[10px]"></i>
-                                    <span class="text-[9px] font-bold uppercase italic">Vehículo Vinculado</span>
+                                <div class="flex items-center gap-2 mb-4">
+                                    <span class="text-[9px] font-bold text-blue-500 uppercase">${p.marca_coche || ''} ${p.modelo_coche || 'Modelo pendiente'}</span>
                                 </div>
 
                                 <div class="flex justify-between items-center">
-                                    <span class="bg-slate-100 dark:bg-slate-800 px-4 py-1.5 rounded-xl text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase">${p.matricula || '---'}</span>
-                                    <i class="fas fa-chevron-right text-slate-200 group-hover:text-blue-500 transition-all"></i>
+                                    <span class="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg text-[9px] font-black uppercase text-slate-600 dark:text-slate-300">
+                                        ${p.matricula || 'SIN MATRÍCULA'}
+                                    </span>
+                                    <span class="text-xs font-black text-emerald-500 amount-blur ${isPrivate ? 'is-hidden' : ''} ${viewMode === 'pro' ? 'block' : 'hidden'}">${p.precio || 0}€</span>
                                 </div>
                             </div>
                         `).join('')}
@@ -250,76 +272,64 @@
             document.getElementById('total-euros').innerText = `${totalGeneral.toLocaleString()}€`;
         }
 
-        function start(e, id) { e.dataTransfer.setData("text/plain", id); e.target.classList.add('dragging'); }
+        // --- FUNCIONES DRAG & DROP ---
+        function start(e, id) { e.dataTransfer.setData("text", id); e.target.closest('.pedido-card').classList.add('dragging'); }
         async function drop(e, estado) {
-            const id = e.dataTransfer.getData("text/plain");
+            e.preventDefault();
+            const id = e.dataTransfer.getData("text");
             try {
-                await fetch('/api/pedidos/update-status', {
+                await fetch('/api/pedidos/status', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id, nuevoEstado: estado, admin_user: USUARIO_ACTUAL })
+                    body: JSON.stringify({ id, estado, user: USUARIO_SESION })
                 });
-                cargarDatos();
                 showToast("SQL Sincronizado");
-            } catch (e) { showToast("Error", "error"); }
+                cargarDatos();
+            } catch (err) { showToast("Error de red", "error"); }
         }
 
-        function switchTab(tabId) {
-            ['tab-pedido', 'tab-logistica', 'tab-taller'].forEach(t => document.getElementById(t).classList.toggle('hidden', t !== tabId));
-            ['btn-tab-pedido', 'btn-tab-logistica', 'btn-tab-taller'].forEach(b => {
-                const active = b.includes(tabId);
-                document.getElementById(b).className = active ? "px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all" : "px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all";
+        function togglePrivacy() {
+            isPrivate = !isPrivate;
+            const icon = document.getElementById('eye-icon');
+            icon.className = isPrivate ? 'fas fa-eye-slash' : 'fas fa-eye';
+            document.querySelectorAll('.amount-blur').forEach(el => el.classList.toggle('is-hidden', isPrivate));
+        }
+
+        function abrirEditar(p) {
+            abrirModal();
+            Object.keys(p).forEach(key => {
+                const el = document.getElementById(key);
+                if (el) el.value = p[key] || '';
             });
-        }
-
-        function validarVIN(input) {
-            input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            document.getElementById('bastidor-count').innerText = `${input.value.length}/17`;
         }
 
         function abrirModal() {
             document.getElementById('pedido-form').reset();
             document.getElementById('pedido-id').value = '';
             document.getElementById('modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('modalContent').classList.replace('opacity-0', 'opacity-100'), 10);
             switchTab('tab-pedido');
-            setTimeout(() => { document.getElementById('modalContent').classList.replace('opacity-0', 'opacity-100'); }, 50);
-        }
-
-        function abrirEditar(p) {
-            abrirModal();
-            document.getElementById('pedido-id').value = p.id;
-            document.getElementById('pieza').value = p.pieza;
-            document.getElementById('precio').value = p.precio;
-            document.getElementById('matricula').value = p.matricula;
-            document.getElementById('bastidor').value = p.bastidor || '';
-            document.getElementById('notas_tecnicas').value = p.notas_tecnicas || '';
-            document.getElementById('nombre_taller').value = p.nombre_taller || 'S/N';
-            document.getElementById('telefono_whatsapp').value = p.telefono_whatsapp || '';
         }
 
         function cerrarModal() {
-            document.getElementById('modalContent').classList.add('opacity-0');
+            document.getElementById('modalContent').classList.replace('opacity-100', 'opacity-0');
             setTimeout(() => document.getElementById('modal').classList.add('hidden'), 300);
         }
 
-        document.getElementById('pedido-form').onsubmit = async (e) => {
-            e.preventDefault();
-            showToast("Guardando en SQL...");
-            // Aquí iría tu lógica de fetch POST /api/pedidos/new o update
-            cerrarModal();
-            cargarDatos();
-        };
-
-        function toggleView() { viewMode = viewMode === 'pro' ? 'standard' : 'pro'; render(); }
-        function toggleDark() { document.documentElement.classList.toggle('dark'); }
-        function filtrar() {
-            const val = document.getElementById('buscador').value.toLowerCase();
-            document.querySelectorAll('.pedido-card').forEach(card => card.style.display = card.innerText.toLowerCase().includes(val) ? 'block' : 'none');
+        function switchTab(id) {
+            ['tab-pedido', 'tab-logistica', 'tab-taller'].forEach(t => document.getElementById(t).classList.toggle('hidden', t !== id));
+            ['btn-tab-pedido', 'btn-tab-logistica', 'btn-tab-taller'].forEach(b => {
+                const active = b.includes(id);
+                document.getElementById(b).className = active ? "px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase bg-blue-600 text-white shadow-lg transition-all" : "px-6 py-2.5 rounded-2xl text-[9px] font-black uppercase text-slate-400 transition-all";
+            });
         }
 
-        window.onload = async () => { 
-            await cargarTalleres(); 
-            cargarDatos(); 
+        function toggleDark() { document.documentElement.classList.toggle('dark'); }
+        function toggleView() { viewMode = viewMode === 'pro' ? 'standard' : 'pro'; render(); }
+
+        window.onload = async () => {
+            await cargarTalleres();
+            cargarDatos();
         };
     </script>
 </body>

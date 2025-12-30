@@ -3,161 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Equipo y Talleres - Recambio Reciclado IA</title>
+    <title>Equipo y Talleres - Logística IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: { extend: { colors: { darkBg: '#0f172a', cardDark: '#1e293b' } } }
+        };
+    </script>
     <style>
-        .modal-active { display: flex !important; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        .table-container::-webkit-scrollbar { height: 8px; }
-        .table-container::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        th.sortable { cursor: pointer; transition: background 0.2s; }
-        th.sortable:hover { background: rgba(255,255,255,0.05); }
+        .modal-active { display: flex !important; animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .table-row-hover:hover { background-color: rgba(59, 130, 246, 0.04); }
     </style>
 </head>
-<body class="bg-[#0f172a] text-slate-300 min-h-screen font-sans">
+<body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased">
 
-    <nav class="bg-[#1e293b]/50 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-[100]">
-        <div class="flex items-center gap-4">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-black text-white italic">R</div>
-            <h1 class="text-white font-black text-xs uppercase tracking-widest hidden sm:block">Recambio Reciclado IA</h1>
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex justify-between items-center sticky top-0 z-[100]">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-4">
+                <div class="relative group">
+                    <button class="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all">
+                        <i class="fas fa-th text-lg"></i>
+                    </button>
+                    <div class="absolute left-0 mt-4 w-64 bg-white dark:bg-slate-900 shadow-2xl rounded-[2rem] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-6 border border-slate-200 dark:border-slate-800 z-[200]">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Módulos Sistema</p>
+                        <div class="space-y-2">
+                            <a href="dashboard.html" class="flex items-center gap-4 p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-2xl transition-all group/item">
+                                <div class="w-9 h-9 bg-blue-100 dark:bg-blue-900/40 text-blue-600 rounded-xl flex items-center justify-center"><i class="fas fa-columns"></i></div>
+                                <span class="text-[10px] font-black text-slate-600 dark:text-slate-300 group-hover/item:text-blue-600 uppercase">Panel Kanban</span>
+                            </a>
+                            <a href="admin-logs.html" class="flex items-center gap-4 p-3 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-all group/item">
+                                <div class="w-9 h-9 bg-red-100 dark:bg-red-900/40 text-red-600 rounded-xl flex items-center justify-center"><i class="fas fa-shield-halved"></i></div>
+                                <span class="text-[10px] font-black text-slate-600 dark:text-slate-300 group-hover/item:text-red-600 uppercase">Auditoría Root</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-800 pl-4">
+                    <img src="assets/logo.png" alt="Logo" class="w-10 h-10 object-contain dark:invert transition-all">
+                    <h1 class="font-black text-sm uppercase italic tracking-tighter">Logística <span class="text-blue-600">IA</span></h1>
+                </div>
+            </div>
         </div>
         
         <div class="flex items-center gap-4">
-            <div class="flex items-center gap-3 px-4 py-2 bg-[#0f172a] rounded-full border border-slate-800">
-                <div id="db-led" class="w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SQL LIVE</span>
+            <div class="flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full">
+                <div id="db-led" class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest">SQL Connect</span>
             </div>
-            <div class="relative group">
-                <button class="w-10 h-10 bg-white rounded-xl text-slate-900 flex items-center justify-center hover:bg-blue-50 transition-all shadow-lg shadow-blue-500/10">
-                    <i class="fas fa-th-large"></i>
-                </button>
-                <div class="absolute right-0 mt-4 w-72 bg-[#1e293b] shadow-2xl rounded-[2rem] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-6 border border-slate-700 z-[200]">
-                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Aplicaciones</p>
-                    <div class="space-y-2">
-                        <a href="dashboard.html" class="flex items-center gap-4 p-3 hover:bg-slate-800 rounded-2xl transition-all group/item">
-                            <div class="w-10 h-10 bg-blue-600/20 text-blue-500 rounded-xl flex items-center justify-center"><i class="fas fa-columns"></i></div>
-                            <span class="text-xs font-bold text-slate-300 group-hover/item:text-white uppercase">Gestión Kanban</span>
-                        </a>
-                        <a href="talleres.html" class="flex items-center gap-4 p-3 bg-blue-600 rounded-2xl transition-all">
-                            <div class="w-10 h-10 bg-white/20 text-white rounded-xl flex items-center justify-center"><i class="fas fa-users-cog"></i></div>
-                            <span class="text-xs font-bold text-white uppercase tracking-tighter">Equipo y Talleres</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+            <div class="w-11 h-11 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-xs shadow-lg">AD</div>
         </div>
     </nav>
 
     <header class="p-8 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-            <div class="flex items-center gap-3 mb-2">
-                <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span class="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">Base de Datos de Usuarios</span>
-            </div>
-            <h1 class="text-4xl font-black text-white uppercase tracking-tighter">Equipo y Talleres</h1>
-            <p id="taller-count" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">Cargando datos de SQL...</p>
+            <h2 class="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Base de <span class="text-blue-600">Talleres</span></h2>
+            <p id="taller-count" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Sincronizando con base de datos...</p>
         </div>
         <div class="flex gap-3">
-            <button onclick="exportarExcel()" class="px-6 py-4 bg-[#1e293b] border border-slate-800 text-slate-300 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-800 transition-all">
+            <button onclick="exportarExcel()" class="px-6 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
                 <i class="fas fa-file-excel text-emerald-500"></i> Exportar
             </button>
             <button onclick="abrirModalTaller()" class="px-8 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:scale-105 transition-all">
-                <i class="fas fa-plus mr-2"></i> Nuevo Taller
+                <i class="fas fa-plus mr-2"></i> Alta Nuevo Taller
             </button>
         </div>
     </header>
 
-    <section class="px-8 max-w-7xl mx-auto mb-6">
-        <div class="bg-[#1e293b] p-3 rounded-[2rem] border border-slate-800 flex flex-col md:flex-row items-center gap-4 shadow-2xl">
-            <div class="flex-1 flex items-center gap-4 px-6 py-2 w-full">
-                <i class="fas fa-search text-slate-500 text-sm"></i>
-                <input type="text" id="busqueda" oninput="filtrarYRenderizar()" placeholder="BUSCAR POR CUALQUIER CAMPO..." 
-                       class="w-full bg-transparent border-none outline-none text-[11px] font-bold uppercase text-white placeholder:text-slate-600">
+    <section class="px-8 max-w-7xl mx-auto mb-8">
+        <div class="bg-white dark:bg-slate-900 p-4 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-4 shadow-xl">
+            <div class="flex-1 flex items-center gap-4 px-6 w-full">
+                <i class="fas fa-search text-slate-400 text-sm"></i>
+                <input type="text" id="busqueda" oninput="filtrarYRenderizar()" placeholder="Buscar por nombre, email o provincia..." 
+                       class="w-full bg-transparent border-none outline-none text-[11px] font-bold uppercase text-slate-800 dark:text-white placeholder:text-slate-400">
             </div>
-            <div class="flex gap-4 px-6 border-l border-slate-800 w-full md:w-auto">
-                <select id="filtro-provincia" onchange="filtrarYRenderizar()" class="bg-transparent border-none outline-none text-[11px] font-black uppercase text-blue-500 cursor-pointer">
+            <div class="flex gap-6 px-8 border-l border-slate-200 dark:border-slate-800 w-full md:w-auto">
+                <select id="filtro-provincia" onchange="filtrarYRenderizar()" class="bg-transparent border-none outline-none text-[10px] font-black uppercase text-blue-600 cursor-pointer">
                     <option value="">Provincia: Todas</option>
-                </select>
-                <select id="ordenar-por" onchange="cambiarOrden(this.value)" class="bg-transparent border-none outline-none text-[11px] font-black uppercase text-slate-400 cursor-pointer">
-                    <option value="nombre_taller">Ordenar por Nombre</option>
-                    <option value="provincia">Ordenar por Provincia</option>
-                    <option value="email">Ordenar por Email</option>
                 </select>
             </div>
         </div>
     </section>
 
     <main class="px-8 max-w-7xl mx-auto pb-20">
-        <div class="bg-[#1e293b] rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl table-container overflow-x-auto">
-            <table class="w-full text-left border-separate border-spacing-0">
+        <div class="bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-900/50">
-                        <th onclick="cambiarOrden('nombre_taller')" class="sortable p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-800">
-                            Taller <i class="fas fa-sort ml-2 opacity-30"></i>
-                        </th>
-                        <th onclick="cambiarOrden('email')" class="sortable p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-800">
-                            Email de Acceso <i class="fas fa-sort ml-2 opacity-30"></i>
-                        </th>
-                        <th onclick="cambiarOrden('provincia')" class="sortable p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-800">
-                            Provincia <i class="fas fa-sort ml-2 opacity-30"></i>
-                        </th>
-                        <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-800">Contraseña</th>
-                        <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-800 text-right">Acciones</th>
+                    <tr class="bg-slate-50 dark:bg-slate-800/50">
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Identificador / Nombre</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Email de Acceso</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Localización</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Credenciales</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-talleres" class="text-slate-300">
+                <tbody id="tabla-talleres" class="text-slate-600 dark:text-slate-300">
                     </tbody>
             </table>
         </div>
     </main>
 
-    <div id="modalTaller" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl hidden items-center justify-center z-[500] p-4">
-        <div class="bg-[#1e293b] w-full max-w-2xl rounded-[3rem] p-12 shadow-2xl border border-slate-700">
-            <h3 id="modal-title" class="text-2xl font-black text-white uppercase tracking-tighter mb-8">Gestión de Usuario</h3>
-            <form id="formTaller" onsubmit="guardarTaller(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div id="modalTaller" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-[500] p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[3.5rem] p-12 shadow-2xl border border-white/10">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-xl">
+                    <i class="fas fa-building-circle-check"></i>
+                </div>
+                <h3 id="modal-title" class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Ficha de Registro</h3>
+            </div>
+
+            <form id="formTaller" onsubmit="guardarTaller(event)" class="space-y-5">
                 <input type="hidden" id="t-id">
-                <div class="md:col-span-2">
-                    <label class="text-[9px] font-black text-slate-500 uppercase ml-3 mb-2 block">Nombre del Taller</label>
-                    <input type="text" id="t-nombre" required class="w-full p-4 bg-[#0f172a] rounded-2xl border border-slate-800 text-xs font-bold uppercase outline-none focus:border-blue-500 text-white">
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Nombre Comercial</label>
+                    <input type="text" id="t-nombre" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500">
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-500 uppercase ml-3 mb-2 block">Email</label>
-                    <input type="email" id="t-email" required class="w-full p-4 bg-[#0f172a] rounded-2xl border border-slate-800 text-xs font-bold outline-none focus:border-blue-500 text-white">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Email Principal</label>
+                        <input type="email" id="t-email" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold outline-none focus:ring-2 ring-blue-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Provincia</label>
+                        <input type="text" id="t-provincia" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500">
+                    </div>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-500 uppercase ml-3 mb-2 block">Provincia</label>
-                    <input type="text" id="t-provincia" class="w-full p-4 bg-[#0f172a] rounded-2xl border border-slate-800 text-xs font-bold uppercase outline-none focus:border-blue-500 text-white">
+                <div class="space-y-1">
+                    <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Contraseña Sistema</label>
+                    <input type="password" id="t-pass" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold outline-none focus:ring-2 ring-blue-500">
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-500 uppercase ml-3 mb-2 block">Contraseña</label>
-                    <input type="password" id="t-pass" class="w-full p-4 bg-[#0f172a] rounded-2xl border border-slate-800 text-xs font-bold outline-none focus:border-blue-500 text-white">
-                </div>
-                <div class="md:col-span-2 flex gap-4 mt-6">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 py-5 text-slate-500 text-[10px] font-black uppercase">Cerrar</button>
-                    <button type="submit" class="flex-[2] py-5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl">Sincronizar SQL</button>
+                
+                <div class="flex gap-3 pt-6">
+                    <button type="button" onclick="cerrarModal()" class="flex-1 py-5 text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest">Descartar</button>
+                    <button type="submit" class="flex-[2] py-5 bg-blue-600 text-white rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20">Confirmar en SQL</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        const API_BASE_URL = "https://recambio-verde-iax.onrender.com";
         let usuarios = [];
         let datosFiltrados = [];
-        let ordenActual = { campo: 'nombre_taller', direccion: 'asc' };
 
         async function cargarDatos() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/talleres`);
+                // Usamos la ruta /api/usuarios o /api/talleres según tu server.js
+                const res = await fetch('/api/usuarios');
                 const data = await res.json();
-                usuarios = data.filter(u => u.rol === 'taller');
+                // Filtramos solo los que son talleres, excluyendo admin
+                usuarios = data.filter(u => u.rol !== 'admin');
                 actualizarProvincias();
                 filtrarYRenderizar();
                 updateSyncStatus(true);
-            } catch (e) { updateSyncStatus(false); }
+            } catch (e) { 
+                console.error(e);
+                updateSyncStatus(false); 
+            }
         }
 
         function filtrarYRenderizar() {
@@ -165,92 +171,50 @@
             const p = document.getElementById('filtro-provincia').value;
 
             datosFiltrados = usuarios.filter(u => {
-                const coincideBusqueda = Object.values(u).some(v => String(v).toLowerCase().includes(q));
+                const searchStr = `${u.nombre_taller} ${u.email} ${u.provincia}`.toLowerCase();
+                const coincideBusqueda = searchStr.includes(q);
                 const coincideProvincia = p === "" || u.provincia === p;
                 return coincideBusqueda && coincideProvincia;
             });
 
-            ordenarDatos();
             renderTabla();
-        }
-
-        function cambiarOrden(campo) {
-            if (ordenActual.campo === campo) {
-                ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
-            } else {
-                ordenActual.campo = campo;
-                ordenActual.direccion = 'asc';
-            }
-            ordenarDatos();
-            renderTabla();
-        }
-
-        function ordenarDatos() {
-            datosFiltrados.sort((a, b) => {
-                let valA = (a[ordenActual.campo] || "").toString().toLowerCase();
-                let valB = (b[ordenActual.campo] || "").toString().toLowerCase();
-                return ordenActual.direccion === 'asc' 
-                    ? valA.localeCompare(valB) 
-                    : valB.localeCompare(valA);
-            });
-        }
-
-        function togglePass(id) {
-            const el = document.getElementById(`pass-${id}`);
-            const icon = document.getElementById(`icon-${id}`);
-            const realPass = el.getAttribute('data-pass');
-            
-            if (el.innerText.includes('••••')) {
-                el.innerText = realPass;
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                el.innerText = '••••••••';
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
-            }
         }
 
         function renderTabla() {
             const tbody = document.getElementById('tabla-talleres');
             tbody.innerHTML = datosFiltrados.map(u => `
-                <tr class="border-b border-slate-800/50 hover:bg-slate-800/20 transition-all group">
+                <tr class="table-row-hover border-b border-slate-100 dark:border-slate-800/50 transition-all group">
                     <td class="p-6">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-slate-800 border border-slate-700 text-blue-500 rounded-xl flex items-center justify-center font-black text-xs">
-                                ${u.nombre_taller?.charAt(0).toUpperCase()}
+                            <div class="w-10 h-10 bg-blue-600/10 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs">
+                                ${u.nombre_taller?.substring(0,2).toUpperCase()}
                             </div>
-                            <span class="text-[11px] font-black text-white uppercase">${u.nombre_taller}</span>
+                            <span class="text-[11px] font-black text-slate-800 dark:text-white uppercase">${u.nombre_taller}</span>
                         </div>
                     </td>
                     <td class="p-6 text-[11px] font-bold text-slate-400">${u.email}</td>
                     <td class="p-6">
-                        <span class="px-3 py-1 bg-blue-500/10 text-blue-500 rounded-lg text-[9px] font-black uppercase">
-                            ${u.provincia || 'S/N'}
+                        <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg text-[9px] font-black uppercase">
+                            ${u.provincia || 'N/D'}
                         </span>
                     </td>
                     <td class="p-6">
                         <div class="flex items-center gap-3">
-                            <span id="pass-${u.id}" data-pass="${u.password || 'N/A'}" class="text-[10px] font-mono tracking-widest text-slate-500">••••••••</span>
-                            <button onclick="togglePass(${u.id})" class="text-slate-600 hover:text-white transition-colors">
+                            <span id="pass-${u.id}" class="text-[10px] font-mono tracking-widest text-slate-300 dark:text-slate-600">••••••••</span>
+                            <button onclick="togglePass(${u.id}, '${u.password}')" class="text-slate-400 hover:text-blue-500 transition-colors">
                                 <i id="icon-${u.id}" class="fas fa-eye text-[10px]"></i>
                             </button>
                         </div>
                     </td>
                     <td class="p-6 text-right">
                         <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            <button onclick="editarTaller(${u.id})" class="w-8 h-8 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-white"><i class="fas fa-edit text-[10px]"></i></button>
-                            <button onclick="borrarTaller(${u.id})" class="w-8 h-8 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-red-500"><i class="fas fa-trash text-[10px]"></i></button>
+                            <button onclick="editarTaller(${u.id})" class="w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-400 hover:text-blue-500 shadow-sm"><i class="fas fa-edit text-[10px]"></i></button>
+                            <button onclick="borrarTaller(${u.id}, '${u.nombre_taller}')" class="w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-400 hover:text-red-500 shadow-sm"><i class="fas fa-trash text-[10px]"></i></button>
                         </div>
                     </td>
                 </tr>
             `).join('');
-            document.getElementById('taller-count').innerText = `${datosFiltrados.length} RESULTADOS ENCONTRADOS`;
-        }
-
-        // Resto de funciones CRUD y Helpers...
-        function actualizarProvincias() {
-            const provs = [...new Set(usuarios.map(u => u.provincia).filter(x => x))];
-            document.getElementById('filtro-provincia').innerHTML = '<option value="">Provincia: Todas</option>' + 
-                provs.sort().map(p => `<option value="${p}">${p.toUpperCase()}</option>`).join('');
+            document.getElementById('taller-count').innerText = `${datosFiltrados.length} TALLERES REGISTRADOS EN SISTEMA`;
         }
 
         async function guardarTaller(e) {
@@ -263,10 +227,30 @@
                 password: document.getElementById('t-pass').value,
                 rol: 'taller'
             };
+
             const method = id ? 'PUT' : 'POST';
-            const url = id ? `${API_BASE_URL}/api/talleres/${id}` : `${API_BASE_URL}/api/talleres`;
-            await fetch(url, { method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            cerrarModal(); cargarDatos();
+            const url = id ? `/api/usuarios/${id}` : `/api/usuarios`;
+
+            try {
+                const res = await fetch(url, { 
+                    method, 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                if(res.ok) {
+                    cerrarModal();
+                    cargarDatos();
+                }
+            } catch (err) { alert("Error al guardar en SQL"); }
+        }
+
+        async function borrarTaller(id, nombre) {
+            if(!confirm(`¿Deseas dar de baja al taller ${nombre}? Esta acción se registrará en los logs.`)) return;
+            try {
+                await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+                cargarDatos();
+            } catch (err) { console.error(err); }
         }
 
         function editarTaller(id) {
@@ -276,37 +260,54 @@
             document.getElementById('t-email').value = u.email;
             document.getElementById('t-provincia').value = u.provincia || '';
             document.getElementById('t-pass').value = u.password || '';
-            document.getElementById('modal-title').innerText = "Editar Taller";
+            document.getElementById('modal-title').innerText = "Editar Credenciales";
             document.getElementById('modalTaller').classList.add('modal-active');
         }
 
-        async function borrarTaller(id) {
-            if(!confirm("¿Eliminar taller?")) return;
-            await fetch(`${API_BASE_URL}/api/talleres/${id}`, { method: 'DELETE' });
-            cargarDatos();
+        function togglePass(id, pass) {
+            const el = document.getElementById(`pass-${id}`);
+            const icon = document.getElementById(`icon-${id}`);
+            if (el.innerText === '••••••••') {
+                el.innerText = pass;
+                el.classList.replace('text-slate-300', 'text-blue-500');
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                el.innerText = '••••••••';
+                el.classList.replace('text-blue-500', 'text-slate-300');
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
         }
 
-        function exportarExcel() {
-            const ws = XLSX.utils.json_to_sheet(datosFiltrados.map(u => ({
-                TALLER: u.nombre_taller, EMAIL: u.email, PROVINCIA: u.provincia
-            })));
-            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Equipos");
-            XLSX.writeFile(wb, "Talleres_RecambioIA.xlsx");
+        function actualizarProvincias() {
+            const provs = [...new Set(usuarios.map(u => u.provincia).filter(x => x))];
+            const select = document.getElementById('filtro-provincia');
+            select.innerHTML = '<option value="">Provincia: Todas</option>' + 
+                provs.sort().map(p => `<option value="${p}">${p.toUpperCase()}</option>`).join('');
         }
 
         function updateSyncStatus(ok) {
             const led = document.getElementById('db-led');
-            led.className = `w-2.5 h-2.5 rounded-full ${ok ? 'bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)] animate-pulse' : 'bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)]'}`;
+            led.className = `w-2 h-2 rounded-full ${ok ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`;
         }
 
         function abrirModalTaller() {
             document.getElementById('formTaller').reset();
             document.getElementById('t-id').value = '';
-            document.getElementById('modal-title').innerText = "Nuevo Taller";
+            document.getElementById('modal-title').innerText = "Alta de Taller";
             document.getElementById('modalTaller').classList.add('modal-active');
         }
 
         function cerrarModal() { document.getElementById('modalTaller').classList.remove('modal-active'); }
+
+        function exportarExcel() {
+            const data = datosFiltrados.map(u => ({
+                ID: u.id, TALLER: u.nombre_taller, EMAIL: u.email, PROVINCIA: u.provincia
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Talleres");
+            XLSX.writeFile(wb, "Base_Datos_Talleres.xlsx");
+        }
 
         document.addEventListener('DOMContentLoaded', cargarDatos);
     </script>
