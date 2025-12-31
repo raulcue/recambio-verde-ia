@@ -57,7 +57,18 @@ app.get('/api/talleres', async (req, res) => {
     }
 });
 
-// 2. Listar pedidos con filtros
+// 2. NUEVO: Obtener lista de marcas maestras (CONECTADO A LA BBDD NUEVA)
+app.get('/api/marcas', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT nombre FROM marcas_maestras ORDER BY nombre ASC");
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error al obtener marcas:', err);
+        res.status(500).json({ error: 'Error al obtener marcas' });
+    }
+});
+
+// 3. Listar pedidos con filtros
 app.get('/api/pedidos', async (req, res) => {
     try {
         const { taller_id } = req.query;
@@ -77,7 +88,7 @@ app.get('/api/pedidos', async (req, res) => {
     }
 });
 
-// 3. Crear o Actualizar Pedido (UPSERT dinámico)
+// 4. Crear o Actualizar Pedido (UPSERT dinámico)
 app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const { id, nuevoEstado, pieza, matricula, precio, marca_coche, modelo_coche, bastidor, precio_coste, proveedor, usuario_id, sub_estado_incidencia, notas_tecnicas, admin_user } = req.body;
@@ -119,7 +130,7 @@ app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
     }
 });
 
-// 4. Eliminar
+// 5. Eliminar
 app.delete('/api/pedidos/:id', async (req, res) => {
     const { id } = req.params;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -132,7 +143,7 @@ app.delete('/api/pedidos/:id', async (req, res) => {
     }
 });
 
-// 5. Logs
+// 6. Logs
 app.get('/api/logs', async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM logs ORDER BY fecha DESC LIMIT 100");
