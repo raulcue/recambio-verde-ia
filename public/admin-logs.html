@@ -2,183 +2,80 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auditoría Root - Logística IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script>
-        tailwind.config = { darkMode: 'class' };
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-        }
-        if (localStorage.theme === 'dark') document.documentElement.classList.add('dark');
-    </script>
-    <style>
-        .log-row { transition: all 0.2s; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .dark .log-row { border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .log-row:hover { background-color: rgba(59, 130, 246, 0.05); }
-        .custom-scrollbar::-webkit-scrollbar { height: 4px; width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-    </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors text-slate-900 dark:text-slate-100">
-
-    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-[100]">
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100">
+    <nav class="bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-[100]">
         <div class="flex items-center gap-4">
-            <img src="/assets/logo.png" alt="Logo" class="h-8 object-contain dark:invert transition-all">
-            <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-            <h1 class="font-black text-[11px] md:text-xs uppercase tracking-tighter italic">Auditoría <span class="text-blue-600">Root System</span></h1>
+            <h1 class="font-black text-xs uppercase tracking-tighter italic italic dark:text-white">Auditoría <span class="text-blue-600">Root System</span></h1>
         </div>
-
         <div class="flex items-center gap-3">
-            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center hover:scale-110 transition-all">
-                <i class="fas fa-moon dark:hidden"></i>
-                <i class="fas fa-sun hidden dark:block text-yellow-500"></i>
-            </button>
-            <div class="px-4 py-2 bg-red-600 text-white rounded-2xl flex items-center gap-2 font-black text-[10px] shadow-lg shadow-red-500/20">
-                <i class="fas fa-shield-halved"></i> ADMIN
-            </div>
+            <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center"><i class="fas fa-moon"></i></button>
+            <div class="px-4 py-2 bg-red-600 text-white rounded-2xl font-black text-[10px]">ADMIN</div>
         </div>
     </nav>
 
-    <main class="p-4 md:p-8 max-w-7xl mx-auto">
+    <main class="p-8 max-w-7xl mx-auto">
         <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-                <h2 class="text-4xl font-black uppercase tracking-tighter leading-none italic">Historial de <span class="text-blue-600">Actividad</span></h2>
+                <h2 class="text-4xl font-black uppercase tracking-tighter italic dark:text-white text-blue-600">Historial Actividad</h2>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3 flex items-center gap-2">
-                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Trazabilidad en tiempo real (Capa de Seguridad SQL)
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Trazabilidad SQL en tiempo real
                 </p>
             </div>
-            
-            <div class="flex flex-col md:flex-row gap-3">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="logSearch" oninput="filtrarLogs()" placeholder="BUSCAR POR MATRÍCULA, PIEZA O IP..." 
-                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 pl-10 pr-6 py-3.5 rounded-[1.2rem] text-[10px] font-bold uppercase outline-none focus:ring-2 ring-blue-500 w-full md:w-80 shadow-sm">
-                </div>
-                
-                <button onclick="exportarCSV()" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3.5 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl">
-                    <i class="fas fa-file-csv mr-2"></i> Exportar
-                </button>
-            </div>
+            <button onclick="exportarCSV()" class="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl">Exportar CSV</button>
         </header>
 
         <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50/50 dark:bg-slate-800/50">
-                            <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-100 dark:border-slate-800">Marca de Tiempo / IP</th>
-                            <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-100 dark:border-slate-800">Operador</th>
-                            <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-100 dark:border-slate-800">Evento</th>
-                            <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b border-slate-100 dark:border-slate-800">Detalle de la Acción SQL</th>
-                        </tr>
-                    </thead>
-                    <tbody id="logsContainer" class="text-sm font-medium">
-                        </tbody>
-                </table>
-            </div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 dark:bg-slate-800/50">
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b dark:border-slate-800">Fecha / IP</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b dark:border-slate-800">Operador</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b dark:border-slate-800 text-center">Acción</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest border-b dark:border-slate-800">Detalle SQL</th>
+                    </tr>
+                </thead>
+                <tbody id="logsContainer"></tbody>
+            </table>
         </div>
     </main>
 
-    <footer class="mt-20 py-10 border-t border-slate-200 dark:border-slate-800 text-center px-6">
-        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            SISTEMA DE SEGURIDAD <span class="text-blue-600 italic">LOGÍSTICA IA</span> - VERSIÓN 6.0 ULTIMATE
-        </p>
-    </footer>
-
     <script>
         let allLogs = [];
-
         async function fetchLogs() {
-            try {
-                const response = await fetch('/api/logs');
-                allLogs = await response.json();
-                renderLogs(allLogs);
-            } catch (err) {
-                console.error("Error en conexión:", err);
-            }
-        }
-
-        function renderLogs(logs) {
+            const res = await fetch('/api/logs');
+            allLogs = await res.json();
             const container = document.getElementById('logsContainer');
-            container.innerHTML = '';
-
-            logs.forEach(log => {
-                const fecha = new Date(log.fecha).toLocaleString('es-ES', { 
-                    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' 
-                });
-
-                // Lógica de colores por acción
-                let badgeClass = "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-                if (log.accion.includes('CREATE')) badgeClass = "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
-                if (log.accion.includes('MOVE')) badgeClass = "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
-                if (log.accion.includes('MODIFICACION')) badgeClass = "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
-                if (log.accion.includes('FAIL') || log.accion.includes('UNAUTHORIZED')) badgeClass = "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-
-                container.innerHTML += `
-                    <tr class="log-row">
+            container.innerHTML = allLogs.map(log => {
+                const badgeClass = log.accion === 'CREATE' ? 'bg-emerald-100 text-emerald-700' : (log.accion === 'MOVE' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700');
+                return `
+                    <tr class="border-b dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td class="p-6">
-                            <div class="flex flex-col">
-                                <span class="text-slate-900 dark:text-white font-black text-xs italic">${fecha}</span>
-                                <span class="text-[9px] text-slate-400 font-mono mt-1 tracking-tighter">IP: ${log.ip_address || '0.0.0.0'}</span>
-                            </div>
+                            <div class="flex flex-col"><span class="font-black text-xs dark:text-white">${new Date(log.fecha).toLocaleString()}</span><span class="text-[9px] text-slate-400 font-mono mt-1">${log.ip_address}</span></div>
                         </td>
                         <td class="p-6">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 bg-slate-900 dark:bg-blue-600 text-white rounded-full flex items-center justify-center text-[9px] font-black border-2 border-white dark:border-slate-800 shadow-md">
-                                    ${log.usuario_iniciales || '??'}
-                                </div>
-                                <span class="text-[11px] font-bold dark:text-slate-300 uppercase">${log.usuario_nombre || 'Desconocido'}</span>
+                                <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-[9px] font-black">${log.usuario_iniciales}</div>
+                                <span class="text-[11px] font-bold dark:text-slate-300 uppercase">${log.usuario_nombre}</span>
                             </div>
                         </td>
-                        <td class="p-6 text-center">
-                            <span class="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${badgeClass}">${log.accion}</span>
-                        </td>
-                        <td class="p-6">
-                            <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-                                ${log.detalle} 
-                                <div class="mt-2 flex gap-2">
-                                    ${log.pieza ? `<span class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded text-[8px] font-black uppercase border border-blue-100 dark:border-blue-900/40">${log.pieza}</span>` : ''}
-                                    ${log.matricula ? `<span class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white px-2 py-0.5 rounded text-[8px] font-mono font-black border border-slate-200 dark:border-slate-700 tracking-tighter">${log.matricula}</span>` : ''}
-                                </div>
-                            </p>
-                        </td>
-                    </tr>
-                `;
-            });
+                        <td class="p-6 text-center"><span class="px-3 py-1.5 rounded-lg text-[8px] font-black uppercase ${badgeClass}">${log.accion}</span></td>
+                        <td class="p-6 text-[11px] text-slate-600 dark:text-slate-400">${log.detalle}</td>
+                    </tr>`;
+            }).join('');
         }
-
-        function filtrarLogs() {
-            const query = document.getElementById('logSearch').value.toLowerCase();
-            const filtered = allLogs.filter(l => 
-                (l.matricula && l.matricula.toLowerCase().includes(query)) || 
-                (l.ip_address && l.ip_address.includes(query)) ||
-                (l.detalle && l.detalle.toLowerCase().includes(query)) ||
-                (l.pieza && l.pieza.toLowerCase().includes(query)) ||
-                (l.usuario_nombre && l.usuario_nombre.toLowerCase().includes(query))
-            );
-            renderLogs(filtered);
-        }
-
         function exportarCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,Fecha,IP,Usuario,Evento,Detalle,Pieza,Matricula\n";
-            allLogs.forEach(l => {
-                csvContent += `"${l.fecha}","${l.ip_address}","${l.usuario_nombre}","${l.accion}","${l.detalle}","${l.pieza || ''}","${l.matricula || ''}"\n`;
-            });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `LOGS_AUDITORIA_${new Date().getTime()}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            let csv = "Fecha,IP,Usuario,Accion,Detalle\n";
+            allLogs.forEach(l => csv += `"${l.fecha}","${l.ip_address}","${l.usuario_nombre}","${l.accion}","${l.detalle}"\n`);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'logs.csv'; a.click();
         }
-
-        // Carga y Auto-Refresco
-        fetchLogs();
-        setInterval(fetchLogs, 15000); // Refresco cada 15 segundos para máxima seguridad
+        setInterval(fetchLogs, 5000); fetchLogs();
     </script>
 </body>
 </html>

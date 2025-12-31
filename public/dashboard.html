@@ -1,290 +1,196 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Logística IA - v6</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { darkBg: '#0f172a', cardDark: '#1e293b' } } } };
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
-    </script>
-    <style>
-        .kanban-column { min-width: 320px; }
-        .amount-blur.is-hidden { filter: blur(8px); }
-        .toast { position: fixed; top: 1.5rem; left: 50%; transform: translate(-50%, -200%); transition: 0.6s; opacity: 0; z-index: 10000; }
-        .toast.show { transform: translate(-50%, 0); opacity: 1; }
-        .custom-scrollbar::-webkit-scrollbar { height: 4px; width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-    </style>
-</head>
-<body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 h-screen flex flex-col overflow-hidden">
+<script>
+    let db = [];
+    let isPrivate = false;
+    const columns = [
+        { id: 'solicitado', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
+        { id: 'desguace', label: 'Localizado', color: 'border-amber-500', icon: 'fa-search-location' },
+        { id: 'listo', label: 'En Almacén', color: 'border-purple-600', icon: 'fa-box' },
+        { id: 'transito', label: 'Logística', color: 'border-cyan-500', icon: 'fa-truck' },
+        { id: 'entregado', label: 'Cerrado', color: 'border-emerald-500', icon: 'fa-check-circle' },
+        { id: 'incidencia', label: 'Incidencias', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
+    ];
 
-    <div id="toast" class="toast">
-        <div id="toast-container" class="bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black text-[10px] uppercase tracking-widest">
-            <i class="fas fa-check"></i> <span id="toast-msg">Sincronizado</span>
-        </div>
-    </div>
+    async function init() {
+        await Promise.all([cargarTalleres(), cargarDatos()]);
+        const pEst = document.getElementById('p-estado');
+        pEst.innerHTML = ''; // Limpiar antes de llenar
+        columns.forEach(c => pEst.add(new Option(c.label.toUpperCase(), c.id)));
+    }
 
-    <nav class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex justify-between items-center shrink-0">
-        <div class="flex items-center gap-4">
-            <h1 class="font-black text-sm uppercase italic">Logística <span class="text-blue-600">IA</span></h1>
-            <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-100 dark:bg-slate-800 rounded-xl px-4 py-2 text-[10px] font-black uppercase outline-none">
-                <option value="todos">Todos los Talleres</option>
-            </select>
-        </div>
-        <div class="flex items-center gap-4">
-            <p id="total-euros" class="text-sm font-black text-emerald-500 amount-blur is-hidden">0€</p>
-            <button onclick="togglePrivacy()" class="p-2 text-slate-500"><i id="eye-icon" class="fas fa-eye-slash"></i></button>
-            <button onclick="toggleDark()" class="p-2 text-slate-500"><i class="fas fa-moon"></i></button>
-            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-black text-white">RC</div>
-        </div>
-    </nav>
+    async function cargarTalleres() {
+        const res = await fetch('/api/talleres');
+        const data = await res.json();
+        const fT = document.getElementById('filtroTaller');
+        const pT = document.getElementById('p-taller');
+        data.forEach(t => {
+            fT.add(new Option(t.nombre, t.id));
+            pT.add(new Option(t.nombre, t.id));
+        });
+    }
 
-    <div class="px-8 py-4 flex gap-4 shrink-0 bg-white dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800">
-        <input type="text" id="buscador" oninput="filtrar()" placeholder="BUSCAR PIEZA O MATRÍCULA..." class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-2xl py-3 px-6 text-[10px] font-bold uppercase outline-none focus:ring-2 ring-blue-500">
-        <button onclick="abrirModal()" class="px-8 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg">+ Nuevo</button>
-    </div>
+    async function cargarDatos() {
+        const tId = document.getElementById('filtroTaller').value;
+        const res = await fetch(`/api/pedidos?taller_id=${tId}`);
+        if(!res.ok) return;
+        db = await res.json();
+        renderBoard();
+    }
 
-    <main class="flex-1 flex gap-6 p-8 overflow-x-auto custom-scrollbar" id="kanbanBoard"></main>
+    function renderBoard() {
+        const board = document.getElementById('kanbanBoard');
+        board.innerHTML = '';
+        let globalSum = 0;
 
-    <div id="modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-[200] flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-[2.5rem] p-8 shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="modal-title" class="text-xl font-black uppercase italic dark:text-white">Ficha</h2>
-                <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                    <button onclick="switchTab('tab-pedido')" id="btn-tab-pedido" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase bg-blue-600 text-white">Detalles</button>
-                    <button onclick="switchTab('tab-logistica')" id="btn-tab-logistica" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase text-slate-400">Económico</button>
-                    <button onclick="switchTab('tab-taller')" id="btn-tab-taller" class="px-4 py-2 rounded-lg text-[9px] font-black uppercase text-slate-400">Taller</button>
-                </div>
-            </div>
+        columns.forEach(col => {
+            const items = db.filter(p => p.estado === col.id);
+            const colSum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
+            globalSum += colSum;
 
-            <form id="pedido-form" class="space-y-6 overflow-y-auto pr-2 custom-scrollbar">
-                <input type="hidden" id="pedido-id">
-                
-                <div id="tab-pedido" class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2"><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Pieza</label>
-                        <input type="text" id="pieza" required class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold outline-none"></div>
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Matrícula</label>
-                        <input type="text" id="matricula" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-black uppercase outline-none"></div>
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Bastidor</label>
-                        <input type="text" id="bastidor" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-mono outline-none"></div>
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Marca</label>
-                        <input type="text" id="marca_coche" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs outline-none"></div>
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Modelo</label>
-                        <input type="text" id="modelo_coche" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs outline-none"></div>
-                </div>
-
-                <div id="tab-logistica" class="hidden grid grid-cols-2 gap-4">
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Precio Venta</label>
-                        <input type="number" id="precio" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-black outline-none"></div>
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Coste</label>
-                        <input type="number" id="precio_coste" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs outline-none"></div>
-                    <div class="col-span-2"><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Proveedor</label>
-                        <input type="text" id="proveedor" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs outline-none"></div>
-                </div>
-
-                <div id="tab-taller" class="hidden grid grid-cols-2 gap-4">
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Asignar Taller</label>
-                        <select id="usuario_id" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs outline-none">
-                            <option value="">Sin asignar</option>
-                        </select></div>
-                    <div><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Incidencia</label>
-                        <select id="sub_estado_incidencia" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs outline-none">
-                            <option value="">Ninguna</option>
-                            <option value="rotura">Rotura</option>
-                            <option value="equivocado">Equivocado</option>
-                        </select></div>
-                    <div class="col-span-2"><label class="text-[9px] font-black text-slate-500 uppercase ml-2">Notas Técnicas</label>
-                        <textarea id="notas_tecnicas" rows="3" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs outline-none"></textarea></div>
-                </div>
-
-                <div class="flex gap-4 pt-4 bg-white dark:bg-slate-900">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-[10px] font-black uppercase">Cerrar</button>
-                    <button type="submit" class="flex-1 p-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-xl">Guardar en SQL</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        let db = [];
-        let isPrivate = true;
-        const columns = [
-            { id: 'solicitado', label: 'Solicitado', color: 'border-slate-400' },
-            { id: 'desguace', label: 'En Desguace', color: 'border-amber-500' },
-            { id: 'listo', label: 'Stock', color: 'border-purple-500' },
-            { id: 'transito', label: 'Tránsito', color: 'border-emerald-500' },
-            { id: 'entregado', label: 'Entregado', color: 'border-blue-500' },
-            { id: 'incidencia', label: 'Incidencia', color: 'border-red-500' }
-        ];
-
-        function showToast(msg, error = false) {
-            const t = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            document.getElementById('toast-container').className = error ? 'bg-red-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black text-[10px] uppercase' : 'bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black text-[10px] uppercase';
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
-        }
-
-        async function cargarTalleres() {
-            try {
-                const res = await fetch('/api/talleres');
-                const data = await res.json();
-                const selF = document.getElementById('filtroTaller');
-                const selM = document.getElementById('usuario_id');
-                data.forEach(t => {
-                    const opt = new Option(t.nombre, t.id);
-                    selF.add(opt.cloneNode(true));
-                    selM.add(opt);
-                });
-            } catch (e) { console.error("Error talleres", e); }
-        }
-
-        async function cargarDatos() {
-            const tId = document.getElementById('filtroTaller').value;
-            try {
-                const res = await fetch(`/api/pedidos?taller_id=${tId}`);
-                if (!res.ok) throw new Error("Server Error");
-                db = await res.json();
-                render();
-            } catch (e) { showToast("Error al conectar con la DB", true); }
-        }
-
-        function render() {
-            const board = document.getElementById('kanbanBoard');
-            board.innerHTML = '';
-            let globalSum = 0;
-
-            columns.forEach(col => {
-                const items = db.filter(p => p.estado?.toLowerCase() === col.id);
-                const sum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
-                globalSum += sum;
-
-                const columnEl = document.createElement('div');
-                columnEl.className = 'kanban-column flex flex-col gap-4';
-                columnEl.innerHTML = `
-                    <div class="border-t-2 ${col.color} pt-4 mb-2 flex justify-between items-center">
-                        <span class="text-[10px] font-black uppercase dark:text-white">${col.label} (${items.length})</span>
-                        <span class="text-[10px] font-bold text-slate-400 amount-blur ${isPrivate ? 'is-hidden' : ''}">${sum.toFixed(0)}€</span>
+            const columnHtml = `
+                <div class="kanban-column flex flex-col gap-6">
+                    <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color}">
+                        <div>
+                            <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
+                        </div>
+                        <span class="total-header-blur text-xs font-black text-blue-600 italic">${colSum.toFixed(0)}€</span>
                     </div>
-                    <div class="flex-1 space-y-3 overflow-y-auto custom-scrollbar" ondragover="event.preventDefault()" ondrop="drop(event, '${col.id}')">
+                    <div class="flex-1 space-y-4 overflow-y-auto custom-scrollbar pr-2" ondragover="event.preventDefault()" ondrop="drop(event, '${col.id}')">
                         ${items.map(p => `
-                            <div draggable="true" ondragstart="start(event, ${p.id})" onclick='abrirEditar(${JSON.stringify(p)})'
-                                 class="bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500 transition-all cursor-pointer group">
-                                <p class="text-[8px] font-bold text-slate-400 uppercase mb-1">ID #${p.id}</p>
-                                <h4 class="text-[11px] font-black uppercase dark:text-white mb-2 leading-tight">${p.pieza}</h4>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-[9px] font-bold text-blue-500 uppercase">${p.matricula || '---'}</span>
-                                    <span class="text-[10px] font-black text-emerald-500 amount-blur ${isPrivate ? 'is-hidden' : ''}">${p.precio || 0}€</span>
+                            <div draggable="true" ondragstart="start(event, ${p.id})" 
+                                 onclick='abrirEditar(${JSON.stringify(p)})'
+                                 class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500/40 transition-all cursor-pointer group active:scale-95">
+                                <div class="flex justify-between mb-4">
+                                    <div class="w-8 h-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-blue-600">
+                                        <i class="fas ${col.icon} text-[10px]"></i>
+                                    </div>
+                                    <span class="text-[8px] font-bold text-slate-300 tracking-widest">#${p.id}</span>
+                                </div>
+                                <h4 class="text-xs font-black uppercase dark:text-white leading-tight mb-2 tracking-tighter">${p.pieza}</h4>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase mb-4">${p.marca_coche || ''} ${p.modelo_coche || '---'}</p>
+                                <div class="flex justify-between items-center pt-4 border-t dark:border-slate-800">
+                                    <span class="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg">${p.matricula || 'S/M'}</span>
+                                    <span class="text-xs font-black dark:text-white">${p.precio || 0}€</span>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
-                `;
-                board.appendChild(columnEl);
-            });
-            document.getElementById('total-euros').innerText = `${globalSum.toLocaleString()}€`;
-        }
+                </div>
+            `;
+            board.innerHTML += columnHtml;
+        });
+        document.getElementById('total-general').innerText = `${globalSum.toLocaleString()}€`;
+    }
 
-        function start(e, id) { e.dataTransfer.setData("text", id); }
+    function start(e, id) { e.dataTransfer.setData("text", id); }
+    
+    async function drop(e, nuevoEstado) {
+        const id = e.dataTransfer.getData("text");
+        const pedido = db.find(x => x.id == id);
+        // Enviamos el objeto con los nombres exactos que espera tu server.js
+        await fetch('/api/pedidos/update-status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                id: id, 
+                nuevoEstado: nuevoEstado, 
+                pieza: pedido.pieza,
+                admin_user: 'Admin (Drag)' 
+            })
+        });
+        cargarDatos();
+    }
 
-        async function drop(e, estado) {
-            e.preventDefault();
-            const id = e.dataTransfer.getData("text");
-            try {
-                await fetch('/api/pedidos/update-status', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id, nuevoEstado: estado })
-                });
-                cargarDatos();
-                showToast("Sincronizado");
-            } catch (e) { showToast("Error al mover", true); }
-        }
+    function togglePrivacy() {
+        isPrivate = !isPrivate;
+        document.body.classList.toggle('privacy-active', isPrivate);
+        document.getElementById('eye-icon').className = isPrivate ? "fas fa-eye-slash text-xs" : "fas fa-eye text-xs";
+    }
 
-        document.getElementById('pedido-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const data = {
-                id: document.getElementById('pedido-id').value,
-                pieza: document.getElementById('pieza').value,
-                matricula: document.getElementById('matricula').value,
-                marca_coche: document.getElementById('marca_coche').value,
-                modelo_coche: document.getElementById('modelo_coche').value,
-                bastidor: document.getElementById('bastidor').value,
-                precio: document.getElementById('precio').value,
-                precio_coste: document.getElementById('precio_coste').value,
-                proveedor: document.getElementById('proveedor').value,
-                usuario_id: document.getElementById('usuario_id').value,
-                sub_estado_incidencia: document.getElementById('sub_estado_incidencia').value,
-                notas_tecnicas: document.getElementById('notas_tecnicas').value
-            };
+    function switchTab(t) {
+        ['gen', 'eco', 'tec'].forEach(id => {
+            document.getElementById(`tab-${id}`).classList.toggle('hidden', id !== t);
+            document.getElementById(`tab-${id}-btn`).classList.toggle('tab-active', id === t);
+        });
+    }
 
-            await fetch('/api/pedidos/update-status', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            cerrarModal();
-            cargarDatos();
-            showToast("DB Actualizada");
+    function abrirModalNuevo() {
+        document.getElementById('form-pedido').reset();
+        document.getElementById('p-id').value = '';
+        document.getElementById('modal-titulo').innerText = "Nuevo Registro";
+        document.getElementById('modal-estado-badge').innerText = "NUEVO";
+        document.getElementById('modal').classList.remove('hidden');
+        switchTab('gen');
+    }
+
+    function abrirEditar(p) {
+        document.getElementById('p-id').value = p.id;
+        document.getElementById('p-pieza').value = p.pieza || '';
+        document.getElementById('p-matricula').value = p.matricula || '';
+        document.getElementById('p-marca').value = p.marca_coche || '';
+        document.getElementById('p-modelo').value = p.modelo_coche || '';
+        document.getElementById('p-taller').value = p.usuario_id || '';
+        document.getElementById('p-estado').value = p.estado || 'solicitado';
+        document.getElementById('p-precio').value = p.precio || 0;
+        document.getElementById('p-coste').value = p.precio_coste || 0;
+        document.getElementById('p-proveedor').value = p.proveedor || '';
+        document.getElementById('p-referencia').value = p.referencia || '';
+        document.getElementById('p-bastidor').value = p.bastidor || '';
+        document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
+        document.getElementById('p-notas').value = p.notas_tecnicas || '';
+        
+        document.getElementById('modal-titulo').innerText = "Editar Registro #" + p.id;
+        document.getElementById('modal-estado-badge').innerText = p.estado.toUpperCase();
+        document.getElementById('modal').classList.remove('hidden');
+        switchTab('gen');
+    }
+
+    document.getElementById('form-pedido').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        // MAPEADO EXACTO HACIA TU SERVER.JS
+        const data = {
+            id: document.getElementById('p-id').value || null,
+            pieza: document.getElementById('p-pieza').value,
+            matricula: document.getElementById('p-matricula').value,
+            marca_coche: document.getElementById('p-marca').value,
+            modelo_coche: document.getElementById('p-modelo').value,
+            usuario_id: document.getElementById('p-taller').value,
+            nuevoEstado: document.getElementById('p-estado').value,
+            precio: document.getElementById('p-precio').value || 0,
+            precio_coste: document.getElementById('p-coste').value || 0,
+            proveedor: document.getElementById('p-proveedor').value,
+            bastidor: document.getElementById('p-bastidor').value,
+            sub_estado_incidencia: document.getElementById('p-subestado').value,
+            notas_tecnicas: document.getElementById('p-notas').value,
+            admin_user: 'Admin Root'
         };
 
-        function filtrar() {
-            const q = document.getElementById('buscador').value.toLowerCase();
-            document.querySelectorAll('.bg-white.dark\\:bg-slate-900.p-5').forEach(card => {
-                card.style.display = card.innerText.toLowerCase().includes(q) ? 'block' : 'none';
-            });
+        await fetch('/api/pedidos/update-status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        cerrarModal(); 
+        cargarDatos();
+    };
+
+    async function eliminarRegistro() {
+        const id = document.getElementById('p-id').value;
+        if(!id) return;
+        if(confirm("¿Seguro que quieres borrar este registro?")) {
+            await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
+            cerrarModal(); cargarDatos();
         }
+    }
 
-        function togglePrivacy() {
-            isPrivate = !isPrivate;
-            document.getElementById('eye-icon').className = isPrivate ? 'fas fa-eye-slash' : 'fas fa-eye';
-            render();
-        }
+    function filtrar() {
+        const q = document.getElementById('buscador').value.toLowerCase();
+        document.querySelectorAll('#kanbanBoard .group').forEach(card => {
+            card.style.display = card.innerText.toLowerCase().includes(q) ? 'block' : 'none';
+        });
+    }
 
-        function abrirEditar(p) {
-            abrirModal();
-            document.getElementById('modal-title').innerText = `Pedido #${p.id}`;
-            document.getElementById('pedido-id').value = p.id;
-            document.getElementById('pieza').value = p.pieza || '';
-            document.getElementById('matricula').value = p.matricula || '';
-            document.getElementById('bastidor').value = p.bastidor || '';
-            document.getElementById('marca_coche').value = p.marca_coche || '';
-            document.getElementById('modelo_coche').value = p.modelo_coche || '';
-            document.getElementById('precio').value = p.precio || 0;
-            document.getElementById('precio_coste').value = p.precio_coste || 0;
-            document.getElementById('proveedor').value = p.proveedor || '';
-            document.getElementById('usuario_id').value = p.usuario_id || '';
-            document.getElementById('sub_estado_incidencia').value = p.sub_estado_incidencia || '';
-            document.getElementById('notas_tecnicas').value = p.notas_tecnicas || '';
-        }
-
-        function abrirModal() {
-            document.getElementById('pedido-form').reset();
-            document.getElementById('pedido-id').value = '';
-            document.getElementById('modal').classList.remove('hidden');
-            switchTab('tab-pedido');
-        }
-
-        function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
-
-        function switchTab(id) {
-            ['tab-pedido', 'tab-logistica', 'tab-taller'].forEach(t => document.getElementById(t).classList.toggle('hidden', t !== id));
-            ['btn-tab-pedido', 'btn-tab-logistica', 'btn-tab-taller'].forEach(b => {
-                const active = b.includes(id);
-                document.getElementById(b).className = active ? "px-4 py-2 rounded-lg text-[9px] font-black uppercase bg-blue-600 text-white shadow-lg" : "px-4 py-2 rounded-lg text-[9px] font-black uppercase text-slate-400";
-            });
-        }
-
-        function toggleDark() { document.documentElement.classList.toggle('dark'); }
-
-        window.onload = async () => {
-            await cargarTalleres();
-            cargarDatos();
-        };
-    </script>
-</body>
-</html>
+    function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
+    window.onload = init;
+</script>

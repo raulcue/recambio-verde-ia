@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Panel Taller - Logística IA</title>
+    <title>Pedidos Taller - Logística IA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -12,22 +12,33 @@
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 900; }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
         .dark .glass-card { background: rgba(15, 23, 42, 0.8); }
+        .logo-invert { transition: filter 0.3s ease; }
+        .dark .logo-invert { filter: brightness(0) invert(1); }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-[#0f172a] min-h-screen transition-colors pb-24">
 
     <nav class="glass-card border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-[100]">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black italic">R</div>
-            <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">Panel <span class="text-blue-600">Taller</span></h1>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+                <img src="assets/logo.png" alt="Logística IA" class="h-8 w-auto logo-invert">
+                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">Pedidos <span class="text-blue-600">Taller</span></h1>
+            </div>
         </div>
         
         <div class="flex items-center gap-3">
-            <button onclick="document.documentElement.classList.toggle('dark')" class="w-9 h-9 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+            <button onclick="document.documentElement.classList.toggle('dark')" class="w-9 h-9 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
                 <i class="fas fa-moon dark:hidden text-xs"></i>
                 <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
             </button>
-            <div class="w-9 h-9 bg-slate-900 text-white rounded-full flex items-center justify-center font-black text-[10px]">TA</div>
+            <div class="flex items-center gap-3 pl-3 border-l dark:border-slate-800">
+                <div class="text-right hidden sm:block">
+                    <p class="text-[10px] font-black dark:text-white leading-none uppercase">Acceso Taller</p>
+                    <p class="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Sincronizado</p>
+                </div>
+                <div class="w-9 h-9 bg-slate-900 dark:bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-[10px]">TA</div>
+            </div>
         </div>
     </nav>
 
@@ -35,7 +46,7 @@
         <div>
             <div class="flex items-center gap-2 mb-1">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sincronizado con Central</span>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Terminal Activa</span>
             </div>
             <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter italic">Mis <span class="text-blue-600">Pedidos</span></h1>
             <p id="contador-piezas" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Cargando base de datos...</p>
@@ -138,8 +149,8 @@
                 
                 if (allPedidos.length === 0) {
                     container.innerHTML = `
-                        <div class="text-center py-20">
-                            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                        <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                            <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                                 <i class="fas fa-box-open text-2xl"></i>
                             </div>
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No hay pedidos registrados</p>
@@ -152,16 +163,19 @@
                     const statusStyles = {
                         'solicitado': 'bg-blue-100 text-blue-600',
                         'buscando': 'bg-amber-100 text-amber-600',
+                        'desguace': 'bg-amber-100 text-amber-600',
                         'incidencia': 'bg-red-100 text-red-600',
-                        'completado': 'bg-emerald-100 text-emerald-600'
+                        'completado': 'bg-emerald-100 text-emerald-600',
+                        'entregado': 'bg-emerald-100 text-emerald-600',
+                        'listo': 'bg-purple-100 text-purple-600'
                     };
                     const color = statusStyles[p.estado] || 'bg-slate-100 text-slate-600';
 
                     return `
-                        <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer">
+                        <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer group">
                             <div class="flex justify-between items-start mb-4">
                                 <span class="text-[9px] font-black ${color} px-3 py-1 rounded-full uppercase tracking-tighter">${p.estado || 'solicitado'}</span>
-                                <span class="text-[9px] font-bold text-slate-300 uppercase italic">ID: RR-${p.id}</span>
+                                <span class="text-[9px] font-bold text-slate-300 uppercase italic">RR-${p.id}</span>
                             </div>
                             <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter leading-tight">${p.pieza}</h3>
                             <div class="flex items-center gap-3 mt-2">
@@ -175,13 +189,14 @@
                 
                 document.getElementById('contador-piezas').innerText = `${allPedidos.length} SOLICITUDES EN CURSO`;
             } catch (e) { 
-                console.error("Error cargando pedidos:", e);
+                console.error("Error:", e);
                 document.getElementById('contador-piezas').innerText = "ERROR DE CONEXIÓN";
             }
         }
 
         function verDetalle(id) {
             const p = allPedidos.find(i => i.id === id);
+            if (!p) return;
             document.getElementById('edit-id').value = p.id;
             document.getElementById('edit-pieza').value = p.pieza;
             document.getElementById('edit-matricula').value = p.matricula;
@@ -196,15 +211,18 @@
             e.preventDefault();
             const id = document.getElementById('edit-id').value;
             const body = {
+                id: id,
                 pieza: document.getElementById('edit-pieza').value,
                 matricula: document.getElementById('edit-matricula').value,
                 modelo_coche: document.getElementById('edit-modelo').value,
-                bastidor: document.getElementById('edit-bastidor').value
+                bastidor: document.getElementById('edit-bastidor').value,
+                admin_user: 'App Taller'
             };
             
             try {
-                await fetch(`/api/pedidos/${id}`, { 
-                    method: 'PUT', 
+                // Usamos la ruta profesional de actualización de estado que soporta múltiples campos
+                await fetch(`/api/pedidos/update-status`, { 
+                    method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
                     body: JSON.stringify(body) 
                 });
@@ -229,16 +247,18 @@
                 pieza: document.getElementById('new-pieza').value,
                 modelo_coche: document.getElementById('new-modelo').value,
                 matricula: document.getElementById('new-matricula').value,
-                estado: 'solicitado'
+                nuevoEstado: 'solicitado',
+                admin_user: 'App Taller'
             };
             try {
-                const res = await fetch('/api/pedidos', { 
+                const res = await fetch('/api/pedidos/update-status', { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
                     body: JSON.stringify(body) 
                 });
                 if(res.ok) {
                     cerrarModal(); 
+                    e.target.reset();
                     init();
                 }
             } catch (err) { alert("Error al enviar solicitud"); }
