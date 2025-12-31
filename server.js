@@ -44,20 +44,92 @@ const validarPedido = (req, res, next) => {
 };
 
 /**
- * RUTAS DE LA API
+ * RUTAS DE LA API - GESTIÓN DE USUARIOS (TALLERES)
  */
 
-// 1. Obtener lista de talleres
+// 1. Obtener lista de usuarios con rol 'taller' (Para talleres.html)
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const result = await pool.query(
+            "SELECT id, nombre_taller, email, provincia, password, rol FROM usuarios WHERE rol = 'taller' ORDER BY nombre_taller ASC"
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error SQL Usuarios:', err.message);
+        res.status(500).json({ error: 'Error al obtener usuarios' });
+    }
+});
+
+// 2. Crear Nuevo Usuario/Taller
+app.post('/api/usuarios', async (req, res) => {
+    const { nombre_taller, email, provincia, password, rol } = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    try {
+        const query = `
+            INSERT INTO usuarios (nombre_taller, email, provincia, password, rol, fecha_registro)
+            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) RETURNING id`;
+        const result = await pool.query(query, [nombre_taller, email, provincia, password, rol || 'taller']);
+        
+        await registrarLog('Admin', 'ALTA_TALLER', `Nuevo taller: ${nombre_taller}`, ip);
+        res.json({ success: true, id: result.rows[0].id });
+    } catch (err) {
+        console.error('Error Crear Usuario:', err.message);
+        res.status(500).json({ error: 'Error al registrar taller' });
+    }
+});
+
+// 3. Actualizar Usuario/Taller
+app.put('/api/usuarios/:id', async (req, res) => {
+    const { id } = req.params;
+    const { nombre_taller, email, provincia, password } = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    try {
+        const query = `
+            UPDATE usuarios 
+            SET nombre_taller = $1, email = $2, provincia = $3, password = $4, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = $5`;
+        await pool.query(query, [nombre_taller, email, provincia, password, id]);
+        
+        await registrarLog('Admin', 'EDIT_TALLER', `Editado taller: ${nombre_taller}`, ip);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error Update Usuario:', err.message);
+        res.status(500).json({ error: 'Error al actualizar taller' });
+    }
+});
+
+// 4. Eliminar Usuario/Taller
+app.delete('/api/usuarios/:id', async (req, res) => {
+    const { id } = req.params;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    try {
+        const info = await pool.query("SELECT nombre_taller FROM usuarios WHERE id = $1", [id]);
+        const nombre = info.rows[0]?.nombre_taller || id;
+        
+        await pool.query("DELETE FROM usuarios WHERE id = $1", [id]);
+        await registrarLog('Admin', 'BAJA_TALLER', `Eliminado taller: ${nombre}`, ip);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error Delete Usuario:', err.message);
+        res.status(500).json({ error: 'Error al eliminar taller' });
+    }
+});
+
+/**
+ * RUTAS DE LA API - PEDIDOS Y OTROS
+ */
+
+// 5. Lista simple de nombres de talleres (para selectores)
 app.get('/api/talleres', async (req, res) => {
     try {
         const result = await pool.query("SELECT id, nombre_taller as nombre FROM usuarios WHERE rol = 'taller' ORDER BY nombre_taller ASC");
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: 'Error al obtener talleres' });
+        res.status(500).json({ error: 'Error al obtener lista de talleres' });
     }
 });
 
-// 2. NUEVO: Obtener lista de marcas maestras (CONECTADO A LA BBDD NUEVA)
+// 6. Marcas Maestras
 app.get('/api/marcas', async (req, res) => {
     try {
         const result = await pool.query("SELECT nombre FROM marcas_maestras ORDER BY nombre ASC");
@@ -68,7 +140,7 @@ app.get('/api/marcas', async (req, res) => {
     }
 });
 
-// 3. Listar pedidos con filtros
+// 7. Listar pedidos con filtros
 app.get('/api/pedidos', async (req, res) => {
     try {
         const { taller_id } = req.query;
@@ -88,14 +160,13 @@ app.get('/api/pedidos', async (req, res) => {
     }
 });
 
-// 4. Crear o Actualizar Pedido (UPSERT dinámico)
+// 8. Crear o Actualizar Pedido (UPSERT)
 app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const { id, nuevoEstado, pieza, matricula, precio, marca_coche, modelo_coche, bastidor, precio_coste, proveedor, usuario_id, sub_estado_incidencia, notas_tecnicas, admin_user } = req.body;
 
     try {
         if (id && !isNaN(id)) {
-            // MODO EDICIÓN DINÁMICA
             const campos = [
                 {n: 'estado', v: nuevoEstado}, {n: 'pieza', v: pieza}, {n: 'matricula', v: matricula},
                 {n: 'precio', v: parseFloat(precio) || 0}, {n: 'marca_coche', v: marca_coche},
@@ -111,13 +182,12 @@ app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
             await pool.query(`UPDATE pedidos SET ${sets}, updated_at = CURRENT_TIMESTAMP WHERE id = $${campos.length + 1}`, [...values, id]);
             await registrarLog(admin_user, 'EDIT', `Pedido #${id}: ${pieza}`, ip);
         } else {
-            // MODO CREACIÓN
             const queryInsert = `
                 INSERT INTO pedidos (pieza, matricula, marca_coche, modelo_coche, estado, precio, precio_coste, usuario_id, fecha_creacion)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP) RETURNING id`;
             
             const uId = (usuario_id && !isNaN(usuario_id)) ? parseInt(usuario_id) : null;
-            const resInsert = await pool.query(queryInsert, [
+            await pool.query(queryInsert, [
                 pieza, matricula, marca_coche, modelo_coche, nuevoEstado || 'solicitado', 
                 parseFloat(precio) || 0, parseFloat(precio_coste) || 0, uId
             ]);
@@ -130,7 +200,7 @@ app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
     }
 });
 
-// 5. Eliminar
+// 9. Eliminar Pedido
 app.delete('/api/pedidos/:id', async (req, res) => {
     const { id } = req.params;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -143,7 +213,7 @@ app.delete('/api/pedidos/:id', async (req, res) => {
     }
 });
 
-// 6. Logs
+// 10. Consultar Auditoría (Logs)
 app.get('/api/logs', async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM logs ORDER BY fecha DESC LIMIT 100");
