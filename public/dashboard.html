@@ -22,14 +22,55 @@
         .dark .logo-invert { filter: brightness(0) invert(1); }
         @keyframes fadeInCard { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .card-anim { animation: fadeInCard 0.4s ease forwards; }
+
+        /* Estilos Quirúrgicos para el Waffle */
+        .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
+        .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
+        .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
+        .waffle-item i { font-size: 1.25rem; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
     <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
+            
             <div class="flex items-center gap-4">
-                <a href="javascript:void(0)" onclick="location.reload()" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+                <div class="relative group">
+                    <button class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-blue-600">
+                        <i class="fas fa-th text-xs"></i>
+                    </button>
+                    <div class="absolute left-0 top-full mt-2 hidden group-hover:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[2rem] overflow-hidden z-[60]">
+                        <div class="waffle-grid">
+                            <a href="landing.html" class="waffle-item text-blue-600">
+                                <i class="fas fa-home"></i>
+                                <span class="text-[9px] font-black uppercase text-slate-500">Principal</span>
+                            </a>
+                            <a href="dashboard.html" class="waffle-item text-indigo-500">
+                                <i class="fas fa-columns"></i>
+                                <span class="text-[9px] font-black uppercase text-slate-500">Flujos</span>
+                            </a>
+                            <a href="stats.html" class="waffle-item text-emerald-500">
+                                <i class="fas fa-chart-line"></i>
+                                <span class="text-[9px] font-black uppercase text-slate-500">BI Stats</span>
+                            </a>
+                            <a href="talleres.html" class="waffle-item text-orange-500">
+                                <i class="fas fa-users-cog"></i>
+                                <span class="text-[9px] font-black uppercase text-slate-500">Equipo</span>
+                            </a>
+                            <a href="pedidos-taller.html" class="waffle-item text-purple-500">
+                                <i class="fas fa-list-check"></i>
+                                <span class="text-[9px] font-black uppercase text-slate-500">Pedidos</span>
+                            </a>
+                            <a href="admin-logs.html" class="waffle-item text-slate-500">
+                                <i class="fas fa-history"></i>
+                                <span class="text-[9px] font-black uppercase text-slate-500">Logs</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <img src="assets/logo.png" alt="Kanban Recambio Reciclado" class="h-8 w-auto logo-invert">
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
                     <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">
@@ -45,12 +86,11 @@
                         class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
                 
-                <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
-                    <i class="fas fa-moon dark:hidden text-xs"></i>
-                    <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
-                </button>
-
-                <div class="flex gap-2">
+                <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
+                    <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                        <i class="fas fa-moon dark:hidden text-xs"></i>
+                        <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+                    </button>
                     <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
                         <i id="eye-icon" class="fas fa-eye text-xs"></i>
                     </button>
@@ -59,9 +99,15 @@
                     </button>
                 </div>
 
-                <div class="flex flex-col items-end">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase">Total en Tránsito</span>
-                    <span id="total-general" class="text-lg font-black text-blue-600 blur-data">0€</span>
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total Tránsito</span>
+                        <span id="total-general" class="text-lg font-black text-blue-600 blur-data leading-none">0€</span>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg shadow-blue-500/20">AD</div>
+                    <button title="Salir" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-600 transition-colors">
+                        <i class="fas fa-power-off text-sm"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -83,11 +129,11 @@
         </div>
     </nav>
 
-    <main id="kanbanBoard" class="flex-grow p-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-full mx-auto items-start transition-opacity duration-300"></main>
+    <main id="kanbanBoard" class="flex-grow p-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-full mx-auto items-start pb-24 transition-opacity duration-300"></main>
 
     <div id="modalAjustes" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border border-slate-200 dark:border-slate-800">
-            <h3 class="text-sm font-black uppercase tracking-widest mb-6">Ajustes de Alerta (Días)</h3>
+            <h3 class="text-sm font-black uppercase tracking-widest mb-6 text-slate-800 dark:text-white">Ajustes de Alerta (Días)</h3>
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
                     <span class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-orange-500"></i> Alerta Naranja</span>
@@ -145,13 +191,11 @@
                     </div>
                     <button type="button" onclick="cerrarModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500"><i class="fas fa-times"></i></button>
                 </div>
-
                 <div class="flex border-b dark:border-slate-800 px-8 bg-white dark:bg-slate-900">
                     <button type="button" id="tab-gen-btn" onclick="switchTab('gen')" class="py-4 px-6 text-[10px] font-black uppercase tab-active">General</button>
                     <button type="button" id="tab-eco-btn" onclick="switchTab('eco')" class="py-4 px-6 text-[10px] font-black uppercase">Económico</button>
                     <button type="button" id="tab-tec-btn" onclick="switchTab('tec')" class="py-4 px-6 text-[10px] font-black uppercase">Técnico</button>
                 </div>
-
                 <div class="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
                     <div id="tab-gen" class="space-y-6">
                         <div class="grid grid-cols-2 gap-6">
@@ -186,7 +230,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div id="tab-eco" class="hidden space-y-6">
                         <div class="grid grid-cols-2 gap-6">
                             <div class="flex flex-col gap-2">
@@ -203,7 +246,6 @@
                             <input type="text" id="p-proveedor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
                         </div>
                     </div>
-
                     <div id="tab-tec" class="hidden space-y-6">
                         <div class="flex flex-col gap-2">
                             <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Bastidor</label>
@@ -219,7 +261,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="p-8 border-t dark:border-slate-800 flex justify-between gap-4 bg-slate-50/30">
                     <button type="button" onclick="eliminarRegistro()" class="text-red-500 text-[10px] font-black uppercase hover:bg-red-50 px-6 py-2 rounded-xl transition-all">Eliminar</button>
                     <div class="flex gap-4">
@@ -231,7 +272,7 @@
         </div>
     </div>
 
-    <footer class="w-full py-4 border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+    <footer class="fixed bottom-0 w-full py-4 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40">
         <div class="max-w-full mx-auto px-6 flex justify-between items-center">
             <div>v2.2.0 | CREADOR: RAUL CUE</div>
             <div>CONTACTO: RAULCUE@GMAIL.COM</div>
