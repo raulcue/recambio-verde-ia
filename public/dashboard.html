@@ -9,10 +9,11 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
-        .privacy-active .text-xs, .privacy-active .text-xs font-black { filter: blur(5px); pointer-events: none; }
+        .privacy-active .text-xs, .privacy-active .text-xs.font-black, .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
+        .kanban-column { min-height: 80vh; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
@@ -20,7 +21,9 @@
     <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <img src="/assets/logo.png" alt="Logo" class="h-10 w-auto">
+                <div class="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                    <i class="fas fa-robot text-lg"></i>
+                </div>
                 <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
                 <h1 class="text-sm font-black uppercase tracking-tighter">Logística <span class="text-blue-600">IA</span></h1>
             </div>
@@ -29,7 +32,7 @@
                 <div class="relative">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     <input type="text" id="buscador" onkeyup="filtrar()" placeholder="Buscar pieza, matrícula..." 
-                        class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500">
+                        class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
                 
                 <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
@@ -38,7 +41,7 @@
 
                 <div class="flex flex-col items-end">
                     <span class="text-[10px] font-bold text-slate-400 uppercase">Total en Tránsito</span>
-                    <span id="total-general" class="text-lg font-black text-blue-600">0€</span>
+                    <span id="total-general" class="text-lg font-black text-blue-600 blur-data">0€</span>
                 </div>
             </div>
         </div>
@@ -47,17 +50,17 @@
     <nav class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4">
         <div class="max-w-[1600px] mx-auto flex justify-between items-center">
             <div class="flex gap-4">
-                <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider">
-                    <option value="todos text-slate-400">TODOS LOS TALLERES</option>
+                <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-xs font-bold uppercase tracking-wider outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="todos">TODOS LOS TALLERES</option>
                 </select>
             </div>
-            <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20">
+            <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/20 active:scale-95">
                 <i class="fas fa-plus mr-2"></i> Nuevo Pedido
             </button>
         </div>
     </nav>
 
-    <main id="kanbanBoard" class="p-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-[1600px] mx-auto items-start">
+    <main id="kanbanBoard" class="p-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-[1600px] mx-auto items-start transition-opacity duration-300">
         </main>
 
     <div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -67,48 +70,48 @@
                 
                 <div class="p-8 border-b dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                     <div>
-                        <span id="modal-estado-badge" class="text-[9px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-widest mb-2 inline-block">NUEVO</span>
+                        <span id="modal-estado-badge" class="text-[9px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-widest mb-2 inline-block shadow-md shadow-blue-500/20">EDICIÓN</span>
                         <h2 id="modal-titulo" class="text-xl font-black uppercase tracking-tighter dark:text-white">Detalles del Pedido</h2>
                     </div>
-                    <button type="button" onclick="cerrarModal()" class="text-slate-400 hover:text-red-500 text-xl transition-colors"><i class="fas fa-times"></i></button>
+                    <button type="button" onclick="cerrarModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all"><i class="fas fa-times"></i></button>
                 </div>
 
-                <div class="flex border-b dark:border-slate-800 px-8">
-                    <button type="button" id="tab-gen-btn" onclick="switchTab('gen')" class="py-4 px-6 text-[10px] font-black uppercase tracking-widest tab-active">General</button>
-                    <button type="button" id="tab-eco-btn" onclick="switchTab('eco')" class="py-4 px-6 text-[10px] font-black uppercase tracking-widest">Económico</button>
-                    <button type="button" id="tab-tec-btn" onclick="switchTab('tec')" class="py-4 px-6 text-[10px] font-black uppercase tracking-widest">Técnico</button>
+                <div class="flex border-b dark:border-slate-800 px-8 bg-white dark:bg-slate-900">
+                    <button type="button" id="tab-gen-btn" onclick="switchTab('gen')" class="py-4 px-6 text-[10px] font-black uppercase tracking-widest tab-active transition-all">General</button>
+                    <button type="button" id="tab-eco-btn" onclick="switchTab('eco')" class="py-4 px-6 text-[10px] font-black uppercase tracking-widest transition-all">Económico</button>
+                    <button type="button" id="tab-tec-btn" onclick="switchTab('tec')" class="py-4 px-6 text-[10px] font-black uppercase tracking-widest transition-all">Técnico</button>
                 </div>
 
-                <div class="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div class="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
                     <div id="tab-gen" class="space-y-6">
                         <div class="grid grid-cols-2 gap-6">
                             <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Pieza Solicitada</label>
-                                <input type="text" id="p-pieza" required class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Pieza Solicitada</label>
+                                <input type="text" id="p-pieza" required class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none">
                             </div>
                             <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Matrícula</label>
-                                <input type="text" id="p-matricula" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 uppercase">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Marca</label>
-                                <input type="text" id="p-marca" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold">
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Modelo</label>
-                                <input type="text" id="p-modelo" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Matrícula</label>
+                                <input type="text" id="p-matricula" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none uppercase">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-6">
                             <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Taller Asignado</label>
-                                <select id="p-taller" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold"></select>
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Marca</label>
+                                <input type="text" id="p-marca" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
                             </div>
                             <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Estado Flujo</label>
-                                <select id="p-estado" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold"></select>
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Modelo</label>
+                                <input type="text" id="p-modelo" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Taller Asignado</label>
+                                <select id="p-taller" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none"></select>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Estado Flujo</label>
+                                <select id="p-estado" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none"></select>
                             </div>
                         </div>
                     </div>
@@ -116,47 +119,41 @@
                     <div id="tab-eco" class="hidden space-y-6">
                         <div class="grid grid-cols-2 gap-6">
                             <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Precio Venta (€)</label>
-                                <input type="number" id="p-precio" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-blue-600">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Precio Venta (€)</label>
+                                <input type="number" id="p-precio" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-blue-600 outline-none">
                             </div>
                             <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Precio Coste (€)</label>
-                                <input type="number" id="p-coste" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-red-500">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Precio Coste (€)</label>
+                                <input type="number" id="p-coste" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-red-500 outline-none">
                             </div>
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400">Proveedor</label>
-                            <input type="text" id="p-proveedor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Proveedor</label>
+                            <input type="text" id="p-proveedor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
                         </div>
                     </div>
 
                     <div id="tab-tec" class="hidden space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Bastidor (VIN)</label>
-                                <input type="text" id="p-bastidor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold uppercase">
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400">Referencia Pieza</label>
-                                <input type="text" id="p-referencia" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold">
-                            </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Bastidor (VIN)</label>
+                            <input type="text" id="p-bastidor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold uppercase outline-none">
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400">Sub-estado / Incidencia</label>
-                            <input type="text" id="p-subestado" placeholder="Ej: Retraso por transporte" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Sub-estado / Incidencia</label>
+                            <input type="text" id="p-subestado" placeholder="Ej: Retraso por transporte" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400">Notas Internas</label>
-                            <textarea id="p-notas" rows="3" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold"></textarea>
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Notas Técnicas</label>
+                            <textarea id="p-notas" rows="3" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none custom-scrollbar"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-8 border-t dark:border-slate-800 flex justify-between gap-4">
+                <div class="p-8 border-t dark:border-slate-800 flex justify-between gap-4 bg-slate-50/30 dark:bg-slate-800/30">
                     <button type="button" onclick="eliminarRegistro()" class="text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-50 dark:hover:bg-red-900/20 px-6 py-2 rounded-xl transition-all">Eliminar</button>
                     <div class="flex gap-4">
                         <button type="button" onclick="cerrarModal()" class="text-slate-400 text-[10px] font-black uppercase tracking-widest px-6 py-2">Cancelar</button>
-                        <button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:scale-105 transition-all">Guardar Cambios</button>
+                        <button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:scale-105 transition-all active:scale-95">Guardar Registro</button>
                     </div>
                 </div>
             </form>
@@ -177,61 +174,73 @@
 
         async function init() {
             await Promise.all([cargarTalleres(), cargarDatos()]);
+            
+            // Llenar select de estados en el modal
             const pEst = document.getElementById('p-estado');
-            if(pEst) {
-                pEst.innerHTML = '';
-                columns.forEach(c => pEst.add(new Option(c.label.toUpperCase(), c.id)));
-            }
+            pEst.innerHTML = '';
+            columns.forEach(c => pEst.add(new Option(c.label.toUpperCase(), c.id)));
 
-            // CORRECCIÓN LÍNEA 148: Vinculamos el onsubmit aquí tras asegurar que el DOM cargó
-            const form = document.getElementById('form-pedido');
-            if(form) {
-                form.onsubmit = async (e) => {
-                    e.preventDefault();
-                    const data = {
-                        id: document.getElementById('p-id').value || null,
-                        pieza: document.getElementById('p-pieza').value,
-                        matricula: document.getElementById('p-matricula').value,
-                        marca_coche: document.getElementById('p-marca').value,
-                        modelo_coche: document.getElementById('p-modelo').value,
-                        usuario_id: document.getElementById('p-taller').value,
-                        nuevoEstado: document.getElementById('p-estado').value,
-                        precio: document.getElementById('p-precio').value || 0,
-                        precio_coste: document.getElementById('p-coste').value || 0,
-                        proveedor: document.getElementById('p-proveedor').value,
-                        bastidor: document.getElementById('p-bastidor').value,
-                        sub_estado_incidencia: document.getElementById('p-subestado').value,
-                        notas_tecnicas: document.getElementById('p-notas').value,
-                        admin_user: 'Admin Root'
-                    };
-                    await fetch('/api/pedidos/update-status', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(data)
-                    });
-                    cerrarModal(); 
-                    cargarDatos();
+            // Listener del formulario
+            document.getElementById('form-pedido').onsubmit = async (e) => {
+                e.preventDefault();
+                const data = {
+                    id: document.getElementById('p-id').value || null,
+                    pieza: document.getElementById('p-pieza').value,
+                    matricula: document.getElementById('p-matricula').value,
+                    marca_coche: document.getElementById('p-marca').value,
+                    modelo_coche: document.getElementById('p-modelo').value,
+                    usuario_id: document.getElementById('p-taller').value,
+                    nuevoEstado: document.getElementById('p-estado').value,
+                    precio: document.getElementById('p-precio').value || 0,
+                    precio_coste: document.getElementById('p-coste').value || 0,
+                    proveedor: document.getElementById('p-proveedor').value,
+                    bastidor: document.getElementById('p-bastidor').value,
+                    sub_estado_incidencia: document.getElementById('p-subestado').value,
+                    notas_tecnicas: document.getElementById('p-notas').value,
+                    admin_user: 'Admin Root'
                 };
-            }
+
+                await fetch('/api/pedidos/update-status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                cerrarModal(); 
+                cargarDatos();
+            };
         }
 
         async function cargarTalleres() {
-            const res = await fetch('/api/talleres');
-            const data = await res.json();
-            const fT = document.getElementById('filtroTaller');
-            const pT = document.getElementById('p-taller');
-            data.forEach(t => {
-                fT.add(new Option(t.nombre, t.id));
-                pT.add(new Option(t.nombre, t.id));
-            });
+            try {
+                const res = await fetch('/api/talleres');
+                const data = await res.json();
+                const fT = document.getElementById('filtroTaller');
+                const pT = document.getElementById('p-taller');
+                data.forEach(t => {
+                    fT.add(new Option(t.nombre, t.id));
+                    pT.add(new Option(t.nombre, t.id));
+                });
+            } catch(e) { console.error("Error cargando talleres"); }
         }
 
         async function cargarDatos() {
-            const tId = document.getElementById('filtroTaller').value;
-            const res = await fetch(`/api/pedidos?taller_id=${tId}`);
-            if(!res.ok) return;
-            db = await res.json();
-            renderBoard();
+            const board = document.getElementById('kanbanBoard');
+            let tId = document.getElementById('filtroTaller').value;
+            
+            // Blindaje: tomamos solo el ID si hay basura de Tailwind
+            if (tId.includes(' ')) tId = tId.split(' ')[0];
+
+            board.style.opacity = '0.5';
+            try {
+                const res = await fetch(`/api/pedidos?taller_id=${tId}`);
+                if(!res.ok) throw new Error();
+                db = await res.json();
+                renderBoard();
+            } catch(e) {
+                console.error("Error al conectar con el servidor");
+            } finally {
+                board.style.opacity = '1';
+            }
         }
 
         function renderBoard() {
@@ -245,41 +254,42 @@
                 globalSum += colSum;
 
                 const columnHtml = `
-                    <div class="kanban-column flex flex-col gap-6">
-                        <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color}">
+                    <div class="kanban-column flex flex-col gap-6 h-full">
+                        <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color} py-1">
                             <div>
                                 <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
                             </div>
-                            <span class="text-xs font-black text-blue-600 italic">${colSum.toFixed(0)}€</span>
+                            <span class="text-xs font-black text-blue-600 italic blur-data">${colSum.toFixed(0)}€</span>
                         </div>
-                        <div class="flex-1 space-y-4 overflow-y-auto custom-scrollbar pr-2" ondragover="event.preventDefault()" ondrop="drop(event, '${col.id}')">
+                        <div class="flex-1 space-y-4 pb-10" ondragover="event.preventDefault()" ondrop="drop(event, '${col.id}')">
                             ${items.map(p => `
                                 <div draggable="true" ondragstart="start(event, ${p.id})" 
-                                     onclick='abrirEditar(${JSON.stringify(p)})'
-                                     class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500/40 transition-all cursor-pointer group active:scale-95">
+                                     onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
+                                     class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/5 transition-all cursor-grab active:cursor-grabbing group">
                                     <div class="flex justify-between mb-4">
-                                        <div class="w-8 h-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-blue-600">
+                                        <div class="w-8 h-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors">
                                             <i class="fas ${col.icon} text-[10px]"></i>
                                         </div>
                                         <span class="text-[8px] font-bold text-slate-300 tracking-widest">#${p.id}</span>
                                     </div>
-                                    <h4 class="text-xs font-black uppercase dark:text-white leading-tight mb-2 tracking-tighter">${p.pieza}</h4>
+                                    <h4 class="text-xs font-black uppercase dark:text-white leading-tight mb-2 tracking-tighter truncate">${p.pieza}</h4>
                                     <p class="text-[9px] font-bold text-slate-400 uppercase mb-4">${p.marca_coche || ''} ${p.modelo_coche || '---'}</p>
                                     <div class="flex justify-between items-center pt-4 border-t dark:border-slate-800">
-                                        <span class="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg">${p.matricula || 'S/M'}</span>
-                                        <span class="text-xs font-black dark:text-white">${p.precio || 0}€</span>
+                                        <span class="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg blur-data">${p.matricula || 'S/M'}</span>
+                                        <span class="text-xs font-black dark:text-white blur-data">${p.precio || 0}€</span>
                                     </div>
                                 </div>
                             `).join('')}
                         </div>
                     </div>
                 `;
-                board.innerHTML += columnHtml;
+                board.insertAdjacentHTML('beforeend', columnHtml);
             });
             document.getElementById('total-general').innerText = `${globalSum.toLocaleString()}€`;
         }
 
+        // Drag & Drop
         function start(e, id) { e.dataTransfer.setData("text", id); }
         async function drop(e, nuevoEstado) {
             const id = e.dataTransfer.getData("text");
@@ -287,11 +297,12 @@
             await fetch('/api/pedidos/update-status', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ id: id, nuevoEstado: nuevoEstado, pieza: pedido.pieza, admin_user: 'Admin (Drag)' })
+                body: JSON.stringify({ ...pedido, id: id, nuevoEstado: nuevoEstado, admin_user: 'Admin (Drag)' })
             });
             cargarDatos();
         }
 
+        // UX Helpers
         function togglePrivacy() {
             isPrivate = !isPrivate;
             document.body.classList.toggle('privacy-active', isPrivate);
@@ -309,6 +320,7 @@
             document.getElementById('form-pedido').reset();
             document.getElementById('p-id').value = '';
             document.getElementById('modal-titulo').innerText = "Nuevo Registro";
+            document.getElementById('modal-estado-badge').innerText = "NUEVO";
             document.getElementById('modal').classList.remove('hidden');
             switchTab('gen');
         }
@@ -328,22 +340,27 @@
             document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
             document.getElementById('p-notas').value = p.notas_tecnicas || '';
             document.getElementById('modal-titulo').innerText = "Editar Registro #" + p.id;
+            document.getElementById('modal-estado-badge').innerText = "EDICIÓN";
             document.getElementById('modal').classList.remove('hidden');
             switchTab('gen');
         }
 
         function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
+
         async function eliminarRegistro() {
             const id = document.getElementById('p-id').value;
-            if(id && confirm("¿Borrar permanentemente?")) {
+            if(id && confirm("¿Deseas eliminar este registro permanentemente?")) {
                 await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
-                cerrarModal(); cargarDatos();
+                cerrarModal(); 
+                cargarDatos();
             }
         }
+
         function filtrar() {
             const q = document.getElementById('buscador').value.toLowerCase();
             document.querySelectorAll('#kanbanBoard .group').forEach(card => {
-                card.style.display = card.innerText.toLowerCase().includes(q) ? 'block' : 'none';
+                const match = card.innerText.toLowerCase().includes(q);
+                card.style.display = match ? 'block' : 'none';
             });
         }
 
