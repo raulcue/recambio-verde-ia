@@ -20,16 +20,18 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .table-row-hover:hover { background-color: rgba(59, 130, 246, 0.04); }
         .waffle-grid { display: grid; grid-template-cols: repeat(3, 1fr); gap: 8px; padding: 16px; width: 240px; }
-        .waffle-item { display: flex; flex-col: flex-col; align-items: center; justify-content: center; padding: 12px; border-radius: 1rem; transition: all 0.2s; text-decoration: none; }
+        .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; border-radius: 1rem; transition: all 0.2s; text-decoration: none; }
         .waffle-item:hover { background: rgba(59, 130, 246, 0.1); transform: translateY(-2px); }
         .waffle-item i { font-size: 1.25rem; margin-bottom: 4px; }
+        /* Estilo para slots de teléfono */
+        .tel-slot:focus-within { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+        .tel-slot input:not(:placeholder-shown) { background-color: rgba(59, 130, 246, 0.05); border-color: #3b82f6; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col">
 
     <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
-            
             <div class="flex items-center gap-4">
                 <div class="relative group">
                     <button class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-blue-600">
@@ -37,49 +39,29 @@
                     </button>
                     <div class="absolute left-0 top-full mt-2 hidden group-hover:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[2rem] overflow-hidden z-[60]">
                         <div class="waffle-grid">
-                            <a href="dashboard.html" class="waffle-item text-indigo-500">
-                                <i class="fas fa-columns"></i>
-                                <span class="text-[9px] font-black uppercase text-slate-500">Flujos</span>
-                            </a>
-                            <a href="talleres.html" class="waffle-item text-orange-500 bg-orange-50 dark:bg-orange-900/10">
-                                <i class="fas fa-users-cog"></i>
-                                <span class="text-[9px] font-black uppercase text-orange-600">Equipo</span>
-                            </a>
-                            <a href="admin-logs.html" class="waffle-item text-slate-500">
-                                <i class="fas fa-history"></i>
-                                <span class="text-[9px] font-black uppercase text-slate-500">Logs</span>
-                            </a>
+                            <a href="dashboard.html" class="waffle-item text-indigo-500"><i class="fas fa-columns"></i><span class="text-[9px] font-black uppercase text-slate-500">Flujos</span></a>
+                            <a href="talleres.html" class="waffle-item text-orange-500 bg-orange-50 dark:bg-orange-900/10"><i class="fas fa-users-cog"></i><span class="text-[9px] font-black uppercase text-orange-600">Equipo</span></a>
+                            <a href="admin-logs.html" class="waffle-item text-slate-500"><i class="fas fa-history"></i><span class="text-[9px] font-black uppercase text-slate-500">Logs</span></a>
                         </div>
                     </div>
                 </div>
-
                 <div class="flex items-center gap-3">
                     <img src="assets/logo.png" alt="Logo" class="h-8 w-auto dark:invert">
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <h1 class="font-black text-xs uppercase italic tracking-tighter text-slate-800 dark:text-white">
-                        Logística <span class="text-blue-600">IA</span>
-                    </h1>
+                    <h1 class="font-black text-xs uppercase italic tracking-tighter text-slate-800 dark:text-white">Logística <span class="text-blue-600">IA</span></h1>
                 </div>
             </div>
-
             <div class="flex items-center gap-6">
                 <div class="flex items-center gap-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700">
                     <div id="db-led" class="w-2 h-2 bg-red-500 rounded-full transition-all duration-500"></div>
                     <span class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">SQL Connect</span>
                 </div>
-                
-                <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
-                    <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
-                        <i class="fas fa-moon dark:hidden text-xs"></i>
-                        <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
-                    </button>
-                </div>
-
+                <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                    <i class="fas fa-moon dark:hidden text-xs"></i><i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+                </button>
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg shadow-blue-500/20">AD</div>
-                    <button title="Salir" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-600 transition-colors">
-                        <i class="fas fa-power-off text-sm"></i>
-                    </button>
+                    <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+                    <button class="w-8 h-8 text-slate-400 hover:text-red-600"><i class="fas fa-power-off text-sm"></i></button>
                 </div>
             </div>
         </div>
@@ -104,7 +86,7 @@
         <div class="bg-white dark:bg-slate-900 p-4 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center gap-4 shadow-xl">
             <div class="flex-1 flex items-center gap-4 px-6 w-full">
                 <i class="fas fa-search text-slate-400 text-sm"></i>
-                <input type="text" id="busqueda" oninput="filtrarYRenderizar()" placeholder="Buscar por nombre, email o provincia..." 
+                <input type="text" id="busqueda" oninput="filtrarYRenderizar()" placeholder="Buscar por taller, email, provincia o teléfono..." 
                        class="w-full bg-transparent border-none outline-none text-[11px] font-bold uppercase text-slate-800 dark:text-white placeholder:text-slate-400">
             </div>
             <div class="flex gap-6 px-8 border-l border-slate-200 dark:border-slate-800 w-full md:w-auto">
@@ -120,50 +102,84 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 dark:bg-slate-800/50">
-                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Identificador / Nombre</th>
-                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Email de Acceso</th>
-                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Localización</th>
-                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Credenciales</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Taller / ID</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Email Principal</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">Ubicación</th>
+                        <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest">WhatsApp Activos</th>
                         <th class="p-6 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-talleres" class="text-slate-600 dark:text-slate-300">
-                </tbody>
+                <tbody id="tabla-talleres" class="text-slate-600 dark:text-slate-300"></tbody>
             </table>
         </div>
     </main>
 
-    <div id="modalTaller" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-[500] p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[3.5rem] p-12 shadow-2xl border border-white/10">
-            <div class="flex items-center gap-4 mb-8">
-                <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-xl">
-                    <i class="fas fa-building-circle-check"></i>
+    <div id="modalTaller" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[500] p-4 overflow-y-auto">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-4xl rounded-[3rem] p-10 shadow-2xl border border-white/10 my-auto">
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-xl"><i class="fas fa-building-circle-check"></i></div>
+                    <h3 id="modal-title" class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Ficha de Taller</h3>
                 </div>
-                <h3 id="modal-title" class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Ficha de Registro</h3>
+                <button onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <form id="formTaller" onsubmit="guardarTaller(event)" class="space-y-5">
+
+            <form id="formTaller" onsubmit="guardarTaller(event)" class="space-y-8">
                 <input type="hidden" id="t-id">
-                <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Nombre Comercial</label>
-                    <input type="text" id="t-nombre" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-1">
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Email Principal</label>
+                        <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Nombre Comercial</label>
+                        <input type="text" id="t-nombre" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500 transition-all">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Email de Acceso</label>
                         <input type="email" id="t-email" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold outline-none focus:ring-2 ring-blue-500">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Provincia</label>
                         <input type="text" id="t-provincia" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500">
                     </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Contraseña Sistema</label>
+                        <input type="text" id="t-pass" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold outline-none focus:ring-2 ring-blue-500">
+                    </div>
                 </div>
+
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Contraseña Sistema</label>
-                    <input type="password" id="t-pass" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold outline-none focus:ring-2 ring-blue-500">
+                    <label class="text-[9px] font-black text-slate-400 uppercase ml-4">Dirección Fiscal / Taller</label>
+                    <input type="text" id="t-direccion" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none text-xs font-bold outline-none focus:ring-2 ring-blue-500">
                 </div>
-                <div class="flex gap-3 pt-6">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 py-5 text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest">Descartar</button>
-                    <button type="submit" class="flex-[2] py-5 bg-blue-600 text-white rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20">Confirmar en SQL</button>
+
+                <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-between mb-4 px-2">
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fab fa-whatsapp text-green-500 text-lg"></i> Gestión de Terminales WhatsApp
+                        </h4>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="phone-container">
+                        <div class="tel-slot relative group">
+                            <span class="absolute -top-2 -left-2 w-5 h-5 bg-blue-600 text-white text-[9px] flex items-center justify-center rounded-full font-bold shadow-lg z-10">1</span>
+                            <input type="text" id="tel_1" placeholder="Principal" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all">
+                        </div>
+                        <div class="tel-slot relative group">
+                            <span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">2</span>
+                            <input type="text" id="tel_2" placeholder="Línea 2" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all">
+                        </div>
+                        <div class="tel-slot relative group"><span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">3</span><input type="text" id="tel_3" placeholder="Línea 3" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all"></div>
+                        <div class="tel-slot relative group"><span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">4</span><input type="text" id="tel_4" placeholder="Línea 4" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all"></div>
+                        <div class="tel-slot relative group"><span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">5</span><input type="text" id="tel_5" placeholder="Línea 5" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all"></div>
+                        <div class="tel-slot relative group"><span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">6</span><input type="text" id="tel_6" placeholder="Línea 6" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all"></div>
+                        <div class="tel-slot relative group"><span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">7</span><input type="text" id="tel_7" placeholder="Línea 7" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all"></div>
+                        <div class="tel-slot relative group"><span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">8</span><input type="text" id="tel_8" placeholder="Línea 8" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all"></div>
+                        <div class="tel-slot relative group"><span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">9</span><input type="text" id="tel_9" placeholder="Línea 9" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all"></div>
+                        <div class="tel-slot relative group"><span class="absolute -top-2 -left-2 w-5 h-5 bg-slate-400 text-white text-[9px] flex items-center justify-center rounded-full font-bold z-10">10</span><input type="text" id="tel_10" placeholder="Línea 10" class="w-full p-3 pl-4 bg-white dark:bg-slate-900 border border-transparent rounded-xl text-[11px] font-bold outline-none transition-all"></div>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-6">
+                    <button type="button" onclick="cerrarModal()" class="flex-1 py-5 text-slate-500 font-black uppercase text-[10px] tracking-widest hover:bg-slate-100 dark:hover:bg-slate-800 rounded-3xl transition-all">Descartar</button>
+                    <button type="submit" class="flex-[2] py-5 bg-blue-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-blue-500/40 hover:scale-[1.02] active:scale-95 transition-all">Confirmar en SQL</button>
                 </div>
             </form>
         </div>
@@ -192,38 +208,44 @@
             const p = document.getElementById('filtro-provincia').value;
 
             datosFiltrados = usuarios.filter(u => {
-                const searchStr = `${u.nombre_taller} ${u.email} ${u.provincia}`.toLowerCase();
-                const coincideBusqueda = searchStr.includes(q);
-                const coincideProvincia = p === "" || u.provincia === p;
-                return coincideBusqueda && coincideProvincia;
+                const phones = [u.telefono_whatsapp, u.telefono_whatsapp_2, u.telefono_whatsapp_3, u.telefono_whatsapp_4, u.telefono_whatsapp_5, u.telefono_whatsapp_6, u.telefono_whatsapp_7, u.telefono_whatsapp_8, u.telefono_whatsapp_9, u.telefono_whatsapp_10].join(' ');
+                const searchStr = `${u.nombre_taller} ${u.email} ${u.provincia} ${phones}`.toLowerCase();
+                return searchStr.includes(q) && (p === "" || u.provincia === p);
             });
             renderTabla();
         }
 
         function renderTabla() {
             const tbody = document.getElementById('tabla-talleres');
-            tbody.innerHTML = datosFiltrados.map(u => `
+            tbody.innerHTML = datosFiltrados.map(u => {
+                // Contar teléfonos activos
+                let telCount = 0;
+                for(let i=1; i<=10; i++) if(u[i===1 ? 'telefono_whatsapp' : `telefono_whatsapp_${i}`]) telCount++;
+
+                return `
                 <tr class="table-row-hover border-b border-slate-100 dark:border-slate-800/50 transition-all group">
                     <td class="p-6">
                         <div class="flex items-center gap-4">
                             <div class="w-10 h-10 bg-blue-600/10 text-blue-600 rounded-xl flex items-center justify-center font-black text-xs">
                                 ${u.nombre_taller?.substring(0,2).toUpperCase()}
                             </div>
-                            <span class="text-[11px] font-black text-slate-800 dark:text-white uppercase">${u.nombre_taller}</span>
+                            <div>
+                                <span class="text-[11px] font-black text-slate-800 dark:text-white uppercase block">${u.nombre_taller}</span>
+                                <span class="text-[9px] text-slate-400 font-mono italic">ID: #${u.id}</span>
+                            </div>
                         </div>
                     </td>
                     <td class="p-6 text-[11px] font-bold text-slate-400">${u.email}</td>
                     <td class="p-6">
-                        <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg text-[9px] font-black uppercase">
-                            ${u.provincia || 'N/D'}
+                        <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg text-[9px] font-black uppercase block w-fit mb-1">
+                            ${u.provincia || 'S/P'}
                         </span>
+                        <span class="text-[9px] text-slate-400 truncate max-w-[150px] block">${u.direccion || ''}</span>
                     </td>
                     <td class="p-6">
-                        <div class="flex items-center gap-3">
-                            <span id="pass-${u.id}" class="text-[10px] font-mono tracking-widest text-slate-300 dark:text-slate-600">••••••••</span>
-                            <button onclick="togglePass(${u.id}, '${u.password}')" class="text-slate-400 hover:text-blue-500 transition-colors">
-                                <i id="icon-${u.id}" class="fas fa-eye text-[10px]"></i>
-                            </button>
+                        <div class="flex items-center gap-2">
+                            <i class="fab fa-whatsapp text-green-500 text-xs"></i>
+                            <span class="text-[10px] font-black ${telCount > 0 ? 'text-slate-700 dark:text-slate-200' : 'text-slate-300'}">${telCount} TERMINALES</span>
                         </div>
                     </td>
                     <td class="p-6 text-right">
@@ -232,8 +254,8 @@
                             <button onclick="borrarTaller(${u.id}, '${u.nombre_taller}')" class="w-9 h-9 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-400 hover:text-red-500 shadow-sm"><i class="fas fa-trash text-[10px]"></i></button>
                         </div>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
             document.getElementById('taller-count').innerText = `${datosFiltrados.length} TALLERES REGISTRADOS EN SISTEMA`;
         }
 
@@ -244,8 +266,19 @@
                 nombre_taller: document.getElementById('t-nombre').value,
                 email: document.getElementById('t-email').value,
                 provincia: document.getElementById('t-provincia').value,
+                direccion: document.getElementById('t-direccion').value,
                 password: document.getElementById('t-pass').value,
-                rol: 'taller'
+                rol: 'taller',
+                telefono_whatsapp: document.getElementById('tel_1').value,
+                telefono_whatsapp_2: document.getElementById('tel_2').value,
+                telefono_whatsapp_3: document.getElementById('tel_3').value,
+                telefono_whatsapp_4: document.getElementById('tel_4').value,
+                telefono_whatsapp_5: document.getElementById('tel_5').value,
+                telefono_whatsapp_6: document.getElementById('tel_6').value,
+                telefono_whatsapp_7: document.getElementById('tel_7').value,
+                telefono_whatsapp_8: document.getElementById('tel_8').value,
+                telefono_whatsapp_9: document.getElementById('tel_9').value,
+                telefono_whatsapp_10: document.getElementById('tel_10').value
             };
 
             const method = id ? 'PUT' : 'POST';
@@ -261,37 +294,31 @@
             } catch (err) { alert("Error al guardar en SQL"); }
         }
 
-        async function borrarTaller(id, nombre) {
-            if(!confirm(`¿Deseas dar de baja al taller ${nombre}?`)) return;
-            try {
-                await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-                cargarDatos();
-            } catch (err) { console.error(err); }
-        }
-
         function editarTaller(id) {
             const u = usuarios.find(x => x.id === id);
             document.getElementById('t-id').value = u.id;
             document.getElementById('t-nombre').value = u.nombre_taller;
             document.getElementById('t-email').value = u.email;
             document.getElementById('t-provincia').value = u.provincia || '';
+            document.getElementById('t-direccion').value = u.direccion || '';
             document.getElementById('t-pass').value = u.password || '';
+            
+            // Cargar los 10 teléfonos
+            for(let i=1; i<=10; i++) {
+                const field = i === 1 ? 'telefono_whatsapp' : `telefono_whatsapp_${i}`;
+                document.getElementById(`tel_${i}`).value = u[field] || '';
+            }
+
             document.getElementById('modal-title').innerText = "Editar Credenciales";
             document.getElementById('modalTaller').classList.add('modal-active');
         }
 
-        function togglePass(id, pass) {
-            const el = document.getElementById(`pass-${id}`);
-            const icon = document.getElementById(`icon-${id}`);
-            if (el.innerText === '••••••••') {
-                el.innerText = pass;
-                el.classList.replace('text-slate-300', 'text-blue-500');
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                el.innerText = '••••••••';
-                el.classList.replace('text-blue-500', 'text-slate-300');
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
-            }
+        async function borrarTaller(id, nombre) {
+            if(!confirm(`¿Deseas eliminar definitivamente al taller ${nombre}?`)) return;
+            try {
+                await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
+                cargarDatos();
+            } catch (err) { console.error(err); }
         }
 
         function actualizarProvincias() {
@@ -303,11 +330,7 @@
 
         function updateSyncStatus(ok) {
             const led = document.getElementById('db-led');
-            if (ok) {
-                led.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]";
-            } else {
-                led.className = "w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]";
-            }
+            led.className = ok ? "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]";
         }
 
         function abrirModalTaller() {
@@ -321,7 +344,7 @@
 
         function exportarExcel() {
             const data = datosFiltrados.map(u => ({
-                ID: u.id, TALLER: u.nombre_taller, EMAIL: u.email, PROVINCIA: u.provincia
+                ID: u.id, TALLER: u.nombre_taller, EMAIL: u.email, PROVINCIA: u.provincia, DIRECCIÓN: u.direccion, WHATSAPP_1: u.telefono_whatsapp
             }));
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
