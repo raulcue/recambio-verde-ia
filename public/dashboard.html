@@ -14,6 +14,9 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
         .kanban-column { min-height: 80vh; }
+        /* Clases para el logo */
+        .logo-invert { transition: filter 0.3s ease; }
+        .dark .logo-invert { filter: brightness(0) invert(1); }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
@@ -21,11 +24,11 @@
     <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
         <div class="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <div class="h-10 w-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-                    <i class="fas fa-robot text-lg"></i>
+                <div class="flex items-center gap-3">
+                    <img src="assets/logo.png" alt="Logística IA" class="h-8 w-auto logo-invert">
+                    <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">Logística <span class="text-blue-600">IA</span></h1>
                 </div>
-                <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
-                <h1 class="text-sm font-black uppercase tracking-tighter">Logística <span class="text-blue-600">IA</span></h1>
             </div>
 
             <div class="flex items-center gap-6">
@@ -35,6 +38,11 @@
                         class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
                 
+                <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                    <i class="fas fa-moon dark:hidden text-xs"></i>
+                    <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+                </button>
+
                 <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
                     <i id="eye-icon" class="fas fa-eye text-xs"></i>
                 </button>
@@ -227,7 +235,6 @@
             const board = document.getElementById('kanbanBoard');
             let tId = document.getElementById('filtroTaller').value;
             
-            // Blindaje: tomamos solo el ID si hay basura de Tailwind
             if (tId.includes(' ')) tId = tId.split(' ')[0];
 
             board.style.opacity = '0.5';
@@ -289,7 +296,6 @@
             document.getElementById('total-general').innerText = `${globalSum.toLocaleString()}€`;
         }
 
-        // Drag & Drop
         function start(e, id) { e.dataTransfer.setData("text", id); }
         async function drop(e, nuevoEstado) {
             const id = e.dataTransfer.getData("text");
@@ -302,7 +308,6 @@
             cargarDatos();
         }
 
-        // UX Helpers
         function togglePrivacy() {
             isPrivate = !isPrivate;
             document.body.classList.toggle('privacy-active', isPrivate);
@@ -338,7 +343,7 @@
             document.getElementById('p-proveedor').value = p.proveedor || '';
             document.getElementById('p-bastidor').value = p.bastidor || '';
             document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
-            document.getElementById('p-notas').value = p.notas_tecnicas || '';
+            document.getElementById('p-notes').value = p.notas_tecnicas || '';
             document.getElementById('modal-titulo').innerText = "Editar Registro #" + p.id;
             document.getElementById('modal-estado-badge').innerText = "EDICIÓN";
             document.getElementById('modal').classList.remove('hidden');
