@@ -15,9 +15,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 /**
  * SISTEMA DE AUDITORÍA (LOGS)
- * Lista de control de logs activa: 
- * 1. Monitoreo de SyntaxError (JSON) -> OK
- * 2. Monitoreo de integridad en rutas -> OK
+ * Lista de control activa: 
+ * 1. SyntaxError JSON, Integridad de rutas, Registro de altas/bajas de talleres.
  */
 const registrarLog = async (usuario, accion, detalle, ip) => {
     try {
@@ -50,7 +49,7 @@ const validarPedido = (req, res, next) => {
  * RUTAS DE LA API - GESTIÓN DE USUARIOS (TALLERES)
  */
 
-// 1. Obtener lista de usuarios con rol 'taller' (Incluye los 10 teléfonos)
+// 1. Obtener lista de usuarios con rol 'taller' (10 teléfonos)
 app.get('/api/usuarios', async (req, res) => {
     try {
         const result = await pool.query(
@@ -67,7 +66,7 @@ app.get('/api/usuarios', async (req, res) => {
     }
 });
 
-// 2. Crear Nuevo Usuario/Taller (Actualizado para 10 teléfonos)
+// 2. Crear Nuevo Usuario/Taller (Sincronizado con 10 teléfonos)
 app.post('/api/usuarios', async (req, res) => {
     const { 
         nombre_taller, email, provincia, password, rol, direccion,
@@ -90,10 +89,10 @@ app.post('/api/usuarios', async (req, res) => {
         
         const values = [
             nombre_taller, email, provincia, password, rol || 'taller', direccion,
-            telefono_whatsapp, telefono_whatsapp_2, telefono_whatsapp_3, 
-            telefono_whatsapp_4, telefono_whatsapp_5, telefono_whatsapp_6, 
-            telefono_whatsapp_7, telefono_whatsapp_8, telefono_whatsapp_9, 
-            telefono_whatsapp_10
+            telefono_whatsapp || null, telefono_whatsapp_2 || null, telefono_whatsapp_3 || null, 
+            telefono_whatsapp_4 || null, telefono_whatsapp_5 || null, telefono_whatsapp_6 || null, 
+            telefono_whatsapp_7 || null, telefono_whatsapp_8 || null, telefono_whatsapp_9 || null, 
+            telefono_whatsapp_10 || null
         ];
 
         const result = await pool.query(query, values);
@@ -105,7 +104,7 @@ app.post('/api/usuarios', async (req, res) => {
     }
 });
 
-// 3. Actualizar Usuario/Taller (Actualizado para 10 teléfonos)
+// 3. Actualizar Usuario/Taller (Corregido mapeo $16 para ID)
 app.put('/api/usuarios/:id', async (req, res) => {
     const { id } = req.params;
     const { 
@@ -128,10 +127,10 @@ app.put('/api/usuarios/:id', async (req, res) => {
         
         const values = [
             nombre_taller, email, provincia, password, direccion,
-            telefono_whatsapp, telefono_whatsapp_2, telefono_whatsapp_3, 
-            telefono_whatsapp_4, telefono_whatsapp_5, telefono_whatsapp_6, 
-            telefono_whatsapp_7, telefono_whatsapp_8, telefono_whatsapp_9, 
-            telefono_whatsapp_10, id
+            telefono_whatsapp || null, telefono_whatsapp_2 || null, telefono_whatsapp_3 || null, 
+            telefono_whatsapp_4 || null, telefono_whatsapp_5 || null, telefono_whatsapp_6 || null, 
+            telefono_whatsapp_7 || null, telefono_whatsapp_8 || null, telefono_whatsapp_9 || null, 
+            telefono_whatsapp_10 || null, id
         ];
 
         await pool.query(query, values);
@@ -143,7 +142,7 @@ app.put('/api/usuarios/:id', async (req, res) => {
     }
 });
 
-// 4. Eliminar Usuario/Taller (Sin cambios necesarios)
+// 4. Eliminar Usuario/Taller
 app.delete('/api/usuarios/:id', async (req, res) => {
     const { id } = req.params;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -160,10 +159,9 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 });
 
 /**
- * RUTAS DE LA API - PEDIDOS Y OTROS
+ * RUTAS DE LA API - PEDIDOS, MARCAS Y LOGS
  */
 
-// 5. Lista simple para selectores
 app.get('/api/talleres', async (req, res) => {
     try {
         const result = await pool.query("SELECT id, nombre_taller as nombre FROM usuarios WHERE rol = 'taller' ORDER BY nombre_taller ASC");
@@ -173,18 +171,15 @@ app.get('/api/talleres', async (req, res) => {
     }
 });
 
-// 6. Marcas Maestras
 app.get('/api/marcas', async (req, res) => {
     try {
         const result = await pool.query("SELECT nombre FROM marcas_maestras ORDER BY nombre ASC");
         res.json(result.rows);
     } catch (err) {
-        console.error('Error al obtener marcas:', err);
         res.status(500).json({ error: 'Error al obtener marcas' });
     }
 });
 
-// 7. Listar pedidos
 app.get('/api/pedidos', async (req, res) => {
     try {
         const { taller_id } = req.query;
@@ -202,7 +197,6 @@ app.get('/api/pedidos', async (req, res) => {
     }
 });
 
-// 8. Upsert Pedidos
 app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const { id, nuevoEstado, pieza, matricula, precio, marca_coche, modelo_coche, bastidor, precio_coste, proveedor, usuario_id, sub_estado_incidencia, notas_tecnicas, admin_user } = req.body;
@@ -235,7 +229,6 @@ app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
     }
 });
 
-// 9. Eliminar Pedido
 app.delete('/api/pedidos/:id', async (req, res) => {
     const { id } = req.params;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -248,7 +241,6 @@ app.delete('/api/pedidos/:id', async (req, res) => {
     }
 });
 
-// 10. Logs
 app.get('/api/logs', async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM logs ORDER BY fecha DESC LIMIT 100");
