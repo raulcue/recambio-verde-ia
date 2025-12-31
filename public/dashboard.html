@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logística IA | Panel de Control</title>
+    <title>Kanban Recambio Reciclado | Panel de Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
@@ -12,7 +12,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
-        .privacy-active .text-xs, .privacy-active .text-xs.font-black, .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
+        .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
@@ -28,9 +28,9 @@
         <div class="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-3">
-                    <img src="assets/logo.png" alt="Logística IA" class="h-8 w-auto logo-invert">
+                    <img src="assets/logo.png" alt="Kanban Recambio Reciclado" class="h-8 w-auto logo-invert">
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">Logística <span class="text-blue-600">IA</span></h1>
+                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">Kanban <span class="text-blue-600">Recambio Reciclado</span></h1>
                 </div>
             </div>
 
@@ -162,7 +162,7 @@
                         </div>
                         <div class="flex flex-col gap-2">
                             <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Notas Técnicas</label>
-                            <textarea id="p-notas" rows="3" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none custom-scrollbar"></textarea>
+                            <textarea id="p-notes" rows="3" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none custom-scrollbar"></textarea>
                         </div>
                     </div>
                 </div>
@@ -211,7 +211,7 @@
                     proveedor: document.getElementById('p-proveedor').value,
                     bastidor: document.getElementById('p-bastidor').value,
                     sub_estado_incidencia: document.getElementById('p-subestado').value,
-                    notas_tecnicas: document.getElementById('p-notas').value,
+                    notas_tecnicas: document.getElementById('p-notes').value,
                     admin_user: 'Admin Root'
                 };
 
@@ -270,7 +270,7 @@
                                 <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
                             </div>
-                            <span class="text-xs font-black text-blue-600 italic blur-data">${colSum.toFixed(0)}€</span>
+                            <span class="text-xs font-black text-blue-600 italic">${colSum.toFixed(0)}€</span>
                         </div>
                         <div class="flex-1 space-y-4 pb-10" ondragover="event.preventDefault()" ondrop="drop(event, '${col.id}')">
                             ${items.map(p => `
@@ -286,8 +286,8 @@
                                     <h4 class="text-xs font-black uppercase dark:text-white leading-tight mb-2 tracking-tighter truncate">${p.pieza}</h4>
                                     <p class="text-[9px] font-bold text-slate-400 uppercase mb-4">${p.marca_coche || ''} ${p.modelo_coche || '---'}</p>
                                     <div class="flex justify-between items-center pt-4 border-t dark:border-slate-800">
-                                        <span class="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg blur-data">${p.matricula || 'S/M'}</span>
-                                        <span class="text-xs font-black dark:text-white blur-data">${p.precio || 0}€</span>
+                                        <span class="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg">${p.matricula || 'S/M'}</span>
+                                        <span class="text-xs font-black dark:text-white">${p.precio || 0}€</span>
                                     </div>
                                 </div>
                             `).join('')}
@@ -346,7 +346,7 @@
             document.getElementById('p-proveedor').value = p.proveedor || '';
             document.getElementById('p-bastidor').value = p.bastidor || '';
             document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
-            document.getElementById('p-notas').value = p.notas_tecnicas || '';
+            document.getElementById('p-notes').value = p.notas_tecnicas || '';
             document.getElementById('modal-titulo').innerText = "Editar Registro #" + p.id;
             document.getElementById('modal-estado-badge').innerText = "EDICIÓN";
             document.getElementById('modal').classList.remove('hidden');
