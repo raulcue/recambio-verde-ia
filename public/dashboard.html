@@ -189,10 +189,10 @@
 
         function showToast(msg, type = "success") {
             const t = document.getElementById('toast');
-            const icon = document.getElementById('toast-icon');
             document.getElementById('toast-msg').innerText = msg;
-            document.getElementById('toast-container').className = type === 'error' ? 'bg-red-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px]' : 'bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px]';
-            icon.className = type === 'error' ? 'fas fa-exclamation-triangle' : 'fas fa-database animate-pulse';
+            document.getElementById('toast-container').className = type === 'error' 
+                ? 'bg-red-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px]' 
+                : 'bg-emerald-500 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 font-black uppercase text-[10px]';
             t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 3000);
         }
@@ -208,7 +208,7 @@
                     selectFiltro.add(opt.cloneNode(true));
                     selectModal.add(opt);
                 });
-            } catch (e) { console.warn("Modo demo: Fallo carga de talleres SQL"); }
+            } catch (e) { console.warn("Error cargando talleres"); }
         }
 
         async function cargarDatos() {
@@ -217,7 +217,7 @@
                 const res = await fetch(`/api/pedidos?taller_id=${tId}`);
                 db = await res.json();
                 render();
-            } catch (e) { showToast("Error de sincronización", "error"); }
+            } catch (e) { showToast("Error al cargar pedidos", "error"); }
         }
 
         function render() {
@@ -272,31 +272,76 @@
             document.getElementById('total-euros').innerText = `${totalGeneral.toLocaleString()}€`;
         }
 
-        // --- FUNCIONES DRAG & DROP ---
-        function start(e, id) { e.dataTransfer.setData("text", id); e.target.closest('.pedido-card').classList.add('dragging'); }
+        // --- DRAG & DROP ---
+        function start(e, id) { e.dataTransfer.setData("text", id); }
+
         async function drop(e, estado) {
             e.preventDefault();
             const id = e.dataTransfer.getData("text");
             try {
-                await fetch('/api/pedidos/status', {
+                await fetch('/api/pedidos/update-status', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id, estado, user: USUARIO_SESION })
+                    body: JSON.stringify({ id: id, nuevoEstado: estado, admin_user: USUARIO_SESION })
                 });
-                showToast("SQL Sincronizado");
+                showToast("Movimiento sincronizado");
                 cargarDatos();
-            } catch (err) { showToast("Error de red", "error"); }
+            } catch (err) { showToast("Error al mover tarjeta", "error"); }
         }
 
+        // --- ENVÍO DE FORMULARIO (UPDATE) ---
+        document.getElementById('pedido-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = {
+                id: document.getElementById('pedido-id').value,
+                pieza: document.getElementById('pieza').value,
+                matricula: document.getElementById('matricula').value,
+                marca_coche: document.getElementById('marca_coche').value,
+                modelo_coche: document.getElementById('modelo_coche').value,
+                bastidor: document.getElementById('bastidor').value,
+                precio: document.getElementById('precio').value,
+                precio_coste: document.getElementById('precio_coste').value,
+                proveedor: document.getElementById('proveedor').value,
+                usuario_id: document.getElementById('usuario_id').value,
+                sub_estado_incidencia: document.getElementById('sub_estado_incidencia').value,
+                notas_incidencia: document.getElementById('notas_incidencia').value,
+                admin_user: USUARIO_SESION
+            };
+
+            try {
+                const res = await fetch('/api/pedidos/update-status', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) {
+                    showToast("Base de Datos Actualizada");
+                    cerrarModal();
+                    cargarDatos();
+                }
+            } catch (e) { showToast("Error en sincronización SQL", "error"); }
+        };
+
+        // --- BUSCADOR ---
+        function filtrar() {
+            const term = document.getElementById('buscador').value.toLowerCase();
+            const cards = document.querySelectorAll('.pedido-card');
+            cards.forEach(card => {
+                const content = card.innerText.toLowerCase();
+                card.style.display = content.includes(term) ? 'block' : 'none';
+            });
+        }
+
+        // --- UI HELPERS ---
         function togglePrivacy() {
             isPrivate = !isPrivate;
-            const icon = document.getElementById('eye-icon');
-            icon.className = isPrivate ? 'fas fa-eye-slash' : 'fas fa-eye';
+            document.getElementById('eye-icon').className = isPrivate ? 'fas fa-eye-slash' : 'fas fa-eye';
             document.querySelectorAll('.amount-blur').forEach(el => el.classList.toggle('is-hidden', isPrivate));
         }
 
         function abrirEditar(p) {
             abrirModal();
+            document.getElementById('modal-title').innerText = `Editando Pedido #${p.id}`;
             Object.keys(p).forEach(key => {
                 const el = document.getElementById(key);
                 if (el) el.value = p[key] || '';
@@ -306,6 +351,7 @@
         function abrirModal() {
             document.getElementById('pedido-form').reset();
             document.getElementById('pedido-id').value = '';
+            document.getElementById('modal-title').innerText = "Nuevo Registro";
             document.getElementById('modal').classList.remove('hidden');
             setTimeout(() => document.getElementById('modalContent').classList.replace('opacity-0', 'opacity-100'), 10);
             switchTab('tab-pedido');

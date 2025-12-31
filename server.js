@@ -1,30 +1,26 @@
 // ==========================================
-// 0. CONFIGURACIÓN INICIAL (IMPORTANTE: Faltaba esto)
+// 0. CONFIGURACIÓN E IMPORTACIONES
 // ==========================================
 const express = require('express');
 const path = require('path');
-const { Pool } = require('pg'); // Para conectar con tu base de datos de Render
+const { Pool } = require('pg');
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Configuración de la conexión a la base de datos
-// Render inyecta automáticamente la variable DATABASE_URL
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false } 
+    ssl: { rejectUnauthorized: false }
 });
 
-// Middlewares
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Función auxiliar para info de cliente
 const getClientInfo = (req) => {
     return req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 };
 
 // ==========================================
-// 1. GESTIÓN DE USUARIOS Y TALLERES
+// 1. GESTIÓN DE TALLERES
 // ==========================================
 app.get('/api/talleres', async (req, res) => {
     try {
@@ -33,13 +29,36 @@ app.get('/api/talleres', async (req, res) => {
         );
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
+        console.error('Error en /api/talleres:', err);
         res.status(500).json({ error: 'Error al obtener talleres' });
     }
 });
 
 // ==========================================
-// 2. ACTUALIZACIÓN INTEGRAL (Popup de 20 campos)
+// 2. LECTURA DE PEDIDOS
+// ==========================================
+app.get('/api/pedidos', async (req, res) => {
+    try {
+        const { taller_id } = req.query;
+        let query = "SELECT * FROM pedidos";
+        const params = [];
+
+        if (taller_id && taller_id !== 'todos') {
+            query += " WHERE usuario_id = $1";
+            params.push(taller_id);
+        }
+        
+        query += " ORDER BY created_at DESC";
+        const result = await pool.query(query, params);
+        res.json(result.rows);
+    } catch (err) {
+        console.error('Error en /api/pedidos:', err);
+        res.status(500).json({ error: 'Error al cargar pedidos' });
+    }
+});
+
+// ==========================================
+// 3. ACTUALIZACIÓN E INSERCIÓN (Sincronización SQL)
 // ==========================================
 app.post('/api/pedidos/update-status', async (req, res) => {
     const { 
@@ -52,62 +71,68 @@ app.post('/api/pedidos/update-status', async (req, res) => {
     const ip = getClientInfo(req);
 
     try {
-        const current = await pool.query('SELECT estado FROM pedidos WHERE id = $1', [id]);
-        const estadoAnterior = current.rows[0]?.estado;
+        if (id) {
+            // --- CASO MODIFICACIÓN (UPDATE) ---
+            const current = await pool.query('SELECT estado FROM pedidos WHERE id = $1', [id]);
+            const estadoAnterior = current.rows[0]?.estado;
 
-        await pool.query(
-            `UPDATE pedidos SET 
-                estado = COALESCE($1, estado), 
-                pieza = COALESCE($2, pieza), 
-                matricula = COALESCE($3, matricula), 
-                precio = COALESCE($4, precio),
-                marca_coche = $5, modelo_coche = $6, bastidor = $7,
-                precio_coste = $8, proveedor = $9, usuario_id = $10,
-                sub_estado_incidencia = $11, notas_incidencia = $12,
-                notas_tecnicas = $13,
-                updated_at = CURRENT_TIMESTAMP 
-             WHERE id = $14`,
-            [
-                nuevoEstado || estadoAnterior, pieza, matricula, precio,
-                marca_coche, modelo_coche, bastidor, precio_coste,
-                proveedor, usuario_id, sub_estado_incidencia,
-                notas_incidencia, notas_tecnicas, id
-            ]
-        );
+            await pool.query(
+                `UPDATE pedidos SET 
+                    estado = COALESCE($1, estado), 
+                    pieza = COALESCE($2, pieza), 
+                    matricula = COALESCE($3, matricula), 
+                    precio = $4, marca_coche = $5, modelo_coche = $6, 
+                    bastidor = $7, precio_coste = $8, proveedor = $9, 
+                    usuario_id = $10, sub_estado_incidencia = $11, 
+                    notas_incidencia = $12, updated_at = CURRENT_TIMESTAMP 
+                 WHERE id = $13`,
+                [nuevoEstado || estadoAnterior, pieza, matricula, precio || 0, marca_coche, modelo_coche, bastidor, precio_coste || 0, proveedor, usuario_id || null, sub_estado_incidencia, notas_incidencia, id]
+            );
 
-        let accion = 'MODIFICACION';
-        let detalle = `Actualización ficha técnica pieza: ${pieza || 'ID '+id}`;
-        if (nuevoEstado && nuevoEstado !== estadoAnterior) {
-            accion = 'KANBAN_MOVE';
-            detalle = `Movido de ${estadoAnterior} a ${nuevoEstado}`;
+            // Registro de Log para Update/Movimiento
+            let accion = (nuevoEstado && nuevoEstado !== estadoAnterior) ? 'KANBAN_MOVE' : 'MODIFICACION';
+            let detalle = accion === 'KANBAN_MOVE' ? `De ${estadoAnterior} a ${nuevoEstado}` : `Editó pieza: ${pieza}`;
+            
+            await pool.query(
+                'INSERT INTO logs (pedido_id, accion, detalle, ip_address, usuario_nombre, usuario_iniciales) VALUES ($1, $2, $3, $4, $5, $6)',
+                [id, accion, detalle, ip, admin_user, 'RC']
+            );
+
+        } else {
+            // --- CASO NUEVO REGISTRO (INSERT) ---
+            const result = await pool.query(
+                `INSERT INTO pedidos (pieza, matricula, precio, marca_coche, modelo_coche, bastidor, precio_coste, proveedor, usuario_id, estado, created_at) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'solicitado', CURRENT_TIMESTAMP) RETURNING id`,
+                [pieza, matricula, precio || 0, marca_coche, modelo_coche, bastidor, precio_coste || 0, proveedor, usuario_id || null]
+            );
+            
+            const nuevoId = result.rows[0].id;
+            await pool.query(
+                'INSERT INTO logs (pedido_id, accion, detalle, ip_address, usuario_nombre, usuario_iniciales) VALUES ($1, $2, $3, $4, $5, $6)',
+                [nuevoId, 'CREACION', `Nuevo pedido: ${pieza}`, ip, admin_user, 'RC']
+            );
         }
-
-        await pool.query(
-            'INSERT INTO logs (pedido_id, accion, detalle, ip_address, usuario_nombre, usuario_iniciales) VALUES ($1, $2, $3, $4, $5, $6)',
-            [id, accion, detalle, ip, admin_user || 'Admin', 'AD']
-        );
 
         res.json({ success: true });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error al actualizar SQL' });
+        console.error('Error en /api/pedidos/update-status:', err);
+        res.status(500).json({ error: 'Error en base de datos' });
     }
 });
 
 // ==========================================
-// 3. RUTAS DE NAVEGACIÓN (Para servir el HTML)
+// 4. LECTURA DE LOGS (Para la sección de actividad)
 // ==========================================
-app.get('/stats', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'stats.html'));
+app.get('/api/logs', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM logs ORDER BY created_at DESC LIMIT 50");
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener logs' });
+    }
 });
 
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
-});
-
-// ==========================================
-// 4. ARRANQUE DEL SERVIDOR
-// ==========================================
+// Arrancar Servidor
 app.listen(port, () => {
-    console.log(`🚀 Servidor Logístico IA con Auditoría Root en puerto ${port}`);
+    console.log(`🚀 Servidor Logística IA corriendo en puerto ${port}`);
 });
