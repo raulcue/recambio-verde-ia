@@ -3,70 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pedidos Taller - Logística IA</title>
+    <title>Pedidos Taller - Recambio Reciclado</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        .modal-active { display: flex !important; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 900; }
-        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
-        .dark .glass-card { background: rgba(15, 23, 42, 0.8); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
+        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
+        .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
         .logo-invert { transition: filter 0.3s ease; }
         .dark .logo-invert { filter: brightness(0) invert(1); }
+        .modal-active { display: flex !important; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .dark .glass-card { background: rgba(15, 23, 42, 0.8); }
+
+        /* Estilos para el Waffle - CORRECCIÓN QUIRÚRGICA */
+        .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
+        .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
+        .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
+        .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
+        .waffle-item i { font-size: 1.25rem; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-[#0f172a] min-h-screen transition-colors pb-24">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-    <nav class="glass-card border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center sticky top-0 z-[100]">
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-3">
-                <img src="assets/logo.png" alt="Logística IA" class="h-8 w-auto logo-invert">
-                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">Pedidos <span class="text-blue-600">Taller</span></h1>
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
+                    <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">Kanban <span style="color: #7cb65d;">Recambio Reciclado</span></h1>
+                </a>
             </div>
-        </div>
-        
-        <div class="flex items-center gap-3">
-            <button onclick="document.documentElement.classList.toggle('dark')" class="w-9 h-9 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
-                <i class="fas fa-moon dark:hidden text-xs"></i>
-                <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
-            </button>
-            <div class="flex items-center gap-3 pl-3 border-l dark:border-slate-800">
-                <div class="text-right hidden sm:block">
-                    <p class="text-[10px] font-black dark:text-white leading-none uppercase">Acceso Taller</p>
-                    <p class="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Sincronizado</p>
+            <div class="flex items-center gap-6">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="buscador" onkeyup="filtrar()" placeholder="Buscar pieza, matrícula..." class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
-                <div class="w-9 h-9 bg-slate-900 dark:bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-[10px]">TA</div>
+                <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
+                    <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                        <i class="fas fa-moon dark:hidden text-xs"></i><i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+                    </button>
+                    <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
+                        <i id="eye-icon" class="fas fa-eye text-xs"></i>
+                    </button>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total Tránsito</span>
+                        <span id="total-general" class="text-lg font-black text-blue-600 blur-data leading-none">0€</span>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+                    
+                    <div class="flex items-center gap-2">
+                        <div class="waffle-container group">
+                            <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-th text-xs"></i>
+                            </button>
+                            <div class="absolute right-0 top-full mt-0 hidden group-hover:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[2rem] overflow-hidden z-[60]">
+                                <div class="waffle-grid">
+                                    <a href="landing.html" class="waffle-item text-blue-600"><i class="fas fa-home"></i><span class="text-[9px] font-black uppercase text-slate-500">Principal</span></a>
+                                    <a href="dashboard.html" class="waffle-item text-indigo-500"><i class="fas fa-columns"></i><span class="text-[9px] font-black uppercase text-slate-500">Flujos</span></a>
+                                    <a href="stats.html" class="waffle-item text-emerald-500"><i class="fas fa-chart-line"></i><span class="text-[9px] font-black uppercase text-slate-500">BI Stats</span></a>
+                                    <a href="talleres.html" class="waffle-item text-orange-500"><i class="fas fa-users-cog"></i><span class="text-[9px] font-black uppercase text-slate-500">Equipo</span></a>
+                                    <a href="pedidos-taller.html" class="waffle-item text-purple-500"><i class="fas fa-list-check"></i><span class="text-[9px] font-black uppercase text-slate-500">Pedidos</span></a>
+                                    <a href="admin-logs.html" class="waffle-item text-slate-500"><i class="fas fa-history"></i><span class="text-[9px] font-black uppercase text-slate-500">Logs</span></a>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="w-8 h-8 text-slate-400 hover:text-red-600 transition-colors">
+                            <i class="fas fa-power-off text-sm"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </nav>
-
-    <header class="p-6 max-w-xl mx-auto flex justify-between items-end mt-4">
-        <div>
-            <div class="flex items-center gap-2 mb-1">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Terminal Activa</span>
-            </div>
-            <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter italic">Mis <span class="text-blue-600">Pedidos</span></h1>
-            <p id="contador-piezas" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Cargando base de datos...</p>
         </div>
     </header>
 
+    <nav class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4">
+        <div class="max-w-full mx-auto flex justify-between items-center">
+            <div class="flex gap-4">
+                <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-50 dark:bg-slate-800 border rounded-lg px-4 py-2 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                    <option value="todos">TODOS LOS TALLERES</option>
+                </select>
+                <button onclick="abrirExportar()" class="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
+                    <i class="fas fa-file-excel mr-2"></i> Exportar
+                </button>
+                <button onclick="abrirAjustes()" class="bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
+                    <i class="fas fa-cog mr-2"></i> Ajustes
+                </button>
+            </div>
+            <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                <i class="fas fa-plus mr-2"></i> Nuevo Pedido
+            </button>
+        </div>
+    </nav>
+
     <main class="p-6 max-w-xl mx-auto space-y-4" id="listaPedidosTaller">
-        <div class="animate-pulse space-y-4">
-            <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
-            <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
+        <div class="text-center mb-8">
+            <div class="flex items-center gap-2 mb-1 justify-center">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Terminal Activa</span>
+            </div>
+            <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter italic mb-2">Mis <span class="text-blue-600">Pedidos</span></h1>
+            <p id="contador-piezas" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cargando base de datos...</p>
+        </div>
+
+        <div id="pedidosContainer">
+            <div class="animate-pulse space-y-4">
+                <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
+                <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
+            </div>
         </div>
     </main>
 
-    <div class="fixed bottom-8 left-0 right-0 flex justify-center z-50 pointer-events-none">
-        <button onclick="abrirModalNuevo()" class="pointer-events-auto px-8 py-4 bg-blue-600 text-white rounded-full shadow-2xl shadow-blue-500/40 flex items-center gap-3 hover:scale-105 transition-transform active:scale-95">
-            <i class="fas fa-plus"></i>
-            <span class="text-xs font-black uppercase tracking-widest">Nueva Solicitud</span>
-        </button>
+    <!-- Modales de Dashboard (Ajustes y Exportar) -->
+    <div id="modalAjustes" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border border-white/10">
+            <h3 class="text-sm font-black uppercase tracking-widest mb-6">Días de Alerta</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-orange-500 mr-2"></i> Naranja</span>
+                    <input type="number" id="adj-naranja" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-red-600 mr-2"></i> Rojo</span>
+                    <input type="number" id="adj-rojo" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="mt-8 flex gap-2">
+                <button onclick="cerrarAjustes()" class="flex-1 text-[10px] font-black uppercase p-3 hover:text-slate-400">Cerrar</button>
+                <button onclick="guardarAjustes()" class="flex-1 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase p-3 shadow-lg hover:bg-blue-700 active:scale-95">Guardar</button>
+            </div>
+        </div>
     </div>
 
+    <div id="modalExportar" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
+            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-lg font-black uppercase tracking-tighter">Exportar Reporte</h3>
+            </div>
+            <div class="p-8 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400">Estado</label>
+                        <select id="exp-estado" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"></select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400">Detalle</label>
+                        <select id="exp-vista" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold">
+                            <option value="simple">VISTA SIMPLE</option>
+                            <option value="avanzada">VISTA AVANZADA</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="p-8 flex gap-4">
+                <button onclick="cerrarExportar()" class="flex-1 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+                <button onclick="ejecutarExportar()" class="flex-1 bg-emerald-600 text-white p-4 rounded-full text-[10px] font-black uppercase shadow-lg hover:bg-emerald-700 active:scale-95">Excel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalle de Pedido (Existente) -->
     <div id="popupDetalle" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-end sm:items-center justify-center z-[300] p-0 sm:p-4">
         <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl border-t dark:border-slate-800">
             <div class="flex border-b dark:border-slate-800">
@@ -122,6 +229,7 @@
         </div>
     </div>
 
+    <!-- Modal de Nuevo Pedido -->
     <div id="modalPedido" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[400] p-6">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[3rem] p-10 shadow-2xl">
             <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase mb-8 text-center tracking-tighter italic">Nueva <span class="text-blue-600">Pieza</span></h2>
@@ -138,147 +246,99 @@
         </div>
     </div>
 
+    <footer class="fixed bottom-0 w-full py-4 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-6 flex justify-between border-slate-100 dark:border-slate-800">
+        <div>v2.2.0 | CREADOR: RAUL CUE</div>
+        <div>CONTACTO: RAULCUE@GMAIL.COM</div>
+        <div>COPYRIGHT 2026-2030</div>
+    </footer>
+
     <script>
         let allPedidos = [];
+        let isPrivate = false;
+        let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
+        
+        const columns = [
+            { id: 'solicitado', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
+            { id: 'desguace', label: 'Localizado', color: 'border-amber-500', icon: 'fa-search-location' },
+            { id: 'listo', label: 'En Almacén', color: 'border-purple-600', icon: 'fa-box' },
+            { id: 'transito', label: 'Logística', color: 'border-cyan-500', icon: 'fa-truck' },
+            { id: 'entregado', label: 'Cerrado', color: 'border-emerald-500', icon: 'fa-check-circle' },
+            { id: 'incidencia', label: 'Incidencias', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
+        ];
 
         async function init() {
+            await Promise.all([cargarTalleres(), cargarDatos()]);
+            
+            // Configurar opciones de estado para exportar
+            const expEst = document.getElementById('exp-estado');
+            expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
+            columns.forEach(c => {
+                expEst.add(new Option(c.label.toUpperCase(), c.id));
+            });
+
+            // Configurar el buscador
+            document.getElementById('buscador').addEventListener('keyup', filtrar);
+        }
+
+        async function cargarTalleres() {
             try {
-                const res = await fetch('/api/pedidos');
+                const res = await fetch('/api/talleres');
+                const data = await res.json();
+                const fT = document.getElementById('filtroTaller');
+                fT.innerHTML = '<option value="todos">TODOS LOS TALLERES</option>';
+                data.forEach(t => {
+                    fT.add(new Option(t.nombre, t.id));
+                });
+            } catch(e) { console.error("Error cargando talleres"); }
+        }
+
+        async function cargarDatos() {
+            const container = document.getElementById('pedidosContainer');
+            let tId = document.getElementById('filtroTaller').value;
+            container.style.opacity = '0.5';
+            
+            try {
+                const res = await fetch(`/api/pedidos?taller_id=${tId}`);
                 allPedidos = await res.json();
-                const container = document.getElementById('listaPedidosTaller');
-                
-                if (allPedidos.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
-                            <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                                <i class="fas fa-box-open text-2xl"></i>
-                            </div>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No hay pedidos registrados</p>
-                        </div>`;
-                    document.getElementById('contador-piezas').innerText = "SIN SOLICITUDES";
-                    return;
-                }
-
-                container.innerHTML = allPedidos.map(p => {
-                    const statusStyles = {
-                        'solicitado': 'bg-blue-100 text-blue-600',
-                        'buscando': 'bg-amber-100 text-amber-600',
-                        'desguace': 'bg-amber-100 text-amber-600',
-                        'incidencia': 'bg-red-100 text-red-600',
-                        'completado': 'bg-emerald-100 text-emerald-600',
-                        'entregado': 'bg-emerald-100 text-emerald-600',
-                        'listo': 'bg-purple-100 text-purple-600'
-                    };
-                    const color = statusStyles[p.estado] || 'bg-slate-100 text-slate-600';
-
-                    return `
-                        <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer group">
-                            <div class="flex justify-between items-start mb-4">
-                                <span class="text-[9px] font-black ${color} px-3 py-1 rounded-full uppercase tracking-tighter">${p.estado || 'solicitado'}</span>
-                                <span class="text-[9px] font-bold text-slate-300 uppercase italic">RR-${p.id}</span>
-                            </div>
-                            <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter leading-tight">${p.pieza}</h3>
-                            <div class="flex items-center gap-3 mt-2">
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${p.modelo_coche || '---'}</p>
-                                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                <p class="text-[10px] text-blue-500 font-black uppercase tracking-widest">${p.matricula || 'S/M'}</p>
-                            </div>
+                renderPedidos();
+                actualizarTotal();
+            } catch(e) { 
+                console.error("Error cargando datos"); 
+                container.innerHTML = `
+                    <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                        <div class="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-300">
+                            <i class="fas fa-exclamation-triangle text-2xl"></i>
                         </div>
-                    `;
-                }).join('');
-                
-                document.getElementById('contador-piezas').innerText = `${allPedidos.length} SOLICITUDES EN CURSO`;
-            } catch (e) { 
-                console.error("Error:", e);
-                document.getElementById('contador-piezas').innerText = "ERROR DE CONEXIÓN";
+                        <p class="text-[10px] font-black text-red-400 uppercase tracking-widest">Error de conexión</p>
+                    </div>`;
+            } finally { 
+                container.style.opacity = '1'; 
             }
         }
 
-        function verDetalle(id) {
-            const p = allPedidos.find(i => i.id === id);
-            if (!p) return;
-            document.getElementById('edit-id').value = p.id;
-            document.getElementById('edit-pieza').value = p.pieza;
-            document.getElementById('edit-matricula').value = p.matricula;
-            document.getElementById('edit-modelo').value = p.modelo_coche;
-            document.getElementById('edit-bastidor').value = p.bastidor || '';
-            document.getElementById('badgeEstadoPopup').innerText = p.estado;
-            document.getElementById('detLogEstado').innerText = `> Registro RR-${p.id} sincronizado`;
-            document.getElementById('popupDetalle').classList.add('modal-active');
-        }
-
-        async function actualizarPedido(e) {
-            e.preventDefault();
-            const id = document.getElementById('edit-id').value;
-            const body = {
-                id: id,
-                pieza: document.getElementById('edit-pieza').value,
-                matricula: document.getElementById('edit-matricula').value,
-                modelo_coche: document.getElementById('edit-modelo').value,
-                bastidor: document.getElementById('edit-bastidor').value,
-                admin_user: 'App Taller'
-            };
+        function renderPedidos() {
+            const container = document.getElementById('pedidosContainer');
             
-            try {
-                // Usamos la ruta profesional de actualización de estado que soporta múltiples campos
-                await fetch(`/api/pedidos/update-status`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(body) 
-                });
-                cerrarPopup(); 
-                init();
-            } catch (err) { alert("Error al actualizar"); }
-        }
+            if (allPedidos.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                        <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                            <i class="fas fa-box-open text-2xl"></i>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No hay pedidos registrados</p>
+                    </div>`;
+                document.getElementById('contador-piezas').innerText = "SIN SOLICITUDES";
+                return;
+            }
 
-        async function eliminarPedidoActual() {
-            const id = document.getElementById('edit-id').value;
-            if(!confirm("¿Cancelar esta solicitud definitivamente?")) return;
-            try {
-                await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
-                cerrarPopup(); 
-                init();
-            } catch (err) { alert("Error al eliminar"); }
-        }
-
-        async function crearPedido(e) {
-            e.preventDefault();
-            const body = {
-                pieza: document.getElementById('new-pieza').value,
-                modelo_coche: document.getElementById('new-modelo').value,
-                matricula: document.getElementById('new-matricula').value,
-                nuevoEstado: 'solicitado',
-                admin_user: 'App Taller'
-            };
-            try {
-                const res = await fetch('/api/pedidos/update-status', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(body) 
-                });
-                if(res.ok) {
-                    cerrarModal(); 
-                    e.target.reset();
-                    init();
-                }
-            } catch (err) { alert("Error al enviar solicitud"); }
-        }
-
-        function cambiarTab(tab) {
-            document.getElementById('tabInfo').classList.toggle('hidden', tab !== 'info');
-            document.getElementById('tabTecnico').classList.toggle('hidden', tab !== 'tecnico');
-            document.getElementById('btnTabInfo').classList.toggle('tab-active', tab === 'info');
-            document.getElementById('btnTabTecnico').classList.toggle('tab-active', tab === 'tecnico');
-        }
-
-        function abrirModalNuevo() { document.getElementById('modalPedido').classList.add('modal-active'); }
-        function cerrarModal() { document.getElementById('modalPedido').classList.remove('modal-active'); }
-        function cerrarPopup() { 
-            document.getElementById('popupDetalle').classList.remove('modal-active'); 
-            cambiarTab('info'); 
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+            container.innerHTML = allPedidos.map(p => {
+                const statusStyles = {
+                    'solicitado': 'bg-blue-100 text-blue-600',
+                    'buscando': 'bg-amber-100 text-amber-600',
+                    'desguace': 'bg-amber-100 text-amber-600',
+                    'incidencia': 'bg-red-100 text-red-600',
+                    'completado': 'bg-emerald-100 text-emerald-600',
+                    'entregado': 'bg-emerald-100 text-emerald-600',
+                    'listo': 'bg-purple-100 text-purple-600'
+                };
+                const color = statusStyles[p.estado
