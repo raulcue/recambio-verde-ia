@@ -180,10 +180,11 @@ app.get('/api/marcas', async (req, res) => {
     }
 });
 
+// CAMBIO 1: Obtener pedidos desde la VISTA (para traer nombre_taller)
 app.get('/api/pedidos', async (req, res) => {
     try {
         const { taller_id } = req.query;
-        let query = "SELECT * FROM pedidos WHERE 1=1";
+        let query = "SELECT * FROM vista_pedidos_taller WHERE 1=1";
         const params = [];
         if (taller_id && taller_id !== 'todos' && !isNaN(taller_id)) {
             params.push(parseInt(taller_id));
@@ -215,11 +216,23 @@ app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
             await pool.query(`UPDATE pedidos SET ${sets}, updated_at = CURRENT_TIMESTAMP WHERE id = $${campos.length + 1}`, [...values, id]);
             await registrarLog(admin_user, 'EDIT', `Pedido #${id}: ${pieza}`, ip);
         } else {
+            // CAMBIO 2: El INSERT ahora incluye todos los campos técnicos para nuevos pedidos
             const queryInsert = `
-                INSERT INTO pedidos (pieza, matricula, marca_coche, modelo_coche, estado, precio, precio_coste, usuario_id, fecha_creacion)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`;
+                INSERT INTO pedidos (
+                    pieza, matricula, marca_coche, modelo_coche, estado, 
+                    precio, precio_coste, usuario_id, proveedor, 
+                    bastidor, sub_estado_incidencia, notas_tecnicas, fecha_creacion
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)`;
+            
             const uId = (usuario_id && !isNaN(usuario_id)) ? parseInt(usuario_id) : null;
-            await pool.query(queryInsert, [pieza, matricula, marca_coche, modelo_coche, nuevoEstado || 'solicitado', parseFloat(precio) || 0, parseFloat(precio_coste) || 0, uId]);
+            
+            await pool.query(queryInsert, [
+                pieza, matricula, marca_coche, modelo_coche, nuevoEstado || 'solicitado', 
+                parseFloat(precio) || 0, parseFloat(precio_coste) || 0, uId,
+                proveedor || null, bastidor || null, 
+                sub_estado_incidencia || null, notas_tecnicas || null
+            ]);
             await registrarLog(admin_user, 'CREATE', `Nueva pieza: ${pieza}`, ip);
         }
         res.json({ success: true });
