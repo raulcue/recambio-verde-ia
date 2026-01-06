@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pedidos Taller - Recambio Reciclado</title>
+    <title>Pedidos Taller - Kanban Recambio Reciclado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script>
@@ -46,7 +46,7 @@
             <div class="flex items-center gap-6">
                 <div class="relative">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="buscador" onkeyup="filtrar()" placeholder="Buscar pieza, matrícula..." class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all">
+                    <input type="text" id="buscador" placeholder="Buscar pieza, matrícula..." class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all">
                 </div>
                 <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
                     <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
@@ -91,7 +91,7 @@
     <nav class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4">
         <div class="max-w-full mx-auto flex justify-between items-center">
             <div class="flex gap-4">
-                <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-50 dark:bg-slate-800 border rounded-lg px-4 py-2 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                <select id="filtroTaller" class="bg-slate-50 dark:bg-slate-800 border rounded-lg px-4 py-2 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="todos">TODOS LOS TALLERES</option>
                 </select>
                 <button onclick="abrirExportar()" class="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
@@ -267,7 +267,8 @@
         ];
 
         async function init() {
-            await Promise.all([cargarTalleres(), cargarDatos()]);
+            await cargarTalleres();
+            await cargarDatos();
             
             // Configurar opciones de estado para exportar
             const expEst = document.getElementById('exp-estado');
@@ -278,6 +279,9 @@
 
             // Configurar el buscador
             document.getElementById('buscador').addEventListener('keyup', filtrar);
+            
+            // Configurar el filtro de taller
+            document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
         }
 
         async function cargarTalleres() {
@@ -289,27 +293,42 @@
                 data.forEach(t => {
                     fT.add(new Option(t.nombre, t.id));
                 });
-            } catch(e) { console.error("Error cargando talleres"); }
+            } catch(e) { 
+                console.error("Error cargando talleres", e); 
+            }
         }
 
         async function cargarDatos() {
             const container = document.getElementById('pedidosContainer');
-            let tId = document.getElementById('filtroTaller').value;
+            const tId = document.getElementById('filtroTaller').value;
+            
             container.style.opacity = '0.5';
+            container.innerHTML = `
+                <div class="animate-pulse space-y-4">
+                    <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
+                    <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
+                </div>`;
             
             try {
-                const res = await fetch(`/api/pedidos?taller_id=${tId}`);
+                const url = tId === 'todos' ? '/api/pedidos' : `/api/pedidos?taller_id=${tId}`;
+                const res = await fetch(url);
+                
+                if (!res.ok) {
+                    throw new Error(`Error HTTP: ${res.status}`);
+                }
+                
                 allPedidos = await res.json();
                 renderPedidos();
                 actualizarTotal();
             } catch(e) { 
-                console.error("Error cargando datos"); 
+                console.error("Error cargando datos:", e); 
                 container.innerHTML = `
                     <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
                         <div class="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-300">
                             <i class="fas fa-exclamation-triangle text-2xl"></i>
                         </div>
                         <p class="text-[10px] font-black text-red-400 uppercase tracking-widest">Error de conexión</p>
+                        <p class="text-[8px] text-slate-400 mt-2">${e.message}</p>
                     </div>`;
             } finally { 
                 container.style.opacity = '1'; 
@@ -319,7 +338,7 @@
         function renderPedidos() {
             const container = document.getElementById('pedidosContainer');
             
-            if (allPedidos.length === 0) {
+            if (!allPedidos || allPedidos.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
                         <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
@@ -334,11 +353,273 @@
             container.innerHTML = allPedidos.map(p => {
                 const statusStyles = {
                     'solicitado': 'bg-blue-100 text-blue-600',
-                    'buscando': 'bg-amber-100 text-amber-600',
                     'desguace': 'bg-amber-100 text-amber-600',
-                    'incidencia': 'bg-red-100 text-red-600',
-                    'completado': 'bg-emerald-100 text-emerald-600',
+                    'listo': 'bg-purple-100 text-purple-600',
+                    'transito': 'bg-cyan-100 text-cyan-600',
                     'entregado': 'bg-emerald-100 text-emerald-600',
-                    'listo': 'bg-purple-100 text-purple-600'
+                    'incidencia': 'bg-red-100 text-red-600',
+                    'buscando': 'bg-amber-100 text-amber-600',
+                    'completado': 'bg-emerald-100 text-emerald-600'
                 };
-                const color = statusStyles[p.estado
+                
+                const estado = p.estado || 'solicitado';
+                const color = statusStyles[estado] || 'bg-slate-100 text-slate-600';
+
+                return `
+                    <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer group hover:border-blue-500/40">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[9px] font-black ${color} px-3 py-1 rounded-full uppercase tracking-tighter">${estado.toUpperCase()}</span>
+                            <span class="text-[9px] font-bold text-slate-300 uppercase italic">RR-${p.id}</span>
+                        </div>
+                        <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter leading-tight">${p.pieza || 'Sin nombre'}</h3>
+                        <div class="flex items-center gap-3 mt-2">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${p.modelo_coche || '---'}</p>
+                            <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                            <p class="text-[10px] text-blue-500 font-black uppercase tracking-widest">${p.matricula || 'S/M'}</p>
+                        </div>
+                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <span class="text-[9px] font-bold text-slate-400">${p.nombre_usuario || 'Taller'}</span>
+                            <span class="text-xs font-black dark:text-white">${parseFloat(p.precio || 0).toFixed(2)}€</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('contador-piezas').innerText = `${allPedidos.length} SOLICITUDES EN CURSO`;
+        }
+
+        function actualizarTotal() {
+            const total = allPedidos.reduce((sum, p) => sum + parseFloat(p.precio || 0), 0);
+            document.getElementById('total-general').innerText = `${total.toLocaleString()}€`;
+        }
+
+        function filtrar() {
+            const term = document.getElementById('buscador').value.toLowerCase();
+            const container = document.getElementById('pedidosContainer');
+            
+            if (!term) {
+                renderPedidos();
+                return;
+            }
+            
+            const filtrados = allPedidos.filter(p => 
+                (p.pieza && p.pieza.toLowerCase().includes(term)) || 
+                (p.matricula && p.matricula.toLowerCase().includes(term)) ||
+                (p.modelo_coche && p.modelo_coche.toLowerCase().includes(term)) ||
+                (p.nombre_usuario && p.nombre_usuario.toLowerCase().includes(term))
+            );
+            
+            if (filtrados.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
+                        <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                            <i class="fas fa-search text-2xl"></i>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No se encontraron resultados</p>
+                        <p class="text-[8px] text-slate-400 mt-2">Búsqueda: "${term}"</p>
+                    </div>`;
+                document.getElementById('contador-piezas').innerText = `${filtrados.length} RESULTADOS`;
+            } else {
+                // Crear HTML temporal con los filtrados
+                const html = filtrados.map(p => {
+                    const statusStyles = {
+                        'solicitado': 'bg-blue-100 text-blue-600',
+                        'desguace': 'bg-amber-100 text-amber-600',
+                        'listo': 'bg-purple-100 text-purple-600',
+                        'transito': 'bg-cyan-100 text-cyan-600',
+                        'entregado': 'bg-emerald-100 text-emerald-600',
+                        'incidencia': 'bg-red-100 text-red-600'
+                    };
+                    
+                    const estado = p.estado || 'solicitado';
+                    const color = statusStyles[estado] || 'bg-slate-100 text-slate-600';
+
+                    return `
+                        <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer group hover:border-blue-500/40">
+                            <div class="flex justify-between items-start mb-4">
+                                <span class="text-[9px] font-black ${color} px-3 py-1 rounded-full uppercase tracking-tighter">${estado.toUpperCase()}</span>
+                                <span class="text-[9px] font-bold text-slate-300 uppercase italic">RR-${p.id}</span>
+                            </div>
+                            <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter leading-tight">${p.pieza || 'Sin nombre'}</h3>
+                            <div class="flex items-center gap-3 mt-2">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${p.modelo_coche || '---'}</p>
+                                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                <p class="text-[10px] text-blue-500 font-black uppercase tracking-widest">${p.matricula || 'S/M'}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                container.innerHTML = html;
+                document.getElementById('contador-piezas').innerText = `${filtrados.length} RESULTADOS ENCONTRADOS`;
+            }
+        }
+
+        function verDetalle(id) {
+            const p = allPedidos.find(i => i.id === id);
+            if (!p) return;
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-pieza').value = p.pieza;
+            document.getElementById('edit-matricula').value = p.matricula;
+            document.getElementById('edit-modelo').value = p.modelo_coche;
+            document.getElementById('edit-bastidor').value = p.bastidor || '';
+            document.getElementById('badgeEstadoPopup').innerText = p.estado;
+            document.getElementById('detLogEstado').innerText = `> Registro RR-${p.id} sincronizado`;
+            document.getElementById('popupDetalle').classList.add('modal-active');
+        }
+
+        async function actualizarPedido(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const body = {
+                id: id,
+                pieza: document.getElementById('edit-pieza').value,
+                matricula: document.getElementById('edit-matricula').value,
+                modelo_coche: document.getElementById('edit-modelo').value,
+                bastidor: document.getElementById('edit-bastidor').value,
+                admin_user: 'App Taller'
+            };
+            
+            try {
+                // Usamos la ruta profesional de actualización de estado que soporta múltiples campos
+                await fetch(`/api/pedidos/update-status`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(body) 
+                });
+                cerrarPopup(); 
+                cargarDatos();
+            } catch (err) { 
+                console.error("Error al actualizar:", err);
+                alert("Error al actualizar"); 
+            }
+        }
+
+        async function eliminarPedidoActual() {
+            const id = document.getElementById('edit-id').value;
+            if(!confirm("¿Cancelar esta solicitud definitivamente?")) return;
+            try {
+                await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
+                cerrarPopup(); 
+                cargarDatos();
+            } catch (err) { 
+                console.error("Error al eliminar:", err);
+                alert("Error al eliminar"); 
+            }
+        }
+
+        async function crearPedido(e) {
+            e.preventDefault();
+            const body = {
+                pieza: document.getElementById('new-pieza').value,
+                modelo_coche: document.getElementById('new-modelo').value,
+                matricula: document.getElementById('new-matricula').value,
+                nuevoEstado: 'solicitado',
+                admin_user: 'App Taller'
+            };
+            try {
+                const res = await fetch('/api/pedidos/update-status', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(body) 
+                });
+                if(res.ok) {
+                    cerrarModal(); 
+                    e.target.reset();
+                    cargarDatos();
+                }
+            } catch (err) { 
+                console.error("Error al enviar solicitud:", err);
+                alert("Error al enviar solicitud"); 
+            }
+        }
+
+        function cambiarTab(tab) {
+            document.getElementById('tabInfo').classList.toggle('hidden', tab !== 'info');
+            document.getElementById('tabTecnico').classList.toggle('hidden', tab !== 'tecnico');
+            document.getElementById('btnTabInfo').classList.toggle('tab-active', tab === 'info');
+            document.getElementById('btnTabTecnico').classList.toggle('tab-active', tab === 'tecnico');
+        }
+
+        function abrirModalNuevo() { 
+            document.getElementById('modalPedido').classList.add('modal-active'); 
+        }
+        
+        function cerrarModal() { 
+            document.getElementById('modalPedido').classList.remove('modal-active'); 
+        }
+        
+        function cerrarPopup() { 
+            document.getElementById('popupDetalle').classList.remove('modal-active'); 
+            cambiarTab('info'); 
+        }
+
+        // Funciones del header y filtros (de dashboard)
+        function togglePrivacy() {
+            isPrivate = !isPrivate;
+            document.body.classList.toggle('privacy-active', isPrivate);
+            document.getElementById('eye-icon').className = isPrivate ? "fas fa-eye-slash text-xs" : "fas fa-eye text-xs";
+        }
+
+        function abrirAjustes() {
+            document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
+            document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
+            document.getElementById('modalAjustes').classList.remove('hidden');
+        }
+        
+        function cerrarAjustes() { 
+            document.getElementById('modalAjustes').classList.add('hidden'); 
+        }
+        
+        function guardarAjustes() {
+            ajustesSemaf.naranja = parseInt(document.getElementById('adj-naranja').value);
+            ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value);
+            localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf));
+            cerrarAjustes();
+        }
+
+        function abrirExportar() { 
+            document.getElementById('modalExportar').classList.remove('hidden'); 
+        }
+        
+        function cerrarExportar() { 
+            document.getElementById('modalExportar').classList.add('hidden'); 
+        }
+        
+        function ejecutarExportar() {
+            const estado = document.getElementById('exp-estado').value;
+            const vista = document.getElementById('exp-vista').value;
+            let filtrados = allPedidos;
+            
+            if (estado !== 'todos') {
+                filtrados = allPedidos.filter(p => p.estado === estado);
+            }
+            
+            const dataToExport = filtrados.map(p => ({
+                'ID': p.id, 
+                'TALLER': p.nombre_usuario, 
+                'FECHA': p.fecha_creacion, 
+                'PIEZA': p.pieza, 
+                'MATRÍCULA': p.matricula, 
+                'ESTADO': p.estado, 
+                'PRECIO VENTA': p.precio,
+                ...(vista === 'avanzada' && { 
+                    'PROVEEDOR': p.proveedor, 
+                    'MARCA': p.marca_coche, 
+                    'MODELO': p.modelo_coche, 
+                    'NOTAS': p.notas_tecnicas 
+                })
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
+            XLSX.writeFile(wb, `Reporte_Pedidos_${new Date().toISOString().split('T')[0]}.xlsx`);
+            cerrarExportar();
+        }
+
+        // Inicializar cuando cargue la página
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
