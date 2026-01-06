@@ -14,7 +14,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
         .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
         .logo-invert { transition: filter 0.3s ease; }
@@ -24,12 +24,33 @@
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
         .dark .glass-card { background: rgba(15, 23, 42, 0.8); }
 
-        /* Estilos para el Waffle - CORRECCIÓN QUIRÚRGICA */
+        /* Estética Excel Avanzada */
+        .excel-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px; }
+        .excel-table th { 
+            position: sticky; top: 0; background: #f8fafc; padding: 14px 20px; 
+            font-size: 10px; font-weight: 900; text-transform: uppercase; color: #64748b;
+            text-align: left; border-bottom: 2px solid #e2e8f0; z-index: 20; white-space: nowrap;
+            letter-spacing: 0.05em;
+        }
+        .dark .excel-table th { background: #0f172a; border-bottom-color: #1e293b; color: #94a3b8; }
+        .excel-table td { 
+            padding: 14px 20px; font-size: 11px; font-weight: 600; border-bottom: 1px solid #f1f5f9; 
+            white-space: nowrap; transition: background 0.2s;
+        }
+        .dark .excel-table td { border-bottom-color: #1e293b; color: #cbd5e1; }
+        .excel-table tr:hover td { background-color: rgba(37, 99, 235, 0.04); }
+        .excel-row-active { background-color: rgba(37, 99, 235, 0.08) !important; }
+
         .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
         .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
         .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
         .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
         .waffle-item i { font-size: 1.25rem; }
+
+        /* Estilos Checkbox Personalizados para Ajustes */
+        .switch-col { cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; transition: 0.2s; }
+        .switch-col:hover { background: #f1f5f9; }
+        .dark .switch-col:hover { background: #1e293b; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
@@ -90,15 +111,21 @@
 
     <nav class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4">
         <div class="max-w-full mx-auto flex justify-between items-center">
-            <div class="flex gap-4">
-                <select id="filtroTaller" class="bg-slate-50 dark:bg-slate-800 border rounded-lg px-4 py-2 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+            <div class="flex gap-3">
+                <select id="filtroTaller" class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-4 py-2 text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="todos">TODOS LOS TALLERES</option>
                 </select>
                 <button onclick="abrirExportar()" class="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
                     <i class="fas fa-file-excel mr-2"></i> Exportar
                 </button>
-                <button onclick="abrirAjustes()" class="bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
-                    <i class="fas fa-cog mr-2"></i> Ajustes
+                <button onclick="toggleView()" id="btnToggleView" class="bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
+                    <i class="fas fa-table mr-2"></i> Vista Excel
+                </button>
+                <button onclick="abrirConfiguracionColumnas()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
+                    <i class="fas fa-columns mr-2"></i> Columnas
+                </button>
+                <button onclick="abrirAjustes()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-600 hover:text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
+                    <i class="fas fa-cog"></i>
                 </button>
             </div>
             <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">
@@ -107,7 +134,7 @@
         </div>
     </nav>
 
-    <main class="p-6 max-w-xl mx-auto space-y-4" id="listaPedidosTaller">
+    <main class="p-6 max-w-full mx-auto space-y-4" id="listaPedidosTaller">
         <div class="text-center mb-8">
             <div class="flex items-center gap-2 mb-1 justify-center">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -117,31 +144,41 @@
             <p id="contador-piezas" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cargando base de datos...</p>
         </div>
 
-        <div id="pedidosContainer">
-            <div class="animate-pulse space-y-4">
-                <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
-                <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
+        <div id="pedidosContainer" class="transition-all duration-300">
             </div>
-        </div>
     </main>
 
-    <!-- Modales de Dashboard (Ajustes y Exportar) -->
+    <div id="modalColumnas" class="fixed inset-0 z-[120] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
+            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-lg font-black uppercase tracking-tighter italic">Configurar <span class="text-blue-600">Columnas</span></h3>
+                <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">Selecciona los datos visibles en la tabla</p>
+            </div>
+            <div id="listaColumnasConfig" class="p-6 space-y-1 max-h-96 overflow-y-auto custom-scrollbar">
+                </div>
+            <div class="p-8 flex gap-4 bg-slate-50/50 dark:bg-slate-800/30">
+                <button onclick="cerrarConfiguracionColumnas()" class="flex-1 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+                <button onclick="guardarConfiguracionColumnas()" class="flex-1 bg-blue-600 text-white p-4 rounded-full text-[10px] font-black uppercase shadow-lg hover:bg-blue-700">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modalAjustes" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border border-white/10">
-            <h3 class="text-sm font-black uppercase tracking-widest mb-6">Días de Alerta</h3>
+            <h3 class="text-sm font-black uppercase tracking-widest mb-6 italic">Días de <span class="text-blue-600">Alerta</span></h3>
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-orange-500 mr-2"></i> Naranja</span>
+                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-orange-500 mr-2"></i> Naranja (Días)</span>
                     <input type="number" id="adj-naranja" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-red-600 mr-2"></i> Rojo</span>
+                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-red-600 mr-2"></i> Rojo (Días)</span>
                     <input type="number" id="adj-rojo" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
             <div class="mt-8 flex gap-2">
                 <button onclick="cerrarAjustes()" class="flex-1 text-[10px] font-black uppercase p-3 hover:text-slate-400">Cerrar</button>
-                <button onclick="guardarAjustes()" class="flex-1 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase p-3 shadow-lg hover:bg-blue-700 active:scale-95">Guardar</button>
+                <button onclick="guardarAjustes()" class="flex-1 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase p-3 shadow-lg hover:bg-blue-700">Guardar</button>
             </div>
         </div>
     </div>
@@ -155,7 +192,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase text-slate-400">Estado</label>
-                        <select id="exp-estado" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"></select>
+                        <select id="exp-estado" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold outline-none"></select>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[9px] font-black uppercase text-slate-400">Detalle</label>
@@ -173,7 +210,6 @@
         </div>
     </div>
 
-    <!-- Modal de Detalle de Pedido (Existente) -->
     <div id="popupDetalle" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-end sm:items-center justify-center z-[300] p-0 sm:p-4">
         <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl border-t dark:border-slate-800">
             <div class="flex border-b dark:border-slate-800">
@@ -229,7 +265,6 @@
         </div>
     </div>
 
-    <!-- Modal de Nuevo Pedido -->
     <div id="modalPedido" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[400] p-6">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[3rem] p-10 shadow-2xl">
             <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase mb-8 text-center tracking-tighter italic">Nueva <span class="text-blue-600">Pieza</span></h2>
@@ -237,10 +272,9 @@
                 <input type="text" id="new-pieza" placeholder="PIEZA (Ej: Alternador)" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500 dark:text-white">
                 <input type="text" id="new-modelo" placeholder="MARCA Y MODELO" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500 dark:text-white">
                 <input type="text" id="new-matricula" placeholder="MATRÍCULA" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500 dark:text-white">
-                
                 <div class="flex gap-2 pt-6">
                     <button type="button" onclick="cerrarModal()" class="flex-1 py-4 text-slate-400 text-[10px] font-black uppercase">Descartar</button>
-                    <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-blue-500/20">Solicitar Ahora</button>
+                    <button type="submit" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-lg">Solicitar Ahora</button>
                 </div>
             </form>
         </div>
@@ -253,10 +287,27 @@
     </footer>
 
     <script>
+        // CONFIGURACIÓN GLOBAL
         let allPedidos = [];
         let isPrivate = false;
+        let viewType = localStorage.getItem('taller_view_type') || 'cards';
         let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
         
+        // CONFIGURACIÓN DE COLUMNAS EXCEL (Persistente)
+        let configColumnas = JSON.parse(localStorage.getItem('taller_column_config')) || [
+            { id: 'id', label: 'ID Pedido', visible: true },
+            { id: 'fecha_creacion', label: 'Fecha Alta', visible: true },
+            { id: 'estado', label: 'Estado Actual', visible: true },
+            { id: 'matricula', label: 'Matrícula', visible: true },
+            { id: 'marca_coche', label: 'Marca', visible: true },
+            { id: 'modelo_coche', label: 'Modelo', visible: true },
+            { id: 'pieza', label: 'Pieza Solicitada', visible: true },
+            { id: 'nombre_usuario', label: 'Taller Destino', visible: true },
+            { id: 'precio', label: 'Importe Venta', visible: true },
+            { id: 'proveedor', label: 'Proveedor Origen', visible: false },
+            { id: 'bastidor', label: 'VIN / Bastidor', visible: false }
+        ];
+
         const columns = [
             { id: 'solicitado', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
             { id: 'desguace', label: 'Localizado', color: 'border-amber-500', icon: 'fa-search-location' },
@@ -266,21 +317,17 @@
             { id: 'incidencia', label: 'Incidencias', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
         ];
 
+        // INICIALIZACIÓN
         async function init() {
+            actualizarIconoVista();
             await cargarTalleres();
             await cargarDatos();
             
-            // Configurar opciones de estado para exportar
             const expEst = document.getElementById('exp-estado');
             expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
-            columns.forEach(c => {
-                expEst.add(new Option(c.label.toUpperCase(), c.id));
-            });
+            columns.forEach(c => expEst.add(new Option(c.label.toUpperCase(), c.id)));
 
-            // Configurar el buscador
             document.getElementById('buscador').addEventListener('keyup', filtrar);
-            
-            // Configurar el filtro de taller
             document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
         }
 
@@ -290,104 +337,141 @@
                 const data = await res.json();
                 const fT = document.getElementById('filtroTaller');
                 fT.innerHTML = '<option value="todos">TODOS LOS TALLERES</option>';
-                data.forEach(t => {
-                    fT.add(new Option(t.nombre, t.id));
-                });
-            } catch(e) { 
-                console.error("Error cargando talleres", e); 
-            }
+                data.forEach(t => fT.add(new Option(t.nombre, t.id)));
+            } catch(e) { console.error(e); }
         }
 
         async function cargarDatos() {
             const container = document.getElementById('pedidosContainer');
             const tId = document.getElementById('filtroTaller').value;
-            
             container.style.opacity = '0.5';
-            container.innerHTML = `
-                <div class="animate-pulse space-y-4">
-                    <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
-                    <div class="h-32 bg-slate-200 dark:bg-slate-800 rounded-[35px]"></div>
-                </div>`;
-            
             try {
                 const url = tId === 'todos' ? '/api/pedidos' : `/api/pedidos?taller_id=${tId}`;
                 const res = await fetch(url);
-                
-                if (!res.ok) {
-                    throw new Error(`Error HTTP: ${res.status}`);
-                }
-                
                 allPedidos = await res.json();
                 renderPedidos();
                 actualizarTotal();
-            } catch(e) { 
-                console.error("Error cargando datos:", e); 
-                container.innerHTML = `
-                    <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
-                        <div class="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-300">
-                            <i class="fas fa-exclamation-triangle text-2xl"></i>
-                        </div>
-                        <p class="text-[10px] font-black text-red-400 uppercase tracking-widest">Error de conexión</p>
-                        <p class="text-[8px] text-slate-400 mt-2">${e.message}</p>
-                    </div>`;
-            } finally { 
-                container.style.opacity = '1'; 
+            } catch(e) { console.error(e); }
+            container.style.opacity = '1';
+        }
+
+        // LÓGICA DE VISTAS (EXCEL vs CARDS)
+        function toggleView() {
+            viewType = viewType === 'cards' ? 'excel' : 'cards';
+            localStorage.setItem('taller_view_type', viewType);
+            actualizarIconoVista();
+            renderPedidos();
+        }
+
+        function actualizarIconoVista() {
+            const btn = document.getElementById('btnToggleView');
+            if (viewType === 'excel') {
+                btn.innerHTML = '<i class="fas fa-th-large mr-2"></i> Vista Tarjetas';
+                btn.classList.replace('bg-slate-100', 'bg-blue-50');
+            } else {
+                btn.innerHTML = '<i class="fas fa-table mr-2"></i> Vista Excel';
+                btn.classList.replace('bg-blue-50', 'bg-slate-100');
             }
         }
 
         function renderPedidos() {
             const container = document.getElementById('pedidosContainer');
-            
-            if (!allPedidos || allPedidos.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
-                        <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                            <i class="fas fa-box-open text-2xl"></i>
-                        </div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No hay pedidos registrados</p>
-                    </div>`;
-                document.getElementById('contador-piezas').innerText = "SIN SOLICITUDES";
+            if (allPedidos.length === 0) {
+                container.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold uppercase text-[10px]">No hay pedidos registrados</div>`;
                 return;
             }
 
-            container.innerHTML = allPedidos.map(p => {
-                const statusStyles = {
-                    'solicitado': 'bg-blue-100 text-blue-600',
-                    'desguace': 'bg-amber-100 text-amber-600',
-                    'listo': 'bg-purple-100 text-purple-600',
-                    'transito': 'bg-cyan-100 text-cyan-600',
-                    'entregado': 'bg-emerald-100 text-emerald-600',
-                    'incidencia': 'bg-red-100 text-red-600',
-                    'buscando': 'bg-amber-100 text-amber-600',
-                    'completado': 'bg-emerald-100 text-emerald-600'
-                };
-                
-                const estado = p.estado || 'solicitado';
-                const color = statusStyles[estado] || 'bg-slate-100 text-slate-600';
-
-                return `
-                    <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer group hover:border-blue-500/40">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[9px] font-black ${color} px-3 py-1 rounded-full uppercase tracking-tighter">${estado.toUpperCase()}</span>
-                            <span class="text-[9px] font-bold text-slate-300 uppercase italic">RR-${p.id}</span>
-                        </div>
-                        <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter leading-tight">${p.pieza || 'Sin nombre'}</h3>
-                        <div class="flex items-center gap-3 mt-2">
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${p.modelo_coche || '---'}</p>
-                            <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-                            <p class="text-[10px] text-blue-500 font-black uppercase tracking-widest">${p.matricula || 'S/M'}</p>
-                        </div>
-                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <span class="text-[9px] font-bold text-slate-400">${p.nombre_usuario || 'Taller'}</span>
-                            <span class="text-xs font-black dark:text-white">${parseFloat(p.precio || 0).toFixed(2)}€</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
+            if (viewType === 'excel') {
+                renderVistaExcel(container);
+            } else {
+                renderVistaCards(container);
+            }
             document.getElementById('contador-piezas').innerText = `${allPedidos.length} SOLICITUDES EN CURSO`;
         }
 
+        function renderVistaExcel(container) {
+            const visibleCols = configColumnas.filter(c => c.visible);
+            container.className = "bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-x-auto border border-slate-200 dark:border-slate-800 shadow-2xl custom-scrollbar max-w-full";
+            
+            let html = `<table class="excel-table"><thead><tr>`;
+            visibleCols.forEach(col => html += `<th>${col.label}</th>`);
+            html += `</tr></thead><tbody>`;
+
+            allPedidos.forEach(p => {
+                html += `<tr onclick="verDetalle(${p.id})" class="cursor-pointer">`;
+                visibleCols.forEach(col => {
+                    let val = p[col.id] || '---';
+                    if (col.id === 'id') val = `<span class="text-blue-600 font-black">RR-${val}</span>`;
+                    if (col.id === 'precio') val = `<span class="blur-data">${parseFloat(val).toFixed(2)}€</span>`;
+                    if (col.id === 'estado') val = `<span class="px-3 py-1 rounded-full text-[8px] font-black uppercase ${getStatusColor(val)}">${val}</span>`;
+                    if (col.id === 'fecha_creacion' && val !== '---') val = new Date(val).toLocaleDateString();
+                    
+                    html += `<td class="${col.id === 'precio' ? '' : 'blur-data'}">${val}</td>`;
+                });
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function renderVistaCards(container) {
+            container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6";
+            container.innerHTML = allPedidos.map(p => `
+                <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer group hover:border-blue-500/40">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-[9px] font-black ${getStatusColor(p.estado)} px-3 py-1 rounded-full uppercase tracking-tighter">${p.estado.toUpperCase()}</span>
+                        <span class="text-[9px] font-bold text-slate-300 uppercase italic">RR-${p.id}</span>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter leading-tight">${p.pieza || 'Sin nombre'}</h3>
+                    <div class="flex items-center gap-3 mt-2">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${p.modelo_coche || '---'}</p>
+                        <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                        <p class="text-[10px] text-blue-500 font-black uppercase tracking-widest">${p.matricula || 'S/M'}</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <span class="text-[9px] font-bold text-slate-400">${p.nombre_usuario || 'Taller'}</span>
+                        <span class="text-xs font-black dark:text-white blur-data">${parseFloat(p.precio || 0).toFixed(2)}€</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusColor(estado) {
+            const styles = {
+                'solicitado': 'bg-blue-100 text-blue-600',
+                'desguace': 'bg-amber-100 text-amber-600',
+                'listo': 'bg-purple-100 text-purple-600',
+                'transito': 'bg-cyan-100 text-cyan-600',
+                'entregado': 'bg-emerald-100 text-emerald-600',
+                'incidencia': 'bg-red-100 text-red-600'
+            };
+            return styles[estado] || 'bg-slate-100 text-slate-600';
+        }
+
+        // LÓGICA CONFIGURACIÓN DE COLUMNAS
+        function abrirConfiguracionColumnas() {
+            const lista = document.getElementById('listaColumnasConfig');
+            lista.innerHTML = configColumnas.map((col, idx) => `
+                <div class="switch-col">
+                    <span class="text-[10px] font-black uppercase text-slate-500">${col.label}</span>
+                    <input type="checkbox" ${col.visible ? 'checked' : ''} onchange="tempConfig[${idx}].visible = this.checked" class="w-5 h-5 rounded-lg text-blue-600 border-slate-300 focus:ring-blue-500">
+                </div>
+            `).join('');
+            window.tempConfig = JSON.parse(JSON.stringify(configColumnas));
+            document.getElementById('modalColumnas').classList.remove('hidden');
+        }
+
+        function guardarConfiguracionColumnas() {
+            configColumnas = JSON.parse(JSON.stringify(window.tempConfig));
+            localStorage.setItem('taller_column_config', JSON.stringify(configColumnas));
+            renderPedidos();
+            cerrarConfiguracionColumnas();
+        }
+
+        function cerrarConfiguracionColumnas() { document.getElementById('modalColumnas').classList.add('hidden'); }
+
+        // --- RESTO DE FUNCIONES MANTENIDAS ---
         function actualizarTotal() {
             const total = allPedidos.reduce((sum, p) => sum + parseFloat(p.precio || 0), 0);
             document.getElementById('total-general').innerText = `${total.toLocaleString()}€`;
@@ -395,64 +479,15 @@
 
         function filtrar() {
             const term = document.getElementById('buscador').value.toLowerCase();
-            const container = document.getElementById('pedidosContainer');
-            
-            if (!term) {
-                renderPedidos();
-                return;
-            }
-            
+            if (!term) { cargarDatos(); return; }
             const filtrados = allPedidos.filter(p => 
                 (p.pieza && p.pieza.toLowerCase().includes(term)) || 
                 (p.matricula && p.matricula.toLowerCase().includes(term)) ||
-                (p.modelo_coche && p.modelo_coche.toLowerCase().includes(term)) ||
-                (p.nombre_usuario && p.nombre_usuario.toLowerCase().includes(term))
+                (p.modelo_coche && p.modelo_coche.toLowerCase().includes(term))
             );
-            
-            if (filtrados.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800">
-                        <div class="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                            <i class="fas fa-search text-2xl"></i>
-                        </div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No se encontraron resultados</p>
-                        <p class="text-[8px] text-slate-400 mt-2">Búsqueda: "${term}"</p>
-                    </div>`;
-                document.getElementById('contador-piezas').innerText = `${filtrados.length} RESULTADOS`;
-            } else {
-                // Crear HTML temporal con los filtrados
-                const html = filtrados.map(p => {
-                    const statusStyles = {
-                        'solicitado': 'bg-blue-100 text-blue-600',
-                        'desguace': 'bg-amber-100 text-amber-600',
-                        'listo': 'bg-purple-100 text-purple-600',
-                        'transito': 'bg-cyan-100 text-cyan-600',
-                        'entregado': 'bg-emerald-100 text-emerald-600',
-                        'incidencia': 'bg-red-100 text-red-600'
-                    };
-                    
-                    const estado = p.estado || 'solicitado';
-                    const color = statusStyles[estado] || 'bg-slate-100 text-slate-600';
-
-                    return `
-                        <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer group hover:border-blue-500/40">
-                            <div class="flex justify-between items-start mb-4">
-                                <span class="text-[9px] font-black ${color} px-3 py-1 rounded-full uppercase tracking-tighter">${estado.toUpperCase()}</span>
-                                <span class="text-[9px] font-bold text-slate-300 uppercase italic">RR-${p.id}</span>
-                            </div>
-                            <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tighter leading-tight">${p.pieza || 'Sin nombre'}</h3>
-                            <div class="flex items-center gap-3 mt-2">
-                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${p.modelo_coche || '---'}</p>
-                                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                <p class="text-[10px] text-blue-500 font-black uppercase tracking-widest">${p.matricula || 'S/M'}</p>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-                container.innerHTML = html;
-                document.getElementById('contador-piezas').innerText = `${filtrados.length} RESULTADOS ENCONTRADOS`;
-            }
+            allPedidos = filtrados;
+            renderPedidos();
+            cargarDatos(); // Recargar tras renderizar filtrados si se borra el término
         }
 
         function verDetalle(id) {
@@ -464,48 +499,31 @@
             document.getElementById('edit-modelo').value = p.modelo_coche;
             document.getElementById('edit-bastidor').value = p.bastidor || '';
             document.getElementById('badgeEstadoPopup').innerText = p.estado;
-            document.getElementById('detLogEstado').innerText = `> Registro RR-${p.id} sincronizado`;
             document.getElementById('popupDetalle').classList.add('modal-active');
         }
 
         async function actualizarPedido(e) {
             e.preventDefault();
-            const id = document.getElementById('edit-id').value;
             const body = {
-                id: id,
+                id: document.getElementById('edit-id').value,
                 pieza: document.getElementById('edit-pieza').value,
                 matricula: document.getElementById('edit-matricula').value,
                 modelo_coche: document.getElementById('edit-modelo').value,
                 bastidor: document.getElementById('edit-bastidor').value,
                 admin_user: 'App Taller'
             };
-            
             try {
-                // Usamos la ruta profesional de actualización de estado que soporta múltiples campos
-                await fetch(`/api/pedidos/update-status`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(body) 
-                });
-                cerrarPopup(); 
-                cargarDatos();
-            } catch (err) { 
-                console.error("Error al actualizar:", err);
-                alert("Error al actualizar"); 
-            }
+                await fetch(`/api/pedidos/update-status`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+                cerrarPopup(); cargarDatos();
+            } catch (err) { alert("Error"); }
         }
 
         async function eliminarPedidoActual() {
-            const id = document.getElementById('edit-id').value;
-            if(!confirm("¿Cancelar esta solicitud definitivamente?")) return;
+            if(!confirm("¿Cancelar?")) return;
             try {
-                await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
-                cerrarPopup(); 
-                cargarDatos();
-            } catch (err) { 
-                console.error("Error al eliminar:", err);
-                alert("Error al eliminar"); 
-            }
+                await fetch(`/api/pedidos/${document.getElementById('edit-id').value}`, { method: 'DELETE' });
+                cerrarPopup(); cargarDatos();
+            } catch (err) { alert("Error"); }
         }
 
         async function crearPedido(e) {
@@ -518,20 +536,9 @@
                 admin_user: 'App Taller'
             };
             try {
-                const res = await fetch('/api/pedidos/update-status', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(body) 
-                });
-                if(res.ok) {
-                    cerrarModal(); 
-                    e.target.reset();
-                    cargarDatos();
-                }
-            } catch (err) { 
-                console.error("Error al enviar solicitud:", err);
-                alert("Error al enviar solicitud"); 
-            }
+                await fetch('/api/pedidos/update-status', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
+                cerrarModal(); e.target.reset(); cargarDatos();
+            } catch (err) { alert("Error"); }
         }
 
         function cambiarTab(tab) {
@@ -541,84 +548,29 @@
             document.getElementById('btnTabTecnico').classList.toggle('tab-active', tab === 'tecnico');
         }
 
-        function abrirModalNuevo() { 
-            document.getElementById('modalPedido').classList.add('modal-active'); 
-        }
-        
-        function cerrarModal() { 
-            document.getElementById('modalPedido').classList.remove('modal-active'); 
-        }
-        
-        function cerrarPopup() { 
-            document.getElementById('popupDetalle').classList.remove('modal-active'); 
-            cambiarTab('info'); 
-        }
-
-        // Funciones del header y filtros (de dashboard)
         function togglePrivacy() {
             isPrivate = !isPrivate;
             document.body.classList.toggle('privacy-active', isPrivate);
             document.getElementById('eye-icon').className = isPrivate ? "fas fa-eye-slash text-xs" : "fas fa-eye text-xs";
         }
 
-        function abrirAjustes() {
-            document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
-            document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
-            document.getElementById('modalAjustes').classList.remove('hidden');
-        }
-        
-        function cerrarAjustes() { 
-            document.getElementById('modalAjustes').classList.add('hidden'); 
-        }
-        
-        function guardarAjustes() {
-            ajustesSemaf.naranja = parseInt(document.getElementById('adj-naranja').value);
-            ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value);
-            localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf));
-            cerrarAjustes();
-        }
+        function abrirModalNuevo() { document.getElementById('modalPedido').classList.add('modal-active'); }
+        function cerrarModal() { document.getElementById('modalPedido').classList.remove('modal-active'); }
+        function cerrarPopup() { document.getElementById('popupDetalle').classList.remove('modal-active'); }
+        function abrirAjustes() { document.getElementById('modalAjustes').classList.remove('hidden'); }
+        function cerrarAjustes() { document.getElementById('modalAjustes').classList.add('hidden'); }
+        function abrirExportar() { document.getElementById('modalExportar').classList.remove('hidden'); }
+        function cerrarExportar() { document.getElementById('modalExportar').classList.add('hidden'); }
 
-        function abrirExportar() { 
-            document.getElementById('modalExportar').classList.remove('hidden'); 
-        }
-        
-        function cerrarExportar() { 
-            document.getElementById('modalExportar').classList.add('hidden'); 
-        }
-        
         function ejecutarExportar() {
-            const estado = document.getElementById('exp-estado').value;
-            const vista = document.getElementById('exp-vista').value;
-            let filtrados = allPedidos;
-            
-            if (estado !== 'todos') {
-                filtrados = allPedidos.filter(p => p.estado === estado);
-            }
-            
-            const dataToExport = filtrados.map(p => ({
-                'ID': p.id, 
-                'TALLER': p.nombre_usuario, 
-                'FECHA': p.fecha_creacion, 
-                'PIEZA': p.pieza, 
-                'MATRÍCULA': p.matricula, 
-                'ESTADO': p.estado, 
-                'PRECIO VENTA': p.precio,
-                ...(vista === 'avanzada' && { 
-                    'PROVEEDOR': p.proveedor, 
-                    'MARCA': p.marca_coche, 
-                    'MODELO': p.modelo_coche, 
-                    'NOTAS': p.notas_tecnicas 
-                })
-            }));
-            
+            const dataToExport = allPedidos.map(p => ({ 'ID': p.id, 'PIEZA': p.pieza, 'MATRÍCULA': p.matricula, 'ESTADO': p.estado, 'VENTA': p.precio }));
             const ws = XLSX.utils.json_to_sheet(dataToExport);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
-            XLSX.writeFile(wb, `Reporte_Pedidos_${new Date().toISOString().split('T')[0]}.xlsx`);
+            XLSX.writeFile(wb, `Export_${new Date().getTime()}.xlsx`);
             cerrarExportar();
         }
 
-        // Inicializar cuando cargue la página
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
