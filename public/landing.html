@@ -6,18 +6,15 @@
     <title>Recambio Reciclado - Menu Principal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+        // ACTIVACIÓN DE MODO OSCURO
         tailwind.config = { darkMode: 'class' }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
-        
-        /* Estilos heredados del Dashboard para coherencia */
         .logo-invert { transition: filter 0.3s ease; }
         .dark .logo-invert { filter: brightness(0) invert(1); }
-        
-        /* Waffle Menu Styles */
         .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
         .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
         .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
@@ -31,7 +28,7 @@
         <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
+                    <img src="assets/logo.png" alt="Logo" class="h-8 w-auto logo-invert">
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
                     <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
                         <span id="txt-title-main">Recambio Reciclado</span> <span id="txt-title-sub" style="color: #7cb65d;">- Menu Principal</span>
@@ -40,11 +37,13 @@
             </div>
             
             <div class="flex items-center gap-6">
-                <select id="langSelect" onchange="cambiarIdioma(this.value)" class="bg-transparent border-none text-xl cursor-pointer focus:outline-none appearance-none hover:scale-110 transition-transform">
-                    <option value="es">🇪🇸</option>
-                    <option value="it">🇮🇹</option>
-                    <option value="en">🇬🇧</option>
-                </select>
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl px-2 border border-slate-200 dark:border-slate-700">
+                    <select id="langSelect" onchange="cambiarIdioma(this.value)" class="bg-transparent border-none text-xl cursor-pointer focus:outline-none py-1.5">
+                        <option value="es">🇪🇸</option>
+                        <option value="it">🇮🇹</option>
+                        <option value="en">🇬🇧</option>
+                    </select>
+                </div>
 
                 <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
                     <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
@@ -54,7 +53,6 @@
 
                 <div class="flex items-center gap-4">
                     <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
-                    
                     <div class="flex items-center gap-2">
                         <div class="waffle-container group">
                             <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-colors">
@@ -71,7 +69,6 @@
                                 </div>
                             </div>
                         </div>
-                        
                         <button onclick="window.location.href='index.html'; localStorage.clear();" class="w-8 h-8 text-slate-400 hover:text-red-600 transition-colors flex items-center justify-center">
                             <i class="fas fa-power-off text-sm"></i>
                         </button>
@@ -83,8 +80,7 @@
 
     <main class="flex-grow flex items-center justify-center p-6 pb-24">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl w-full">
-            
-            <a href="stats.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-blue-500 dark:hover:border-blue-500 transition-all text-center group">
+            <a href="stats.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-blue-500 transition-all text-center group">
                 <div class="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-500 transition-colors">
                     <i class="fas fa-chart-pie text-3xl text-emerald-500 group-hover:text-white transition"></i>
                 </div>
@@ -92,7 +88,7 @@
                 <p id="txt-c1-desc" class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">KPIs y Métricas de Rendimiento</p>
             </a>
 
-            <a href="dashboard.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-blue-500 dark:hover:border-blue-500 transition-all text-center group">
+            <a href="dashboard.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-blue-500 transition-all text-center group">
                 <div class="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-blue-600 transition-colors">
                     <i class="fas fa-columns text-3xl text-blue-600 group-hover:text-white transition"></i>
                 </div>
@@ -100,7 +96,7 @@
                 <p id="txt-c2-desc" class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Control Kanban en Tiempo Real</p>
             </a>
 
-            <a href="talleres.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-orange-500 dark:hover:border-orange-500 transition-all text-center group">
+            <a href="talleres.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-orange-500 transition-all text-center group">
                 <div class="w-20 h-20 bg-orange-50 dark:bg-orange-900/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-orange-500 transition-colors">
                     <i class="fas fa-users-cog text-3xl text-orange-500 group-hover:text-white transition"></i>
                 </div>
@@ -108,7 +104,7 @@
                 <p id="txt-c3-desc" class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Administración de Usuarios</p>
             </a>
 
-            <a href="pedidos-taller.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-purple-500 dark:hover:border-purple-500 transition-all text-center group">
+            <a href="pedidos-taller.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-purple-500 transition-all text-center group">
                 <div class="w-20 h-20 bg-purple-50 dark:bg-purple-900/20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-purple-500 transition-colors">
                     <i class="fas fa-list-check text-3xl text-purple-500 group-hover:text-white transition"></i>
                 </div>
@@ -116,7 +112,7 @@
                 <p id="txt-c4-desc" class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Listado General y Exportación</p>
             </a>
 
-            <a href="admin-logs.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl hover:border-slate-800 dark:hover:border-slate-600 transition-all text-center group">
+            <a href="admin-logs.html" class="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-2xl transition-all text-center group">
                 <div class="w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:bg-slate-800 transition-colors">
                     <i class="fas fa-history text-3xl text-slate-400 group-hover:text-white transition"></i>
                 </div>
@@ -131,7 +127,6 @@
                 <span id="txt-c6-title" class="block font-black text-slate-800 dark:text-white uppercase text-[11px] tracking-widest">Cerrar Sesión</span>
                 <p id="txt-c6-desc" class="text-[8px] text-slate-400 mt-2 font-bold uppercase tracking-tighter">Desconectar del Sistema</p>
             </a>
-
         </div>
     </main>
 
@@ -144,8 +139,7 @@
     <script>
         const translations = {
             es: {
-                title_main: "Recambio Reciclado",
-                title_sub: "- Menu Principal",
+                title_main: "Recambio Reciclado", title_sub: "- Menu Principal",
                 c1_title: "Inteligencia de Negocio", c1_desc: "KPIs y Métricas de Rendimiento",
                 c2_title: "Gestión de Flujos", c2_desc: "Control Kanban en Tiempo Real",
                 c3_title: "Equipo y Talleres", c3_desc: "Administración de Usuarios",
@@ -155,8 +149,7 @@
                 f_creator: "CREADOR:", f_contact: "CONTACTO:", f_copy: "COPYRIGHT"
             },
             it: {
-                title_main: "Ricambio Riciclato",
-                title_sub: "- Menu Principale",
+                title_main: "Ricambio Riciclato", title_sub: "- Menu Principale",
                 c1_title: "Business Intelligence", c1_desc: "KPI e Metriche di Performance",
                 c2_title: "Gestione Flussi", c2_desc: "Controllo Kanban in Tempo Reale",
                 c3_title: "Team e Officine", c3_desc: "Amministrazione Utenti",
@@ -166,8 +159,7 @@
                 f_creator: "CREATORE:", f_contact: "CONTATTO:", f_copy: "COPYRIGHT"
             },
             en: {
-                title_main: "Recycled Spare Parts",
-                title_sub: "- Main Menu",
+                title_main: "Recycled Spare Parts", title_sub: "- Main Menu",
                 c1_title: "Business Intelligence", c1_desc: "KPIs and Performance Metrics",
                 c2_title: "Workflow Management", c2_desc: "Real-Time Kanban Control",
                 c3_title: "Team & Workshops", c3_desc: "User Administration",
@@ -181,36 +173,34 @@
         function cambiarIdioma(lang) {
             localStorage.setItem('idioma_seleccionado', lang);
             document.getElementById('langSelect').value = lang;
-            
             const t = translations[lang];
-            
-            document.getElementById('txt-title-main').innerText = t.title_main;
-            document.getElementById('txt-title-sub').innerText = t.title_sub;
-            
-            document.getElementById('txt-c1-title').innerText = t.c1_title;
-            document.getElementById('txt-c1-desc').innerText = t.c1_desc;
-            document.getElementById('txt-c2-title').innerText = t.c2_title;
-            document.getElementById('txt-c2-desc').innerText = t.c2_desc;
-            document.getElementById('txt-c3-title').innerText = t.c3_title;
-            document.getElementById('txt-c3-desc').innerText = t.c3_desc;
-            document.getElementById('txt-c4-title').innerText = t.c4_title;
-            document.getElementById('txt-c4-desc').innerText = t.c4_desc;
-            document.getElementById('txt-c5-title').innerText = t.c5_title;
-            document.getElementById('txt-c5-desc').innerText = t.c5_desc;
-            document.getElementById('txt-c6-title').innerText = t.c6_title;
-            document.getElementById('txt-c6-desc').innerText = t.c6_desc;
-            
-            document.getElementById('txt-footer-creator').innerText = t.f_creator;
-            document.getElementById('txt-footer-contact').innerText = t.f_contact;
-            document.getElementById('txt-footer-copy').innerText = t.f_copy;
+            if(!t) return;
+
+            const safeUpdate = (id, text) => { if(document.getElementById(id)) document.getElementById(id).innerText = text; };
+
+            safeUpdate('txt-title-main', t.title_main);
+            safeUpdate('txt-title-sub', t.title_sub);
+            safeUpdate('txt-c1-title', t.c1_title);
+            safeUpdate('txt-c1-desc', t.c1_desc);
+            safeUpdate('txt-c2-title', t.c2_title);
+            safeUpdate('txt-c2-desc', t.c2_desc);
+            safeUpdate('txt-c3-title', t.c3_title);
+            safeUpdate('txt-c3-desc', t.c3_desc);
+            safeUpdate('txt-c4-title', t.c4_title);
+            safeUpdate('txt-c4-desc', t.c4_desc);
+            safeUpdate('txt-c5-title', t.c5_title);
+            safeUpdate('txt-c5-desc', t.c5_desc);
+            safeUpdate('txt-c6-title', t.c6_title);
+            safeUpdate('txt-c6-desc', t.c6_desc);
+            safeUpdate('txt-footer-creator', t.f_creator);
+            safeUpdate('txt-footer-contact', t.f_contact);
+            safeUpdate('txt-footer-copy', t.f_copy);
         }
 
-        // Cargar idioma guardado o por defecto 'es'
         document.addEventListener('DOMContentLoaded', () => {
             const savedLang = localStorage.getItem('idioma_seleccionado') || 'es';
             cambiarIdioma(savedLang);
         });
     </script>
-
 </body>
 </html>
