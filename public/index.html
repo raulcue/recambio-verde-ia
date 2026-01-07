@@ -70,14 +70,20 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    // Guardamos la sesión local para que el resto de páginas funcionen
+                    // Guardamos el objeto completo para nuevas funciones
                     localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Guardamos compatibilidad para scripts antiguos que busquen 'nombre_usuario'
+                    localStorage.setItem('nombre_usuario', data.user.nombre);
+                    
+                    // Redirigir según indique el servidor
                     window.location.href = data.redirect;
                 } else {
                     errorMsg.innerText = data.message || "Credenciales incorrectas";
                     errorMsg.classList.remove('hidden');
                 }
             } catch (err) {
+                console.error("Error Login:", err);
                 errorMsg.innerText = "Error de conexión con el servidor";
                 errorMsg.classList.remove('hidden');
             } finally {
