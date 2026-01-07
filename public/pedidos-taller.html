@@ -30,9 +30,12 @@
             position: sticky; top: 0; background: #f8fafc; padding: 14px 20px; 
             font-size: 10px; font-weight: 900; text-transform: uppercase; color: #64748b;
             text-align: left; border-bottom: 2px solid #e2e8f0; z-index: 20; white-space: nowrap;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.05em; cursor: pointer;
         }
+        .excel-table th:hover { background: #f1f5f9; color: #2563eb; }
         .dark .excel-table th { background: #0f172a; border-bottom-color: #1e293b; color: #94a3b8; }
+        .dark .excel-table th:hover { background: #1e293b; color: #3b82f6; }
+        
         .excel-table td { 
             padding: 14px 20px; font-size: 11px; font-weight: 600; border-bottom: 1px solid #f1f5f9; 
             white-space: nowrap; transition: background 0.2s;
@@ -51,6 +54,9 @@
         .switch-col { cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; transition: 0.2s; }
         .switch-col:hover { background: #f1f5f9; }
         .dark .switch-col:hover { background: #1e293b; }
+
+        .sort-icon { margin-left: 8px; font-size: 0.7rem; opacity: 0.5; }
+        .sort-active { opacity: 1; color: #2563eb; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
@@ -289,10 +295,16 @@
     <script>
         // CONFIGURACIÓN GLOBAL
         let allPedidos = [];
+        let displayedPedidos = [];
         let isPrivate = false;
-        let viewType = localStorage.getItem('taller_view_type') || 'cards';
+        // 1- VISTA EXCEL POR DEFECTO
+        let viewType = localStorage.getItem('taller_view_type') || 'excel';
         let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
         
+        // Estado de ordenación
+        let sortConfig = { key: null, direction: 'asc' };
+        let currentFilter = 'todos';
+
         // CONFIGURACIÓN DE COLUMNAS EXCEL (Persistente)
         let configColumnas = JSON.parse(localStorage.getItem('taller_column_config')) || [
             { id: 'id', label: 'ID Pedido', visible: true },
@@ -349,6 +361,7 @@
                 const url = tId === 'todos' ? '/api/pedidos' : `/api/pedidos?taller_id=${tId}`;
                 const res = await fetch(url);
                 allPedidos = await res.json();
+                displayedPedidos = [...allPedidos];
                 renderPedidos();
                 actualizarTotal();
             } catch(e) { console.error(e); }
@@ -376,7 +389,7 @@
 
         function renderPedidos() {
             const container = document.getElementById('pedidosContainer');
-            if (allPedidos.length === 0) {
+            if (displayedPedidos.length === 0) {
                 container.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold uppercase text-[10px]">No hay pedidos registrados</div>`;
                 return;
             }
@@ -386,7 +399,44 @@
             } else {
                 renderVistaCards(container);
             }
-            document.getElementById('contador-piezas').innerText = `${allPedidos.length} SOLICITUDES EN CURSO`;
+            document.getElementById('contador-piezas').innerText = `${displayedPedidos.length} SOLICITUDES EN CURSO`;
+        }
+
+        // 2- ORDENACIÓN Y FILTRO POR BLOQUES (ESTADOS)
+        function ordenarPor(key) {
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = 'asc';
+            }
+
+            displayedPedidos.sort((a, b) => {
+                let valA = a[key] || '';
+                let valB = b[key] || '';
+                
+                if (key === 'precio') {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                }
+                
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderPedidos();
+        }
+
+        function toggleEstadoFiltro(estadoId) {
+            if (currentFilter === estadoId) {
+                currentFilter = 'todos';
+                displayedPedidos = [...allPedidos];
+            } else {
+                currentFilter = estadoId;
+                displayedPedidos = allPedidos.filter(p => p.estado === estadoId);
+            }
+            renderPedidos();
         }
 
         function renderVistaExcel(container) {
@@ -394,16 +444,27 @@
             container.className = "bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-x-auto border border-slate-200 dark:border-slate-800 shadow-2xl custom-scrollbar max-w-full";
             
             let html = `<table class="excel-table"><thead><tr>`;
-            visibleCols.forEach(col => html += `<th>${col.label}</th>`);
+            visibleCols.forEach(col => {
+                const isSorting = sortConfig.key === col.id;
+                const iconClass = isSorting ? (sortConfig.direction === 'asc' ? 'fa-sort-up sort-active' : 'fa-sort-down sort-active') : 'fa-sort';
+                
+                // Si es la columna de estado, añadimos lógica de filtrado rápido al click o un indicador
+                html += `<th onclick="ordenarPor('${col.id}')">
+                            <div class="flex items-center">
+                                ${col.label}
+                                <i class="fas ${iconClass} sort-icon"></i>
+                            </div>
+                         </th>`;
+            });
             html += `</tr></thead><tbody>`;
 
-            allPedidos.forEach(p => {
+            displayedPedidos.forEach(p => {
                 html += `<tr onclick="verDetalle(${p.id})" class="cursor-pointer">`;
                 visibleCols.forEach(col => {
                     let val = p[col.id] || '---';
                     if (col.id === 'id') val = `<span class="text-blue-600 font-black">RR-${val}</span>`;
                     if (col.id === 'precio') val = `<span class="blur-data">${parseFloat(val).toFixed(2)}€</span>`;
-                    if (col.id === 'estado') val = `<span class="px-3 py-1 rounded-full text-[8px] font-black uppercase ${getStatusColor(val)}">${val}</span>`;
+                    if (col.id === 'estado') val = `<span onclick="event.stopPropagation(); toggleEstadoFiltro('${val}')" class="px-3 py-1 rounded-full text-[8px] font-black uppercase ${getStatusColor(val)} hover:opacity-70 transition-opacity">${val}</span>`;
                     if (col.id === 'fecha_creacion' && val !== '---') val = new Date(val).toLocaleDateString();
                     
                     html += `<td class="${col.id === 'precio' ? '' : 'blur-data'}">${val}</td>`;
@@ -417,7 +478,7 @@
 
         function renderVistaCards(container) {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6";
-            container.innerHTML = allPedidos.map(p => `
+            container.innerHTML = displayedPedidos.map(p => `
                 <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm active:scale-95 transition-all cursor-pointer group hover:border-blue-500/40">
                     <div class="flex justify-between items-start mb-4">
                         <span class="text-[9px] font-black ${getStatusColor(p.estado)} px-3 py-1 rounded-full uppercase tracking-tighter">${p.estado.toUpperCase()}</span>
@@ -479,15 +540,19 @@
 
         function filtrar() {
             const term = document.getElementById('buscador').value.toLowerCase();
-            if (!term) { cargarDatos(); return; }
-            const filtrados = allPedidos.filter(p => 
-                (p.pieza && p.pieza.toLowerCase().includes(term)) || 
+            if (!term) { 
+                displayedPedidos = [...allPedidos]; 
+                if(currentFilter !== 'todos') displayedPedidos = displayedPedidos.filter(p => p.estado === currentFilter);
+                renderPedidos(); 
+                return; 
+            }
+            displayedPedidos = allPedidos.filter(p => 
+                ((p.pieza && p.pieza.toLowerCase().includes(term)) || 
                 (p.matricula && p.matricula.toLowerCase().includes(term)) ||
-                (p.modelo_coche && p.modelo_coche.toLowerCase().includes(term))
+                (p.modelo_coche && p.modelo_coche.toLowerCase().includes(term))) &&
+                (currentFilter === 'todos' || p.estado === currentFilter)
             );
-            allPedidos = filtrados;
             renderPedidos();
-            cargarDatos(); // Recargar tras renderizar filtrados si se borra el término
         }
 
         function verDetalle(id) {
@@ -563,7 +628,7 @@
         function cerrarExportar() { document.getElementById('modalExportar').classList.add('hidden'); }
 
         function ejecutarExportar() {
-            const dataToExport = allPedidos.map(p => ({ 'ID': p.id, 'PIEZA': p.pieza, 'MATRÍCULA': p.matricula, 'ESTADO': p.estado, 'VENTA': p.precio }));
+            const dataToExport = displayedPedidos.map(p => ({ 'ID': p.id, 'PIEZA': p.pieza, 'MATRÍCULA': p.matricula, 'ESTADO': p.estado, 'VENTA': p.precio }));
             const ws = XLSX.utils.json_to_sheet(dataToExport);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
