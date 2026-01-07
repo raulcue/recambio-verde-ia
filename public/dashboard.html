@@ -33,6 +33,12 @@
         /* Feedback Visual del Drag & Drop */
         .drag-over { background-color: rgba(37, 99, 235, 0.05); border-radius: 2rem; outline: 2px dashed #2563eb; outline-offset: -4px; transition: all 0.2s ease; }
         .dragging { opacity: 0.4; transform: scale(0.95); cursor: grabbing !important; }
+
+        /* TOAST NOTIFICACIONES */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .toast.success i { color: #4ade80; } .toast.error i { color: #f87171; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
@@ -43,7 +49,10 @@
                 <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter">Kanban <span style="color: #7cb65d;">Recambio Reciclado</span></h1>
+                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
+                        Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
+                        <span id="db-status" class="w-2 h-2 rounded-full bg-red-500 transition-colors ml-2" title="Estado BBDD"></span>
+                    </h1>
                 </a>
             </div>
             <div class="flex items-center gap-6">
@@ -241,13 +250,26 @@
                     </div>
                 </div>
                 <div class="p-8 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-4 bg-slate-50/30">
-                    <button type="button" onclick="eliminarRegistro()" class="text-red-500 text-[10px] font-black uppercase hover:bg-red-50 px-6 py-2 rounded-xl transition-all">Eliminar</button>
+                    <button type="button" onclick="eliminarRegistro()" class="text-red-500 hover:bg-red-50 w-10 h-10 flex items-center justify-center rounded-full transition-all"><i class="fas fa-trash-alt"></i></button>
                     <div class="flex gap-4">
                         <button type="button" onclick="cerrarModal()" class="text-slate-400 text-[10px] font-black uppercase px-6 py-2">Cancelar</button>
                         <button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-full text-xs font-black uppercase shadow-xl hover:scale-105 active:scale-95 shadow-blue-500/20">Guardar Cambios</button>
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+    
+    <div id="toast-container"></div>
+    <div id="modal-confirmacion" class="fixed inset-0 z-[120] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 text-center border border-white/10">
+            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3 class="text-lg font-black uppercase tracking-tighter mb-2">¿Eliminar Pedido?</h3>
+            <p class="text-xs text-slate-500 font-bold mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('modal-confirmacion').classList.add('hidden')" class="flex-1 py-3 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+                <button onclick="confirmarEliminacionDefinitiva()" class="flex-1 bg-red-600 text-white rounded-xl py-3 text-[10px] font-black uppercase shadow-lg hover:bg-red-700">Sí, Eliminar</button>
+            </div>
         </div>
     </div>
 
@@ -272,7 +294,14 @@
         ];
 
         async function init() {
-            await Promise.all([cargarTalleres(), cargarDatos(), cargarMarcasMaestras()]);
+            try {
+                await Promise.all([cargarTalleres(), cargarDatos(), cargarMarcasMaestras()]);
+                showToast('CONECTADO A LA BASE DE DATOS', 'success');
+                document.getElementById('db-status').classList.replace('bg-red-500', 'bg-emerald-500');
+            } catch (error) {
+                showToast('ERROR DE CONEXIÓN', 'error');
+            }
+            
             const pEst = document.getElementById('p-estado');
             const expEst = document.getElementById('exp-estado');
             pEst.innerHTML = '';
@@ -299,13 +328,16 @@
                     notas_tecnicas: document.getElementById('p-notes').value,
                     admin_user: 'Admin Root'
                 };
-                await fetch('/api/pedidos/update-status', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
-                cerrarModal(); 
-                cargarDatos();
+                try {
+                    await fetch('/api/pedidos/update-status', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    });
+                    showToast('CAMBIOS GUARDADOS EN SERVIDOR', 'success');
+                    cerrarModal(); 
+                    await cargarDatos();
+                } catch(e) { showToast('ERROR AL GUARDAR', 'error'); }
             };
         }
 
@@ -437,9 +469,10 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ ...pedido, id: id, nuevoEstado: nuevoEstado, admin_user: 'Admin (Drag)' })
                 });
+                showToast('ESTADO ACTUALIZADO', 'success');
                 await cargarDatos();
             } catch(err) {
-                console.error("Error al mover el pedido");
+                showToast('ERROR AL MOVER', 'error');
             } finally {
                 document.getElementById('kanbanBoard').style.opacity = '1';
             }
@@ -532,12 +565,34 @@
 
         function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
 
-        async function eliminarRegistro() {
+        function eliminarRegistro() {
             const id = document.getElementById('p-id').value;
-            if(!id || !confirm('¿Eliminar registro?')) return;
-            await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
-            cerrarModal();
-            cargarDatos();
+            if(!id) return;
+            document.getElementById('modal-confirmacion').classList.remove('hidden');
+        }
+        
+        async function confirmarEliminacionDefinitiva() {
+            const id = document.getElementById('p-id').value;
+            try {
+                await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
+                showToast('REGISTRO ELIMINADO', 'success');
+                document.getElementById('modal-confirmacion').classList.add('hidden');
+                cerrarModal();
+                cargarDatos();
+            } catch(e) { showToast('ERROR AL ELIMINAR', 'error'); }
+        }
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         window.onload = init;

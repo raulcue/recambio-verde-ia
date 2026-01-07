@@ -215,27 +215,29 @@ app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
             const values = campos.map(c => (c.v === "" ? null : c.v));
             await pool.query(`UPDATE pedidos SET ${sets}, updated_at = CURRENT_TIMESTAMP WHERE id = $${campos.length + 1}`, [...values, id]);
             await registrarLog(admin_user, 'EDIT', `Pedido #${id}: ${pieza}`, ip);
+            res.json({ success: true, id: id });
         } else {
-            // CAMBIO 2: El INSERT ahora incluye todos los campos técnicos para nuevos pedidos
+            // CAMBIO 2: El INSERT ahora incluye RETURNING ID para confirmar al frontend
             const queryInsert = `
                 INSERT INTO pedidos (
                     pieza, matricula, marca_coche, modelo_coche, estado, 
                     precio, precio_coste, usuario_id, proveedor, 
                     bastidor, sub_estado_incidencia, notas_tecnicas, fecha_creacion
                 )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)`;
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
+                RETURNING id`;
             
             const uId = (usuario_id && !isNaN(usuario_id)) ? parseInt(usuario_id) : null;
             
-            await pool.query(queryInsert, [
+            const result = await pool.query(queryInsert, [
                 pieza, matricula, marca_coche, modelo_coche, nuevoEstado || 'solicitado', 
                 parseFloat(precio) || 0, parseFloat(precio_coste) || 0, uId,
                 proveedor || null, bastidor || null, 
                 sub_estado_incidencia || null, notas_tecnicas || null
             ]);
             await registrarLog(admin_user, 'CREATE', `Nueva pieza: ${pieza}`, ip);
+            res.json({ success: true, id: result.rows[0].id });
         }
-        res.json({ success: true });
     } catch (err) {
         console.error('ERROR_UPSERT:', err.message);
         res.status(500).json({ error: 'Error al procesar pedido' });
