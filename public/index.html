@@ -20,18 +20,33 @@
 
         <form id="loginForm" class="space-y-4">
             <div>
-                <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Email</label>
-                <input type="email" id="email" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-green-500 transition-all" placeholder="usuario@test.com">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Corporativo</label>
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                    <input type="email" id="email" required class="w-full bg-slate-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-semibold focus:ring-2 focus:ring-green-500 transition-all outline-none" placeholder="usuario@empresa.com">
+                </div>
             </div>
+
             <div>
-                <label class="text-[9px] font-black text-slate-400 uppercase ml-2">Contraseña</label>
-                <input type="password" id="password" required class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-green-500 transition-all" placeholder="••••••">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Contraseña</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 text-xs"></i>
+                    <input type="password" id="password" required class="w-full bg-slate-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm font-semibold focus:ring-2 focus:ring-green-500 transition-all outline-none" placeholder="••••••••">
+                </div>
             </div>
-            <button type="submit" id="btnLogin" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-green-600 transition-all shadow-xl shadow-slate-200">
-                ENTRAR
+
+            <div id="errorMsg" class="hidden text-[10px] font-bold text-red-500 uppercase tracking-tighter text-center bg-red-50 py-3 rounded-xl border border-red-100">
+                Credenciales incorrectas
+            </div>
+
+            <button type="submit" id="btnLogin" class="w-full bg-slate-900 text-white font-black text-[11px] uppercase tracking-[0.2em] py-5 rounded-2xl hover:bg-green-600 hover:shadow-xl hover:shadow-green-100 transition-all active:scale-[0.98]">
+                Entrar al Panel
             </button>
         </form>
-        <div id="errorMsg" class="hidden mt-4 p-4 bg-red-50 text-red-500 text-[10px] font-bold rounded-xl text-center uppercase"></div>
+
+        <div class="mt-8 pt-8 border-t border-slate-50 text-center">
+            <p class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">Auditoría AEAT Conectada</p>
+        </div>
     </div>
 
     <script>
@@ -50,15 +65,21 @@
                 const res = await fetch('/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
+                    body: JSON.stringify({ email, password })\n                });
                 const data = await res.json();
 
                 if (data.success) {
-                    // El servidor nos envía a landing.html o pedidos-taller.html
-                    window.location.href = data.redirect;
+                    // --- MEJORA AÑADIDA PARA CONSISTENCIA DE SESIÓN ---
+                    // Guardamos los datos extendidos del usuario en localStorage
+                    localStorage.setItem('user_id', data.user.id);
+                    localStorage.setItem('user_rol', data.user.rol);
+                    localStorage.setItem('user_nombre', data.user.nombre);
+                    localStorage.setItem('user_iniciales', data.user.iniciales);
+                    
+                    // Todos los usuarios van ahora al landing.html como distribuidor único
+                    window.location.href = 'landing.html';
                 } else {
-                    errorMsg.innerText = "Credenciales incorrectas";
+                    errorMsg.innerText = data.message || "Credenciales incorrectas";
                     errorMsg.classList.remove('hidden');
                 }
             } catch (err) {

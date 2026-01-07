@@ -63,7 +63,12 @@
                 </button>
 
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+                    <div id="avatar-container" class="relative group cursor-pointer">
+                        <div id="user-initials" class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg">
+                            ??
+                        </div>
+                    </div>
+
                     <div class="waffle-container group">
                         <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-600">
                             <i class="fas fa-th text-xs"></i>
@@ -250,6 +255,23 @@
             en: { title_main: "Recycled Spare Parts", title_sub: "- BI", main_title: "Intelligence", main_subtitle: "Performance Analysis", chart1: "Evolution: Sales vs Profit", chart2: "Incidence Rate" }
         };
 
+        function checkAccess() {
+            const rol = localStorage.getItem('user_rol');
+            const iniciales = localStorage.getItem('user_iniciales') || 'AD';
+            
+            if (!rol) { window.location.href = 'index.html'; return; }
+            
+            let color = 'bg-blue-700';
+            if(rol === 'agente') color = 'bg-green-600';
+            if(rol === 'taller') color = 'bg-red-600';
+            
+            const avatarDiv = document.getElementById('user-initials');
+            if(avatarDiv) {
+                avatarDiv.innerText = iniciales;
+                avatarDiv.className = `w-10 h-10 ${color} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg`;
+            }
+        }
+
         function cambiarIdioma(lang) {
             localStorage.setItem('idioma_seleccionado', lang);
             document.getElementById('langSelect').value = lang;
@@ -305,6 +327,7 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            checkAccess();
             const savedLang = localStorage.getItem('idioma_seleccionado') || 'es';
             cambiarIdioma(savedLang);
             cargarTalleres();

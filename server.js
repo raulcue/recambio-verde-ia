@@ -38,199 +38,111 @@ const registrarLog = async (usuario, accion, detalle, ip) => {
  * MIDDLEWARE DE VALIDACIÓN
  */
 const validarPedido = (req, res, next) => {
-    const { pieza } = req.body;
-    if (!pieza || pieza.trim() === "") {
-        return res.status(400).json({ error: "La pieza es obligatoria" });
+    const { pieza, matricula } = req.body;
+    if (!pieza || !matricula) {
+        return res.status(400).json({ error: 'Pieza y Matrícula son obligatorios' });
     }
     next();
 };
 
-/**
- * RUTAS DE LA API - GESTIÓN DE USUARIOS (TALLERES)
- */
+// --- RUTAS DE AUTENTICACIÓN ---
 
-// 1. Obtener lista de usuarios con rol 'taller' (10 teléfonos)
-app.get('/api/usuarios', async (req, res) => {
+app.post('/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    
     try {
         const result = await pool.query(
-            `SELECT id, nombre_taller, email, provincia, password, rol, direccion,
-            telefono_whatsapp, telefono_whatsapp_2, telefono_whatsapp_3, 
-            telefono_whatsapp_4, telefono_whatsapp_5, telefono_whatsapp_6, 
-            telefono_whatsapp_7, telefono_whatsapp_8, telefono_whatsapp_9, 
-            telefono_whatsapp_10 FROM usuarios WHERE rol = 'taller' ORDER BY nombre_taller ASC`
+            "SELECT id, nombre_taller, rol, password FROM usuarios WHERE email = $1", 
+            [email]
         );
-        res.json(result.rows);
-    } catch (err) {
-        console.error('Error SQL Usuarios:', err.message);
-        res.status(500).json({ error: 'Error al obtener usuarios' });
-    }
-});
 
-// 2. Crear Nuevo Usuario/Taller (Sincronizado con 10 teléfonos)
-app.post('/api/usuarios', async (req, res) => {
-    const { 
-        nombre_taller, email, provincia, password, rol, direccion,
-        telefono_whatsapp, telefono_whatsapp_2, telefono_whatsapp_3, 
-        telefono_whatsapp_4, telefono_whatsapp_5, telefono_whatsapp_6, 
-        telefono_whatsapp_7, telefono_whatsapp_8, telefono_whatsapp_9, 
-        telefono_whatsapp_10 
-    } = req.body;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    try {
-        const query = `
-            INSERT INTO usuarios (
-                nombre_taller, email, provincia, password, rol, direccion, fecha_registro,
-                telefono_whatsapp, telefono_whatsapp_2, telefono_whatsapp_3, 
-                telefono_whatsapp_4, telefono_whatsapp_5, telefono_whatsapp_6, 
-                telefono_whatsapp_7, telefono_whatsapp_8, telefono_whatsapp_9, 
-                telefono_whatsapp_10
-            ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
-            RETURNING id`;
-        
-        const values = [
-            nombre_taller, email, provincia, password, rol || 'taller', direccion,
-            telefono_whatsapp || null, telefono_whatsapp_2 || null, telefono_whatsapp_3 || null, 
-            telefono_whatsapp_4 || null, telefono_whatsapp_5 || null, telefono_whatsapp_6 || null, 
-            telefono_whatsapp_7 || null, telefono_whatsapp_8 || null, telefono_whatsapp_9 || null, 
-            telefono_whatsapp_10 || null
-        ];
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            if (user.password === password) {
+                const iniciales = user.nombre_taller 
+                    ? user.nombre_taller.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) 
+                    : '??';
 
-        const result = await pool.query(query, values);
-        await registrarLog('Admin', 'ALTA_TALLER', `Nuevo taller: ${nombre_taller}`, ip);
-        res.json({ success: true, id: result.rows[0].id });
-    } catch (err) {
-        console.error('Error Crear Usuario:', err.message);
-        res.status(500).json({ error: 'Error al registrar taller' });
-    }
-});
-
-// 3. Actualizar Usuario/Taller (Corregido mapeo $16 para ID)
-app.put('/api/usuarios/:id', async (req, res) => {
-    const { id } = req.params;
-    const { 
-        nombre_taller, email, provincia, password, direccion,
-        telefono_whatsapp, telefono_whatsapp_2, telefono_whatsapp_3, 
-        telefono_whatsapp_4, telefono_whatsapp_5, telefono_whatsapp_6, 
-        telefono_whatsapp_7, telefono_whatsapp_8, telefono_whatsapp_9, 
-        telefono_whatsapp_10 
-    } = req.body;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    try {
-        const query = `
-            UPDATE usuarios 
-            SET nombre_taller = $1, email = $2, provincia = $3, password = $4, direccion = $5,
-                telefono_whatsapp = $6, telefono_whatsapp_2 = $7, telefono_whatsapp_3 = $8, 
-                telefono_whatsapp_4 = $9, telefono_whatsapp_5 = $10, telefono_whatsapp_6 = $11, 
-                telefono_whatsapp_7 = $12, telefono_whatsapp_8 = $13, telefono_whatsapp_9 = $14, 
-                telefono_whatsapp_10 = $15, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = $16`;
-        
-        const values = [
-            nombre_taller, email, provincia, password, direccion,
-            telefono_whatsapp || null, telefono_whatsapp_2 || null, telefono_whatsapp_3 || null, 
-            telefono_whatsapp_4 || null, telefono_whatsapp_5 || null, telefono_whatsapp_6 || null, 
-            telefono_whatsapp_7 || null, telefono_whatsapp_8 || null, telefono_whatsapp_9 || null, 
-            telefono_whatsapp_10 || null, id
-        ];
-
-        await pool.query(query, values);
-        await registrarLog('Admin', 'EDIT_TALLER', `Editado taller: ${nombre_taller}`, ip);
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Error Update Usuario:', err.message);
-        res.status(500).json({ error: 'Error al actualizar taller' });
-    }
-});
-
-// 4. Eliminar Usuario/Taller
-app.delete('/api/usuarios/:id', async (req, res) => {
-    const { id } = req.params;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    try {
-        const info = await pool.query("SELECT nombre_taller FROM usuarios WHERE id = $1", [id]);
-        const nombre = info.rows[0]?.nombre_taller || id;
-        await pool.query("DELETE FROM usuarios WHERE id = $1", [id]);
-        await registrarLog('Admin', 'BAJA_TALLER', `Eliminado taller: ${nombre}`, ip);
-        res.json({ success: true });
-    } catch (err) {
-        console.error('Error Delete Usuario:', err.message);
-        res.status(500).json({ error: 'Error al eliminar taller' });
-    }
-});
-
-/**
- * RUTAS DE LA API - PEDIDOS, MARCAS Y LOGS
- */
-
-app.get('/api/talleres', async (req, res) => {
-    try {
-        const result = await pool.query("SELECT id, nombre_taller as nombre FROM usuarios WHERE rol = 'taller' ORDER BY nombre_taller ASC");
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: 'Error al obtener lista de talleres' });
-    }
-});
-
-app.get('/api/marcas', async (req, res) => {
-    try {
-        const result = await pool.query("SELECT nombre FROM marcas_maestras ORDER BY nombre ASC");
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: 'Error al obtener marcas' });
-    }
-});
-
-// CAMBIO 1: Obtener pedidos desde la VISTA (para traer nombre_taller)
-app.get('/api/pedidos', async (req, res) => {
-    try {
-        const { taller_id } = req.query;
-        let query = "SELECT * FROM vista_pedidos_taller WHERE 1=1";
-        const params = [];
-        if (taller_id && taller_id !== 'todos' && !isNaN(taller_id)) {
-            params.push(parseInt(taller_id));
-            query += ` AND usuario_id = $${params.length}`;
+                await registrarLog(user.nombre_taller, 'LOGIN', `Inicio de sesión exitoso (Rol: ${user.rol})`, ip);
+                
+                return res.json({ 
+                    success: true, 
+                    redirect: 'landing.html',
+                    user: {
+                        id: user.id,
+                        nombre: user.nombre_taller,
+                        rol: user.rol,
+                        iniciales: iniciales
+                    }
+                });
+            }
         }
+        
+        await registrarLog(email, 'LOGIN_FAIL', 'Intento de acceso fallido', ip);
+        res.json({ success: false, message: 'Credenciales incorrectas' });
+    } catch (err) {
+        console.error('LOGIN_ERROR:', err);
+        res.status(500).json({ success: false, message: 'Error en el servidor' });
+    }
+});
+
+// --- API DE PEDIDOS ---
+
+app.get('/api/pedidos', async (req, res) => {
+    const userRol = req.headers['x-user-role'];
+    const userId = req.headers['x-user-id'];
+
+    try {
+        let query = "SELECT * FROM pedidos";
+        let params = [];
+
+        if (userRol === 'taller' && userId) {
+            query += " WHERE usuario_id = $1";
+            params.push(userId);
+        }
+        
         query += " ORDER BY fecha_creacion DESC";
+        
         const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: 'Error al cargar pedidos' });
+        console.error('GET_PEDIDOS_ERROR:', err);
+        res.status(500).json({ error: 'Error al obtener pedidos' });
     }
 });
 
-app.post('/api/pedidos/update-status', validarPedido, async (req, res) => {
+app.post('/api/pedidos', validarPedido, async (req, res) => {
+    const { id, pieza, matricula, marca_coche, modelo_coche, estado, precio, precio_coste, usuario_id, proveedor, bastidor, sub_estado_incidencia, notas_tecnicas, admin_user } = req.body;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const { id, nuevoEstado, pieza, matricula, precio, marca_coche, modelo_coche, bastidor, precio_coste, proveedor, usuario_id, sub_estado_incidencia, notas_tecnicas, admin_user } = req.body;
+
     try {
-        if (id && !isNaN(id)) {
-            const campos = [
-                {n: 'estado', v: nuevoEstado}, {n: 'pieza', v: pieza}, {n: 'matricula', v: matricula},
-                {n: 'precio', v: parseFloat(precio) || 0}, {n: 'marca_coche', v: marca_coche},
-                {n: 'modelo_coche', v: modelo_coche}, {n: 'bastidor', v: bastidor},
-                {n: 'precio_coste', v: parseFloat(precio_coste) || 0}, {n: 'proveedor', v: proveedor},
-                {n: 'usuario_id', v: (usuario_id && !isNaN(usuario_id)) ? parseInt(usuario_id) : null},
-                {n: 'sub_estado_incidencia', v: sub_estado_incidencia}, {n: 'notas_tecnicas', v: notas_tecnicas}
-            ];
-            const sets = campos.map((c, i) => `${c.n} = $${i + 1}`).join(', ');
-            const values = campos.map(c => (c.v === "" ? null : c.v));
-            await pool.query(`UPDATE pedidos SET ${sets}, updated_at = CURRENT_TIMESTAMP WHERE id = $${campos.length + 1}`, [...values, id]);
-            await registrarLog(admin_user, 'EDIT', `Pedido #${id}: ${pieza}`, ip);
-            res.json({ success: true, id: id });
+        const uId = usuario_id || null;
+        const nuevoEstado = estado || 'solicitado';
+
+        if (id) {
+            const query = `
+                UPDATE pedidos SET 
+                pieza=$1, matricula=$2, marca_coche=$3, modelo_coche=$4, estado=$5, 
+                precio=$6, precio_coste=$7, usuario_id=$8, proveedor=$9, bastidor=$10, 
+                sub_estado_incidencia=$11, notas_tecnicas=$12, fecha_actualizacion=CURRENT_TIMESTAMP
+                WHERE id=$13
+            `;
+            await pool.query(query, [
+                pieza, matricula, marca_coche, modelo_coche, nuevoEstado, 
+                parseFloat(precio) || 0, parseFloat(precio_coste) || 0, uId,
+                proveedor, bastidor, sub_estado_incidencia, notas_tecnicas, id
+            ]);
+            await registrarLog(admin_user, 'UPDATE', `Pedido #${id} actualizado: ${pieza}`, ip);
+            res.json({ success: true });
         } else {
-            // CAMBIO 2: El INSERT ahora incluye RETURNING ID para confirmar al frontend
-            const queryInsert = `
-                INSERT INTO pedidos (
-                    pieza, matricula, marca_coche, modelo_coche, estado, 
-                    precio, precio_coste, usuario_id, proveedor, 
-                    bastidor, sub_estado_incidencia, notas_tecnicas, fecha_creacion
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
-                RETURNING id`;
-            
-            const uId = (usuario_id && !isNaN(usuario_id)) ? parseInt(usuario_id) : null;
-            
-            const result = await pool.query(queryInsert, [
-                pieza, matricula, marca_coche, modelo_coche, nuevoEstado || 'solicitado', 
+            const query = `
+                INSERT INTO pedidos 
+                (pieza, matricula, marca_coche, modelo_coche, estado, precio, precio_coste, usuario_id, proveedor, bastidor, sub_estado_incidencia, notas_tecnicas)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id
+            `;
+            const result = await pool.query(query, [
+                pieza, matricula, marca_coche, modelo_coche, nuevoEstado, 
                 parseFloat(precio) || 0, parseFloat(precio_coste) || 0, uId,
                 proveedor || null, bastidor || null, 
                 sub_estado_incidencia || null, notas_tecnicas || null
@@ -261,14 +173,119 @@ app.get('/api/logs', async (req, res) => {
         const result = await pool.query("SELECT * FROM logs ORDER BY fecha DESC LIMIT 100");
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: 'Error al cargar auditoría' });
+        res.status(500).json({ error: 'Error al obtener logs' });
     }
 });
+
+app.get('/api/talleres', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT id, nombre_taller, email, rol FROM usuarios WHERE rol = 'taller' ORDER BY nombre_taller ASC");
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener talleres' });
+    }
+});
+
+// --- LÓGICA DE USUARIOS ---
+
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM usuarios ORDER BY id ASC");
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener usuarios' });
+    }
+});
+
+app.post('/api/usuarios', async (req, res) => {
+    const { id, nombre_taller, email, password, rol, admin_user } = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    try {
+        if (id) {
+            await pool.query(
+                "UPDATE usuarios SET nombre_taller=$1, email=$2, password=$3, rol=$4 WHERE id=$5",
+                [nombre_taller, email, password, rol, id]
+            );
+            await registrarLog(admin_user, 'USER_UPDATE', `Usuario ${nombre_taller} actualizado`, ip);
+        } else {
+            await pool.query(
+                "INSERT INTO usuarios (nombre_taller, email, password, rol) VALUES ($1, $2, $3, $4)",
+                [nombre_taller, email, password, rol]
+            );
+            await registrarLog(admin_user, 'USER_CREATE', `Nuevo usuario creado: ${nombre_taller}`, ip);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Error al procesar usuario' });
+    }
+});
+
+app.delete('/api/usuarios/:id', async (req, res) => {
+    const { id } = req.params;
+    const { admin_user } = req.query;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    try {
+        await pool.query("DELETE FROM usuarios WHERE id = $1", [id]);
+        await registrarLog(admin_user, 'USER_DELETE', `Usuario ID ${id} eliminado`, ip);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Error al eliminar usuario' });
+    }
+});
+
+// --- API DE ESTADÍSTICAS (MEJORADA PARA COMPATIBILIDAD CON FRONTEND) ---
+
+app.get('/api/stats/dashboard', async (req, res) => {
+    try {
+        const totalPedidos = await pool.query("SELECT COUNT(*) FROM pedidos");
+        const pedidosMes = await pool.query("SELECT COUNT(*) FROM pedidos WHERE fecha_creacion > CURRENT_DATE - INTERVAL '1 month'");
+        const ventasTotales = await pool.query("SELECT SUM(precio) FROM pedidos WHERE estado = 'finalizado'");
+        
+        res.json({
+            total: totalPedidos.rows[0].count,
+            mes: pedidosMes.rows[0].count,
+            ventas: ventasTotales.rows[0].sum || 0
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener estadísticas' });
+    }
+});
+
+app.get('/api/stats/graficos', async (req, res) => {
+    try {
+        // Obtenemos los datos agrupados por mes
+        const result = await pool.query(`
+            SELECT to_char(fecha_creacion, 'Mon') as mes, 
+                   SUM(precio) as total_ventas,
+                   SUM(precio - precio_coste) as total_beneficio
+            FROM pedidos 
+            WHERE estado = 'finalizado'
+            GROUP BY mes 
+            ORDER BY MIN(fecha_creacion)
+        `);
+
+        // Formateamos para que stats.html lo entienda directamente
+        const labels = result.rows.map(r => r.mes);
+        const ventas = result.rows.map(r => parseFloat(r.total_ventas) || 0);
+        const beneficios = result.rows.map(r => parseFloat(r.total_beneficio) || 0);
+
+        res.json({
+            labels: labels,
+            ventas: ventas,
+            beneficios: beneficios
+        });
+    } catch (err) {
+        console.error('ERROR_GRAFICOS:', err);
+        res.status(500).json({ error: 'Error al obtener gráficos' });
+    }
+});
+
+// --- SERVIDO DE ARCHIVOS ---
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, () => {
-    console.log(`🚀 SERVIDOR LOGÍSTICA IA CORRIENDO EN PUERTO: ${port}`);
+    console.log(`Servidor activo en puerto ${port}`);
 });
