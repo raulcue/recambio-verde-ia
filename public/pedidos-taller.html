@@ -44,19 +44,18 @@
         .excel-table tr:hover td { background-color: rgba(37, 99, 235, 0.04); }
         .excel-row-active { background-color: rgba(37, 99, 235, 0.08) !important; }
 
+        .sort-icon { margin-left: 8px; font-size: 0.7rem; opacity: 0.5; }
+        .sort-active { opacity: 1; color: #2563eb; }
+
         .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
         .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
         .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
         .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
         .waffle-item i { font-size: 1.25rem; }
 
-        /* Estilos Checkbox Personalizados para Ajustes */
         .switch-col { cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; transition: 0.2s; }
         .switch-col:hover { background: #f1f5f9; }
         .dark .switch-col:hover { background: #1e293b; }
-
-        .sort-icon { margin-left: 8px; font-size: 0.7rem; opacity: 0.5; }
-        .sort-active { opacity: 1; color: #2563eb; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
@@ -150,8 +149,7 @@
             <p id="contador-piezas" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cargando base de datos...</p>
         </div>
 
-        <div id="pedidosContainer" class="transition-all duration-300">
-            </div>
+        <div id="pedidosContainer" class="transition-all duration-300"></div>
     </main>
 
     <div id="modalColumnas" class="fixed inset-0 z-[120] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -160,8 +158,7 @@
                 <h3 class="text-lg font-black uppercase tracking-tighter italic">Configurar <span class="text-blue-600">Columnas</span></h3>
                 <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">Selecciona los datos visibles en la tabla</p>
             </div>
-            <div id="listaColumnasConfig" class="p-6 space-y-1 max-h-96 overflow-y-auto custom-scrollbar">
-                </div>
+            <div id="listaColumnasConfig" class="p-6 space-y-1 max-h-96 overflow-y-auto custom-scrollbar"></div>
             <div class="p-8 flex gap-4 bg-slate-50/50 dark:bg-slate-800/30">
                 <button onclick="cerrarConfiguracionColumnas()" class="flex-1 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
                 <button onclick="guardarConfiguracionColumnas()" class="flex-1 bg-blue-600 text-white p-4 rounded-full text-[10px] font-black uppercase shadow-lg hover:bg-blue-700">Guardar Cambios</button>
@@ -222,10 +219,8 @@
                 <button onclick="cambiarTab('info')" id="btnTabInfo" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest tab-active">Detalles Pieza</button>
                 <button onclick="cambiarTab('tecnico')" id="btnTabTecnico" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Ficha Técnica</button>
             </div>
-            
             <form id="formEdicion" onsubmit="actualizarPedido(event)" class="p-8">
                 <input type="hidden" id="edit-id">
-                
                 <div id="tabInfo" class="space-y-5">
                     <div class="flex justify-between items-center">
                         <span id="badgeEstadoPopup" class="px-4 py-1.5 rounded-full text-[9px] font-black uppercase bg-blue-100 text-blue-600"></span>
@@ -248,7 +243,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="tabTecnico" class="hidden space-y-5">
                     <div>
                         <label class="text-[9px] font-black text-slate-400 uppercase ml-2 block mb-1">Bastidor (VIN completo)</label>
@@ -262,7 +256,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="flex gap-3 mt-8">
                     <button type="button" onclick="cerrarPopup()" class="flex-1 py-5 text-slate-500 text-[10px] font-black uppercase tracking-widest">Volver</button>
                     <button type="submit" class="flex-[2] py-5 bg-blue-600 text-white rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20">Actualizar Datos</button>
@@ -287,25 +280,24 @@
     </div>
 
     <footer class="fixed bottom-0 w-full py-4 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-6 flex justify-between border-slate-100 dark:border-slate-800">
-        <div>v2.2.0 | CREADOR: RAUL CUE</div>
+        <div>v2.2.1 | CREADOR: RAUL CUE</div>
         <div>CONTACTO: RAULCUE@GMAIL.COM</div>
         <div>COPYRIGHT 2026-2030</div>
     </footer>
 
     <script>
-        // CONFIGURACIÓN GLOBAL
+        // CONFIGURACIÓN GLOBAL [cite: 294-301]
         let allPedidos = [];
         let displayedPedidos = [];
         let isPrivate = false;
-        // 1- VISTA EXCEL POR DEFECTO
-        let viewType = localStorage.getItem('taller_view_type') || 'excel';
+        let viewType = localStorage.getItem('taller_view_type') || 'excel'; // Vista excel por defecto
         let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
         
-        // Estado de ordenación
+        // Estado de ordenación [cite: 302-311]
         let sortConfig = { key: null, direction: 'asc' };
         let currentFilter = 'todos';
 
-        // CONFIGURACIÓN DE COLUMNAS EXCEL (Persistente)
+        // CONFIGURACIÓN DE COLUMNAS EXCEL [cite: 316-319]
         let configColumnas = JSON.parse(localStorage.getItem('taller_column_config')) || [
             { id: 'id', label: 'ID Pedido', visible: true },
             { id: 'fecha_creacion', label: 'Fecha Alta', visible: true },
@@ -329,7 +321,6 @@
             { id: 'incidencia', label: 'Incidencias', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
         ];
 
-        // INICIALIZACIÓN
         async function init() {
             actualizarIconoVista();
             await cargarTalleres();
@@ -361,14 +352,13 @@
                 const url = tId === 'todos' ? '/api/pedidos' : `/api/pedidos?taller_id=${tId}`;
                 const res = await fetch(url);
                 allPedidos = await res.json();
-                displayedPedidos = [...allPedidos];
+                displayedPedidos = [...allPedidos]; // [cite: 339-340]
                 renderPedidos();
                 actualizarTotal();
             } catch(e) { console.error(e); }
             container.style.opacity = '1';
         }
 
-        // LÓGICA DE VISTAS (EXCEL vs CARDS)
         function toggleView() {
             viewType = viewType === 'cards' ? 'excel' : 'cards';
             localStorage.setItem('taller_view_type', viewType);
@@ -389,7 +379,7 @@
 
         function renderPedidos() {
             const container = document.getElementById('pedidosContainer');
-            if (displayedPedidos.length === 0) {
+            if (displayedPedidos.length === 0) { // [cite: 361-362]
                 container.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold uppercase text-[10px]">No hay pedidos registrados</div>`;
                 return;
             }
@@ -399,10 +389,10 @@
             } else {
                 renderVistaCards(container);
             }
-            document.getElementById('contador-piezas').innerText = `${displayedPedidos.length} SOLICITUDES EN CURSO`;
+            document.getElementById('contador-piezas').innerText = `${displayedPedidos.length} SOLICITUDES EN CURSO`; // [cite: 380-384]
         }
 
-        // 2- ORDENACIÓN Y FILTRO POR BLOQUES (ESTADOS)
+        // 2- ORDENACIÓN Y FILTRO POR BLOQUES [cite: 402-429]
         function ordenarPor(key) {
             if (sortConfig.key === key) {
                 sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
@@ -414,21 +404,18 @@
             displayedPedidos.sort((a, b) => {
                 let valA = a[key] || '';
                 let valB = b[key] || '';
-                
                 if (key === 'precio') {
                     valA = parseFloat(valA);
                     valB = parseFloat(valB);
                 }
-                
                 if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
             });
-
             renderPedidos();
         }
 
-        function toggleEstadoFiltro(estadoId) {
+        function toggleEstadoFiltro(estadoId) { //  [cite: 431-440]
             if (currentFilter === estadoId) {
                 currentFilter = 'todos';
                 displayedPedidos = [...allPedidos];
@@ -447,24 +434,21 @@
             visibleCols.forEach(col => {
                 const isSorting = sortConfig.key === col.id;
                 const iconClass = isSorting ? (sortConfig.direction === 'asc' ? 'fa-sort-up sort-active' : 'fa-sort-down sort-active') : 'fa-sort';
-                
-                // Si es la columna de estado, añadimos lógica de filtrado rápido al click o un indicador
                 html += `<th onclick="ordenarPor('${col.id}')">
-                            <div class="flex items-center">
-                                ${col.label}
-                                <i class="fas ${iconClass} sort-icon"></i>
-                            </div>
-                         </th>`;
+                    <div class="flex items-center">
+                        ${col.label} <i class="fas ${iconClass} sort-icon"></i>
+                    </div>
+                </th>`;
             });
             html += `</tr></thead><tbody>`;
 
-            displayedPedidos.forEach(p => {
+            displayedPedidos.forEach(p => { //
                 html += `<tr onclick="verDetalle(${p.id})" class="cursor-pointer">`;
                 visibleCols.forEach(col => {
                     let val = p[col.id] || '---';
                     if (col.id === 'id') val = `<span class="text-blue-600 font-black">RR-${val}</span>`;
                     if (col.id === 'precio') val = `<span class="blur-data">${parseFloat(val).toFixed(2)}€</span>`;
-                    if (col.id === 'estado') val = `<span onclick="event.stopPropagation(); toggleEstadoFiltro('${val}')" class="px-3 py-1 rounded-full text-[8px] font-black uppercase ${getStatusColor(val)} hover:opacity-70 transition-opacity">${val}</span>`;
+                    if (col.id === 'estado') val = `<span onclick="event.stopPropagation(); toggleEstadoFiltro('${val}')" class="px-3 py-1 rounded-full text-[8px] font-black uppercase ${getStatusColor(val)} hover:opacity-70 transition-opacity">${val}</span>`; //
                     if (col.id === 'fecha_creacion' && val !== '---') val = new Date(val).toLocaleDateString();
                     
                     html += `<td class="${col.id === 'precio' ? '' : 'blur-data'}">${val}</td>`;
@@ -510,7 +494,6 @@
             return styles[estado] || 'bg-slate-100 text-slate-600';
         }
 
-        // LÓGICA CONFIGURACIÓN DE COLUMNAS
         function abrirConfiguracionColumnas() {
             const lista = document.getElementById('listaColumnasConfig');
             lista.innerHTML = configColumnas.map((col, idx) => `
@@ -532,16 +515,15 @@
 
         function cerrarConfiguracionColumnas() { document.getElementById('modalColumnas').classList.add('hidden'); }
 
-        // --- RESTO DE FUNCIONES MANTENIDAS ---
         function actualizarTotal() {
-            const total = allPedidos.reduce((sum, p) => sum + parseFloat(p.precio || 0), 0);
+            const total = displayedPedidos.reduce((sum, p) => sum + parseFloat(p.precio || 0), 0);
             document.getElementById('total-general').innerText = `${total.toLocaleString()}€`;
         }
 
-        function filtrar() {
+        function filtrar() { //
             const term = document.getElementById('buscador').value.toLowerCase();
             if (!term) { 
-                displayedPedidos = [...allPedidos]; 
+                displayedPedidos = [...allPedidos];
                 if(currentFilter !== 'todos') displayedPedidos = displayedPedidos.filter(p => p.estado === currentFilter);
                 renderPedidos(); 
                 return; 
@@ -628,7 +610,7 @@
         function cerrarExportar() { document.getElementById('modalExportar').classList.add('hidden'); }
 
         function ejecutarExportar() {
-            const dataToExport = displayedPedidos.map(p => ({ 'ID': p.id, 'PIEZA': p.pieza, 'MATRÍCULA': p.matricula, 'ESTADO': p.estado, 'VENTA': p.precio }));
+            const dataToExport = displayedPedidos.map(p => ({ 'ID': p.id, 'PIEZA': p.pieza, 'MATRÍCULA': p.matricula, 'ESTADO': p.estado, 'VENTA': p.precio })); //
             const ws = XLSX.utils.json_to_sheet(dataToExport);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
