@@ -5,14 +5,227 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pedidos Taller - Kanban Recambio Reciclado</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com">
+// --- NUEVO BLOQUE DE INICIO SEGURO ---
+async function init() {
+    // 1. Verificamos si existe el objeto de usuario en el navegador
+    const userData = localStorage.getItem('user');
+    
+    // 2. Si no hay usuario, redirigimos al login inmediatamente
+    if (!userData) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    let user;
+
+    try {
+        user = JSON.parse(userData);
+    } catch (e) {
+        console.error("Error al procesar la sesión:", e);
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // 3. Actualizamos avatar con datos reales
+    const userAvatarEl = document.getElementById('user-initials');
+
+    if (userAvatarEl) {
+        userAvatarEl.innerText = user.iniciales || '??';
+
+        // Color según rol
+        let color = 'bg-blue-700';
+        if (user.rol === 'agente') color = 'bg-green-600';
+        if (user.rol === 'taller') color = 'bg-red-600';
+        if (user.rol === 'admin') color = 'bg-red-700';
+
+        userAvatarEl.className = `w-10 h-10 ${color} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg`;
+    }
+
+    // 4. Preferencias guardadas
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
+    
+    // Modo privacidad si existe
+    if (typeof aplicarModoPrivacidad === 'function') {
+        aplicarModoPrivacidad();
+    }
+
+    // 5. Arranque normal de la app
+    actualizarIconoVista();
+    await cargarTalleres();
+    await cargarDatos();
+
+    // Inits modales
+    const expEst = document.getElementById('exp-estado');
+    expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
+    columns.forEach(c => {
+        const opt = new Option(c.label.toUpperCase(), c.id);
+        expEst.add(opt);
+    });
+
+    document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
+    document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
+
+    // Eventos
+    document.getElementById('buscador').addEventListener('keyup', filtrar);
+    document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
+}
+
+// Ejecutamos la nueva función al cargar la página
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js">
+// --- NUEVO BLOQUE DE INICIO SEGURO ---
+async function init() {
+    // 1. Verificamos si existe el objeto de usuario en el navegador
+    const userData = localStorage.getItem('user');
+    
+    // 2. Si no hay usuario, redirigimos al login inmediatamente
+    if (!userData) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    let user;
+
+    try {
+        user = JSON.parse(userData);
+    } catch (e) {
+        console.error("Error al procesar la sesión:", e);
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // 3. Actualizamos avatar con datos reales
+    const userAvatarEl = document.getElementById('user-initials');
+
+    if (userAvatarEl) {
+        userAvatarEl.innerText = user.iniciales || '??';
+
+        // Color según rol
+        let color = 'bg-blue-700';
+        if (user.rol === 'agente') color = 'bg-green-600';
+        if (user.rol === 'taller') color = 'bg-red-600';
+        if (user.rol === 'admin') color = 'bg-red-700';
+
+        userAvatarEl.className = `w-10 h-10 ${color} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg`;
+    }
+
+    // 4. Preferencias guardadas
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
+    
+    // Modo privacidad si existe
+    if (typeof aplicarModoPrivacidad === 'function') {
+        aplicarModoPrivacidad();
+    }
+
+    // 5. Arranque normal de la app
+    actualizarIconoVista();
+    await cargarTalleres();
+    await cargarDatos();
+
+    // Inits modales
+    const expEst = document.getElementById('exp-estado');
+    expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
+    columns.forEach(c => {
+        const opt = new Option(c.label.toUpperCase(), c.id);
+        expEst.add(opt);
+    });
+
+    document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
+    document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
+
+    // Eventos
+    document.getElementById('buscador').addEventListener('keyup', filtrar);
+    document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
+}
+
+// Ejecutamos la nueva función al cargar la página
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
     
     <script>
         tailwind.config = {
             darkMode: 'class',
         }
-    </script>
+    
+// --- NUEVO BLOQUE DE INICIO SEGURO ---
+async function init() {
+    // 1. Verificamos si existe el objeto de usuario en el navegador
+    const userData = localStorage.getItem('user');
+    
+    // 2. Si no hay usuario, redirigimos al login inmediatamente
+    if (!userData) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    let user;
+
+    try {
+        user = JSON.parse(userData);
+    } catch (e) {
+        console.error("Error al procesar la sesión:", e);
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // 3. Actualizamos avatar con datos reales
+    const userAvatarEl = document.getElementById('user-initials');
+
+    if (userAvatarEl) {
+        userAvatarEl.innerText = user.iniciales || '??';
+
+        // Color según rol
+        let color = 'bg-blue-700';
+        if (user.rol === 'agente') color = 'bg-green-600';
+        if (user.rol === 'taller') color = 'bg-red-600';
+        if (user.rol === 'admin') color = 'bg-red-700';
+
+        userAvatarEl.className = `w-10 h-10 ${color} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg`;
+    }
+
+    // 4. Preferencias guardadas
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
+    
+    // Modo privacidad si existe
+    if (typeof aplicarModoPrivacidad === 'function') {
+        aplicarModoPrivacidad();
+    }
+
+    // 5. Arranque normal de la app
+    actualizarIconoVista();
+    await cargarTalleres();
+    await cargarDatos();
+
+    // Inits modales
+    const expEst = document.getElementById('exp-estado');
+    expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
+    columns.forEach(c => {
+        const opt = new Option(c.label.toUpperCase(), c.id);
+        expEst.add(opt);
+    });
+
+    document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
+    document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
+
+    // Eventos
+    document.getElementById('buscador').addEventListener('keyup', filtrar);
+    document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
+}
+
+// Ejecutamos la nueva función al cargar la página
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -523,28 +736,7 @@
             { id: 'incidencia', label: 'Incidencias' }
         ];
 
-        async function init() {
-            checkAccess();
-            actualizarIconoVista();
-            await cargarTalleres();
-            await cargarDatos();
-            
-            // Inits modales
-            const expEst = document.getElementById('exp-estado');
-            expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
-            columns.forEach(c => {
-                const opt = new Option(c.label.toUpperCase(), c.id);
-                expEst.add(opt);
-            });
-
-            document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
-            document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
-
-            // Eventos
-            document.getElementById('buscador').addEventListener('keyup', filtrar);
-            document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
-        }
-
+        
         async function cargarTalleres() {
             try {
                 const res = await fetch('/api/talleres');
@@ -866,7 +1058,78 @@
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
 
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+        
+    
+// --- NUEVO BLOQUE DE INICIO SEGURO ---
+async function init() {
+    // 1. Verificamos si existe el objeto de usuario en el navegador
+    const userData = localStorage.getItem('user');
+    
+    // 2. Si no hay usuario, redirigimos al login inmediatamente
+    if (!userData) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    let user;
+
+    try {
+        user = JSON.parse(userData);
+    } catch (e) {
+        console.error("Error al procesar la sesión:", e);
+        window.location.href = 'index.html';
+        return;
+    }
+
+    // 3. Actualizamos avatar con datos reales
+    const userAvatarEl = document.getElementById('user-initials');
+
+    if (userAvatarEl) {
+        userAvatarEl.innerText = user.iniciales || '??';
+
+        // Color según rol
+        let color = 'bg-blue-700';
+        if (user.rol === 'agente') color = 'bg-green-600';
+        if (user.rol === 'taller') color = 'bg-red-600';
+        if (user.rol === 'admin') color = 'bg-red-700';
+
+        userAvatarEl.className = `w-10 h-10 ${color} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg`;
+    }
+
+    // 4. Preferencias guardadas
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
+    
+    // Modo privacidad si existe
+    if (typeof aplicarModoPrivacidad === 'function') {
+        aplicarModoPrivacidad();
+    }
+
+    // 5. Arranque normal de la app
+    actualizarIconoVista();
+    await cargarTalleres();
+    await cargarDatos();
+
+    // Inits modales
+    const expEst = document.getElementById('exp-estado');
+    expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
+    columns.forEach(c => {
+        const opt = new Option(c.label.toUpperCase(), c.id);
+        expEst.add(opt);
+    });
+
+    document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
+    document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
+
+    // Eventos
+    document.getElementById('buscador').addEventListener('keyup', filtrar);
+    document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
+}
+
+// Ejecutamos la nueva función al cargar la página
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
 </body>
 </html>
