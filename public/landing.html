@@ -189,6 +189,14 @@
             Roadmap - Nuevas Funcionalidades <div class="h-[1px] flex-1 bg-slate-200 dark:bg-slate-800"></div>
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <a href="desguaces.html" id="btn-desguaces" class="card-menu min-h-[220px] p-8 group">
+                <i class="fas fa-warehouse text-xl text-cyan-600 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Desguaces</h4>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">Listado de desguaces.</p>
+                <div class="mt-4 flex items-center gap-2 text-cyan-600 text-[10px] font-black uppercase group-hover:gap-4 transition-all">
+                    <span class="txt-access">Acceder</span> <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
             <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
                 <i class="fas fa-search-plus text-xl text-slate-400 mb-4"></i>
                 <h4 class="text-sm font-black uppercase italic">Stock Externo</h4>
@@ -284,11 +292,11 @@
 
     <script>
         const translations = {
-            es: { welcome: "Bienvenido", subtitle: "Central de Inteligencia Logística", access: "Acceder", manage: "Gestionar", logout: "Cerrar Sesión", t1_title: "Panel de Control", t1_desc: "Gestión de flujos logísticos y automatización.", t2_title: "Equipo y Workshops", t2_desc: "Administración de usuarios y roles de talleres." },
-            en: { welcome: "Welcome", subtitle: "Logistics Intelligence Center", access: "Access", manage: "Manage", logout: "Logout", t1_title: "Control Panel", t1_desc: "Logistics flow management and automation.", t2_title: "Team & Workshops", t2_desc: "User and workshop role administration." },
-            it: { welcome: "Benvenuto", subtitle: "Centro di Intelligence Logistica", access: "Accedere", manage: "Gestire", logout: "Disconnettersi", t1_title: "Pannello di Controllo", t1_desc: "Gestione dei flussi logistici e automazione.", t2_title: "Team e Workshop", t2_desc: "Amministrazione utenti e ruoli officina." },
-            de: { welcome: "Willkommen", subtitle: "Logistik-Intelligence-Zentrum", access: "Zugreifen", manage: "Verwalten", logout: "Abmelden", t1_title: "Kontrollpanel", t1_desc: "Logistikflussmanagement und Automatisierung.", t2_title: "Team & Workshops", t2_desc: "Benutzer- und Werkstattrollenverwaltung." },
-            fr: { welcome: "Bienvenue", subtitle: "Centre d'Intelligence Logistique", access: "Accéder", manage: "Gérer", logout: "Déconnexion", t1_title: "Panneau de Contrôle", t1_desc: "Gestion des flux logistiques et automatisation.", t2_title: "Équipe et Ateliers", t2_desc: "Administration des utilisateurs et rôles." }
+            es: { welcome: "Bienvenido", subtitle: "Central de Inteligencia Logística", access: "Acceder", manage: "Gestionar", logout: "Cerrar Sesión", t1_title: "Panel de Control", t1_desc: "Gestión de flujos logísticos y automatización.", t2_title: "Equipo y Workshops", t2_desc: "Administración de usuarios y roles de talleres.", desguaces: "Desguaces", desguaces_desc: "Listado de desguaces." },
+            en: { welcome: "Welcome", subtitle: "Logistics Intelligence Center", access: "Access", manage: "Manage", logout: "Logout", t1_title: "Control Panel", t1_desc: "Logistics flow management and automation.", t2_title: "Team & Workshops", t2_desc: "User and workshop role administration.", desguaces: "Scrapyards", desguaces_desc: "List of scrapyards." },
+            it: { welcome: "Benvenuto", subtitle: "Centro di Intelligence Logistica", access: "Accedere", manage: "Gestire", logout: "Disconnettersi", t1_title: "Pannello di Controllo", t1_desc: "Gestione dei flussi logistici e automazione.", t2_title: "Team e Workshop", t2_desc: "Amministrazione utenti e ruoli officina.", desguaces: "Demolitori", desguaces_desc: "Elenco demolitori." },
+            de: { welcome: "Willkommen", subtitle: "Logistik-Intelligence-Zentrum", access: "Zugreifen", manage: "Verwalten", logout: "Abmelden", t1_title: "Kontrollpanel", t1_desc: "Logistikflussmanagement und Automatisierung.", t2_title: "Team & Workshops", t2_desc: "Benutzer- und Werkstattrollenverwaltung.", desguaces: "Autoverwertungen", desguaces_desc: "Liste der Autoverwertungen." },
+            fr: { welcome: "Bienvenue", subtitle: "Centre d'Intelligence Logistique", access: "Accéder", manage: "Gérer", logout: "Déconnexion", t1_title: "Panneau de Contrôle", t1_desc: "Gestion des flux logístiques et automatisation.", t2_title: "Équipe et Ateliers", t2_desc: "Administration des utilisateurs et rôles.", desguaces: "Casses automobiles", desguaces_desc: "Liste des casses automobiles." }
         };
 
         function cambiarIdioma(lang) {
@@ -307,6 +315,13 @@
             if(document.getElementById('t1-desc')) document.getElementById('t1-desc').innerText = t.t1_desc;
             if(document.getElementById('t2-title')) document.getElementById('t2-title').innerText = t.t2_title;
             if(document.getElementById('t2-desc')) document.getElementById('t2-desc').innerText = t.t2_desc;
+            const desguacesCard = document.getElementById('btn-desguaces');
+            if (desguacesCard) {
+                const title = desguacesCard.querySelector('h4');
+                const desc = desguacesCard.querySelector('p');
+                if (title) title.innerText = t.desguaces;
+                if (desc) desc.innerText = t.desguaces_desc;
+            }
         }
 
         function initSession() {
@@ -337,6 +352,8 @@
             if (rol === 'taller') {
                 // El taller solo ve Pedidos (Módulo 04).
                 ['btn-c1', 'btn-c2', 'btn-c3', 'btn-c5', 'btn-c6'].forEach(disableLink);
+                // El taller no ve Desguaces
+                disableLink('btn-desguaces');
             } else if (rol === 'agente') {
                 // El agente no ve Logs (Módulo 05).
                 disableLink('btn-c5');
