@@ -279,7 +279,49 @@ app.get('/api/stats/graficos', async (req, res) => {
         res.status(500).json({ error: 'Error al obtener gráficos' });
     }
 });
+// --- API DE DESGUACES (NUEVA SECCIÓN) ---
 
+app.get('/api/desguaces', async (req, res) => {
+    try {
+        // Antes de nada, comprobamos la BBDD (Norma: Antes de crear nada, comprueba la BBDD)
+        const result = await pool.query('SELECT * FROM desguaces ORDER BY provincia ASC, nombre ASC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error('GET_DESGUACES_ERROR:', err);
+        res.status(500).json({ error: 'Error al obtener desguaces' });
+    }
+});
+
+app.post('/api/desguaces', async (req, res) => {
+    const d = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    try {
+        // Verificación preventiva para evitar duplicados (Norma: Comprobar BBDD)
+        const check = await pool.query('SELECT id FROM desguaces WHERE nombre = $1 AND provincia = $2', [d.nombre, d.provincia]);
+        if (check.rows.length > 0) {
+            return res.status(400).json({ error: 'El desguace ya existe en esta provincia.' });
+        }
+
+        const query = `
+            INSERT INTO desguaces 
+            (nombre, direccion, provincia, cp, telefono_fijo, movil_1, movil_2, email, horario, web, es_workshop, fuente_origen, fecha_registro)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
+            RETURNING *`;
+        const values = [
+            d.nombre, d.direccion, d.provincia, d.cp, 
+            d.telefono_fijo, d.movil_1, d.movil_2, d.email, 
+            d.horario, d.web, d.es_workshop, d.fuente_origen
+        ];
+        const result = await pool.query(query, values);
+        
+        // Registro en log usando tu función existente
+        await registrarLog(d.admin_user || 'Admin', 'DESGUACE_CREATE', `Nuevo desguace: ${d.nombre}`, ip);
+        res.json({ success: true, id: result.rows[0].id });
+    } catch (err) {
+        console.error('POST_DESGUACE_ERROR:', err);
+        res.status(500).json({ error: 'Error al procesar desguace' });
+    }
+});
 // --- SERVIDO DE ARCHIVOS ---
 
 app.get('*', (req, res) => {
