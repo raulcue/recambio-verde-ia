@@ -3,599 +3,866 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kanban Recambio Reciclado | Panel de Control</title>
+    <title>Dashboard - Gestor de Piezas</title>
+    
+    <!-- Stylesheets -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
-        .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
-        .kanban-column { min-height: 80vh; }
-        .logo-invert { transition: filter 0.3s ease; }
-        .dark .logo-invert { filter: brightness(0) invert(1); }
-        @keyframes fadeInCard { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card-anim { animation: fadeInCard 0.4s ease forwards; }
-
-        /* Estilos para el Waffle - CORRECCIÓN QUIRÚRGICA */
-        .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
-        .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
-        .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
-        .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
-        .waffle-item i { font-size: 1.25rem; }
-
-        /* Feedback Visual del Drag & Drop */
-        .drag-over { background-color: rgba(37, 99, 235, 0.05); border-radius: 2rem; outline: 2px dashed #2563eb; outline-offset: -4px; transition: all 0.2s ease; }
-        .dragging { opacity: 0.4; transform: scale(0.95); cursor: grabbing !important; }
-
-        /* TOAST NOTIFICACIONES */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
-        .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-        .toast.success i { color: #4ade80; } .toast.error i { color: #f87171; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Kanban Styles */
+        .kanban-column { min-height: 500px; }
+        .kanban-item { 
+            cursor: move;
+            transition: all 0.3s ease;
+            border-left: 4px solid #3b82f6;
+        }
+        .kanban-item.urgente { border-left-color: #ef4444; }
+        .kanban-item.alta { border-left-color: #f59e0b; }
+        .kanban-item.media { border-left-color: #3b82f6; }
+        .kanban-item.baja { border-left-color: #10b981; }
+        
+        /* Drag & Drop */
+        .dragging { opacity: 0.5; transform: rotate(2deg); }
+        .drop-zone { 
+            transition: all 0.3s ease;
+            min-height: 100px;
+        }
+        .drop-zone.drag-over { 
+            background-color: rgba(59, 130, 246, 0.1);
+            border: 2px dashed #3b82f6;
+        }
+        
+        /* Avatar Menu */
+        .avatar-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            min-width: 200px;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 100;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+        .dark .avatar-menu {
+            background: #1f2937;
+            border-color: #374151;
+        }
+        .avatar-menu.show { display: block; }
+        
+        /* Waffle Menu */
+        .waffle-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            z-index: 100;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            width: 320px;
+        }
+        .dark .waffle-menu {
+            background: #1f2937;
+            border-color: #374151;
+        }
+        .waffle-menu.show { display: block; }
+        
+        /* Language Selector */
+        .lang-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 100;
+            overflow: hidden;
+            min-width: 150px;
+            border: 1px solid #e5e7eb;
+        }
+        .dark .lang-menu {
+            background: #1f2937;
+            border-color: #374151;
+        }
+        .lang-menu.show { display: block; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
 
-    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
-                    <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
-                        Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
-                        <span id="db-status" class="w-2 h-2 rounded-full bg-red-500 transition-colors ml-2" title="Estado BBDD"></span>
-                    </h1>
-                </a>
-            </div>
+    <!-- Header Superior -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 sticky top-0 z-40">
+        <div class="max-w-[1800px] mx-auto flex items-center justify-between">
+            
+            <!-- Logo y Navegación -->
             <div class="flex items-center gap-6">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="buscador" onkeyup="filtrar()" placeholder="Buscar pieza, matrícula..." class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all">
-                </div>
-                <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
-                    <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
-                        <i class="fas fa-moon dark:hidden text-xs"></i><i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
-                    </button>
-                    <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
-                        <i id="eye-icon" class="fas fa-eye text-xs"></i>
-                    </button>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="flex flex-col items-end">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total Tránsito</span>
-                        <span id="total-general" class="text-lg font-black text-blue-600 blur-data leading-none">0€</span>
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+                        <i class="fas fa-tools text-white text-lg"></i>
                     </div>
-                    <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+                    <div>
+                        <h1 class="text-xl font-black uppercase tracking-tight">Dashboard Piezas</h1>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Gestión Kanban & Pedidos</p>
+                    </div>
+                </div>
+                
+                <!-- Waffle Icon (Roadmap y Navegación) -->
+                <div class="relative">
+                    <button onclick="toggleWaffleMenu()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        <i class="fas fa-th text-slate-700 dark:text-slate-300"></i>
+                    </button>
                     
-                    <div class="flex items-center gap-2">
-                        <div class="waffle-container group">
-                            <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-colors">
-                                <i class="fas fa-th text-xs"></i>
-                            </button>
-                            <div class="absolute right-0 top-full mt-0 hidden group-hover:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[2rem] overflow-hidden z-[60]">
-                                <div class="waffle-grid">
-                                    <a href="landing.html" class="waffle-item text-blue-600"><i class="fas fa-home"></i><span class="text-[9px] font-black uppercase text-slate-500">Principal</span></a>
-                                    <a href="dashboard.html" class="waffle-item text-indigo-500"><i class="fas fa-columns"></i><span class="text-[9px] font-black uppercase text-slate-500">Flujos</span></a>
-                                    <a href="stats.html" class="waffle-item text-emerald-500"><i class="fas fa-chart-line"></i><span class="text-[9px] font-black uppercase text-slate-500">BI Stats</span></a>
-                                    <a href="talleres.html" class="waffle-item text-orange-500"><i class="fas fa-users-cog"></i><span class="text-[9px] font-black uppercase text-slate-500">Equipo</span></a>
-                                    <a href="pedidos-taller.html" class="waffle-item text-purple-500"><i class="fas fa-list-check"></i><span class="text-[9px] font-black uppercase text-slate-500">Pedidos</span></a>
-                                    <a href="admin-logs.html" class="waffle-item text-slate-500"><i class="fas fa-history"></i><span class="text-[9px] font-black uppercase text-slate-500">Logs</span></a>
-                                </div>
-                            </div>
+                    <!-- Waffle Menu -->
+                    <div id="waffle-menu" class="waffle-menu">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-700">
+                            <h3 class="font-black text-sm uppercase text-slate-700 dark:text-slate-300">Acceso Rápido</h3>
                         </div>
-                        <button class="w-8 h-8 text-slate-400 hover:text-red-600 transition-colors">
-                            <i class="fas fa-power-off text-sm"></i>
+                        <div class="grid grid-cols-3 gap-1 p-2">
+                            <!-- Enlaces del roadmap -->
+                            <a href="dashboard.html" class="flex flex-col items-center p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-2">
+                                    <i class="fas fa-columns text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Dashboard</span>
+                            </a>
+                            
+                            <a href="desguaces.html" id="roadmap-desguaces" class="flex flex-col items-center p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2">
+                                    <i class="fas fa-warehouse text-green-600 dark:text-green-400"></i>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Desguaces</span>
+                            </a>
+                            
+                            <a href="usuarios.html" class="flex flex-col items-center p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mb-2">
+                                    <i class="fas fa-users text-purple-600 dark:text-purple-400"></i>
+                                </div>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Usuarios</span>
+                            </a>
+                            
+                            <!-- Más enlaces según necesidad -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Controles Derecha -->
+            <div class="flex items-center gap-3">
+                <!-- Botón Nuevo Pedido -->
+                <button onclick="abrirModalPieza()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-lg active:scale-95">
+                    <i class="fas fa-plus mr-2"></i> Nuevo Pedido
+                </button>
+                
+                <!-- Idioma -->
+                <div class="relative">
+                    <button onclick="toggleLangMenu()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        <i class="fas fa-globe text-slate-700 dark:text-slate-300"></i>
+                    </button>
+                    
+                    <!-- Language Menu -->
+                    <div id="lang-menu" class="lang-menu">
+                        <button onclick="cambiarIdioma('es')" class="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🇪🇸 Español</span>
                         </button>
+                        <button onclick="cambiarIdioma('en')" class="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🇬🇧 English</span>
+                        </button>
+                        <button onclick="cambiarIdioma('fr')" class="w-full text-left px-4 py-3 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-3">
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🇫🇷 Français</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Notificaciones -->
+                <button class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors relative">
+                    <i class="fas fa-bell text-slate-700 dark:text-slate-300"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-black rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                </button>
+                
+                <!-- Avatar y Usuario (COPIADO DE LANDING) -->
+                <div class="relative">
+                    <button onclick="toggleAvatarMenu()" class="flex items-center gap-3 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        <div id="user-avatar" class="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm text-white shadow-lg border-2 border-white dark:border-slate-800">
+                            <!-- Se llena con JS -->
+                        </div>
+                        <div class="text-left">
+                            <p id="user-name" class="text-xs font-black text-slate-700 dark:text-slate-300"></p>
+                            <p id="user-rol" class="text-[10px] text-slate-500 uppercase font-bold tracking-widest"></p>
+                        </div>
+                    </button>
+                    
+                    <!-- Avatar Menu (COPIADO DE LANDING) -->
+                    <div id="avatar-menu" class="avatar-menu">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-700">
+                            <p class="text-xs font-black text-slate-700 dark:text-slate-300" id="menu-user-name"></p>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest" id="menu-user-rol"></p>
+                        </div>
+                        <div class="p-2">
+                            <a href="perfil.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                <i class="fas fa-user text-slate-500 w-4"></i>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Mi Perfil</span>
+                            </a>
+                            <a href="configuracion.html" class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                <i class="fas fa-cog text-slate-500 w-4"></i>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Configuración</span>
+                            </a>
+                            <div class="h-px bg-slate-100 dark:bg-slate-700 my-2"></div>
+                            <button onclick="cerrarSesion()" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors">
+                                <i class="fas fa-power-off"></i>
+                                <span class="text-xs font-bold">Cerrar Sesión</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <nav class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4">
-        <div class="max-w-full mx-auto flex justify-between items-center">
-            <div class="flex gap-4">
-                <select id="filtroTaller" onchange="cargarDatos()" class="bg-slate-50 dark:bg-slate-800 border rounded-lg px-4 py-2 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                    <option value="todos">TODOS LOS TALLERES</option>
-                </select>
-                <button onclick="abrirExportar()" class="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
-                    <i class="fas fa-file-excel mr-2"></i> Exportar
-                </button>
-                <button onclick="abrirAjustes()" class="bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
-                    <i class="fas fa-cog mr-2"></i> Ajustes
-                </button>
-            </div>
-            <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">
-                <i class="fas fa-plus mr-2"></i> Nuevo Pedido
-            </button>
-        </div>
-    </nav>
-
-    <main id="kanbanBoard" class="flex-grow p-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 max-w-full mx-auto items-start pb-24 transition-opacity duration-300"></main>
-
-    <div id="modalAjustes" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border border-white/10">
-            <h3 class="text-sm font-black uppercase tracking-widest mb-6">Días de Alerta</h3>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-orange-500 mr-2"></i> Naranja</span>
-                    <input type="number" id="adj-naranja" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
+    <!-- Filtros -->
+    <div class="max-w-[1800px] mx-auto p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Filtro por Taller -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Taller</label>
+                    <select id="filtro-taller" onchange="filtrarKanban()" class="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 min-w-[180px]">
+                        <option value="">TODOS LOS TALLERES</option>
+                    </select>
                 </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-red-600 mr-2"></i> Rojo</span>
-                    <input type="number" id="adj-rojo" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
+                
+                <!-- Filtro por Estado -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Estado</label>
+                    <select id="filtro-estado" onchange="filtrarKanban()" class="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">TODOS LOS ESTADOS</option>
+                        <option value="solicitud">Solicitud</option>
+                        <option value="proceso">En Proceso</option>
+                        <option value="finalizado">Finalizado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
                 </div>
-            </div>
-            <div class="mt-8 flex gap-2">
-                <button onclick="cerrarAjustes()" class="flex-1 text-[10px] font-black uppercase p-3 hover:text-slate-400">Cerrar</button>
-                <button onclick="guardarAjustes()" class="flex-1 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase p-3 shadow-lg hover:bg-blue-700 active:scale-95">Guardar</button>
+                
+                <!-- Filtro por Prioridad -->
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Prioridad</label>
+                    <select id="filtro-prioridad" onchange="filtrarKanban()" class="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">TODAS LAS PRIORIDADES</option>
+                        <option value="urgente">Urgente</option>
+                        <option value="alta">Alta</option>
+                        <option value="media">Media</option>
+                        <option value="baja">Baja</option>
+                    </select>
+                </div>
+                
+                <!-- Buscador -->
+                <div class="flex-1 min-w-[300px]">
+                    <label class="text-[10px] font-black uppercase text-slate-500 mb-1 block">Buscar</label>
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="buscador" onkeyup="filtrarKanban()" placeholder="Buscar por título, marca, modelo..." class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <!-- Botón Limpiar -->
+                <div class="self-end">
+                    <button onclick="limpiarFiltros()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-xs font-bold transition-colors">
+                        <i class="fas fa-times mr-2"></i>Limpiar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="modalExportar" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
-            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="text-lg font-black uppercase tracking-tighter">Exportar Reporte</h3>
-            </div>
-            <div class="p-8 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-400">Estado</label>
-                        <select id="exp-estado" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500"></select>
+    <!-- Kanban Board -->
+    <main class="max-w-[1800px] mx-auto p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- Columna: Solicitud -->
+            <div class="kanban-column bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+                        <h2 class="text-sm font-black uppercase">Solicitud</h2>
+                        <span id="count-solicitud" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black px-2 py-1 rounded-lg">0</span>
                     </div>
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-400">Detalle</label>
-                        <select id="exp-vista" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold">
-                            <option value="simple">VISTA SIMPLE</option>
-                            <option value="avanzada">VISTA AVANZADA</option>
+                    <button onclick="abrirModalPieza()" class="text-blue-600 hover:text-blue-700">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div id="columna-solicitud" class="drop-zone space-y-3" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <!-- Las tarjetas se cargan aquí -->
+                </div>
+            </div>
+            
+            <!-- Columna: En Proceso -->
+            <div class="kanban-column bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <h2 class="text-sm font-black uppercase">En Proceso</h2>
+                        <span id="count-proceso" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black px-2 py-1 rounded-lg">0</span>
+                    </div>
+                </div>
+                <div id="columna-proceso" class="drop-zone space-y-3" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <!-- Las tarjetas se cargan aquí -->
+                </div>
+            </div>
+            
+            <!-- Columna: Finalizado -->
+            <div class="kanban-column bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <h2 class="text-sm font-black uppercase">Finalizado</h2>
+                        <span id="count-finalizado" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black px-2 py-1 rounded-lg">0</span>
+                    </div>
+                </div>
+                <div id="columna-finalizado" class="drop-zone space-y-3" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <!-- Las tarjetas se cargan aquí -->
+                </div>
+            </div>
+            
+            <!-- Columna: Cancelado -->
+            <div class="kanban-column bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <h2 class="text-sm font-black uppercase">Cancelado</h2>
+                        <span id="count-cancelado" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black px-2 py-1 rounded-lg">0</span>
+                    </div>
+                </div>
+                <div id="columna-cancelado" class="drop-zone space-y-3" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <!-- Las tarjetas se cargan aquí -->
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Modal para Nueva Pieza -->
+    <div id="modal-pieza" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-lg font-black uppercase">Nuevo Pedido / Pieza</h3>
+                <button onclick="cerrarModalPieza()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="form-pieza" class="p-6 space-y-4">
+                <!-- Título y Descripción -->
+                <div>
+                    <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Título del Pedido *</label>
+                    <input type="text" id="p-titulo" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
+                </div>
+                
+                <div>
+                    <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Descripción</label>
+                    <textarea id="p-descripcion" rows="2" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold resize-none"></textarea>
+                </div>
+                
+                <!-- Datos del Vehículo -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Marca</label>
+                        <input type="text" id="p-marca" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Modelo</label>
+                        <input type="text" id="p-modelo" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Matrícula</label>
+                        <input type="text" id="p-matricula" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
+                    </div>
+                    <div>
+                        <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Año</label>
+                        <input type="number" id="p-año" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
+                    </div>
+                </div>
+                
+                <!-- FIXED: Cliente y Taller - Ahora se cargan desde /api/usuarios -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Cliente *</label>
+                        <select id="p-cliente" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
+                            <option value="">Seleccionar cliente</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Taller *</label>
+                        <select id="p-taller" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
+                            <option value="">Seleccionar taller</option>
                         </select>
                     </div>
                 </div>
-            </div>
-            <div class="p-8 flex gap-4">
-                <button onclick="cerrarExportar()" class="flex-1 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
-                <button onclick="ejecutarExportar()" class="flex-1 bg-emerald-600 text-white p-4 rounded-full text-[10px] font-black uppercase shadow-lg hover:bg-emerald-700 active:scale-95">Excel</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden border border-white/20">
-            <form id="form-pedido">
-                <input type="hidden" id="p-id">
-                <div class="p-8 border-b flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                
+                <!-- Prioridad y Fecha -->
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <span id="modal-estado-badge" class="text-[9px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-widest mb-2 inline-block">PEDIDO</span>
-                        <h2 id="modal-titulo" class="text-xl font-black uppercase tracking-tighter">Gestión de Registro</h2>
+                        <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Prioridad</label>
+                        <select id="p-prioridad" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
+                            <option value="media">Media</option>
+                            <option value="baja">Baja</option>
+                            <option value="alta">Alta</option>
+                            <option value="urgente">Urgente</option>
+                        </select>
                     </div>
-                    <button type="button" onclick="cerrarModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="flex border-b px-8 bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800">
-                    <button type="button" id="tab-gen-btn" onclick="switchTab('gen')" class="py-4 px-6 text-[10px] font-black uppercase tab-active">General</button>
-                    <button type="button" id="tab-eco-btn" onclick="switchTab('eco')" class="py-4 px-6 text-[10px] font-black uppercase">Económico</button>
-                    <button type="button" id="tab-tec-btn" onclick="switchTab('tec')" class="py-4 px-6 text-[10px] font-black uppercase">Técnico</button>
-                </div>
-                <div class="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
-                    <div id="tab-gen" class="space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Pieza</label>
-                                <input type="text" id="p-pieza" required class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20">
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Matrícula</label>
-                                <input type="text" id="p-matricula" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none uppercase">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Marca</label>
-                                <input type="text" id="p-marca" list="marcas-list" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
-                                <datalist id="marcas-list"></datalist>
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Modelo</label>
-                                <input type="text" id="p-modelo" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Taller Solicitante</label>
-                                <select id="p-taller" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none"></select>
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Estado Flujo</label>
-                                <select id="p-estado" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none"></select>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="tab-eco" class="hidden space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Precio Venta (€)</label>
-                                <input type="number" id="p-precio" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-blue-600 outline-none">
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Precio Coste (€)</label>
-                                <input type="number" id="p-coste" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-red-500 outline-none">
-                            </div>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Proveedor</label>
-                            <input type="text" id="p-proveedor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
-                        </div>
-                    </div>
-                    <div id="tab-tec" class="hidden space-y-6">
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Bastidor (VIN)</label>
-                            <input type="text" id="p-bastidor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold uppercase outline-none">
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Incidencias / Subestado</label>
-                            <input type="text" id="p-subestado" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Notas Técnicas</label>
-                            <textarea id="p-notes" rows="3" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none custom-scrollbar"></textarea>
-                        </div>
+                    <div>
+                        <label class="text-xs font-black uppercase text-slate-500 mb-2 block">Fecha Límite</label>
+                        <input type="date" id="p-fecha-limite" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none text-sm font-bold">
                     </div>
                 </div>
-                <div class="p-8 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-4 bg-slate-50/30">
-                    <button type="button" onclick="eliminarRegistro()" class="text-red-500 hover:bg-red-50 w-10 h-10 flex items-center justify-center rounded-full transition-all"><i class="fas fa-trash-alt"></i></button>
-                    <div class="flex gap-4">
-                        <button type="button" onclick="cerrarModal()" class="text-slate-400 text-[10px] font-black uppercase px-6 py-2">Cancelar</button>
-                        <button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-full text-xs font-black uppercase shadow-xl hover:scale-105 active:scale-95 shadow-blue-500/20">Guardar Cambios</button>
-                    </div>
+                
+                <!-- Botones -->
+                <div class="flex gap-4 pt-6">
+                    <button type="button" onclick="cerrarModalPieza()" class="flex-1 py-3 font-black uppercase text-xs text-slate-500 hover:text-slate-700">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-black uppercase text-xs shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all">
+                        Guardar Pedido
+                    </button>
                 </div>
             </form>
         </div>
     </div>
-    
-    <div id="toast-container"></div>
-    <div id="modal-confirmacion" class="fixed inset-0 z-[120] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 text-center border border-white/10">
-            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-exclamation-triangle"></i></div>
-            <h3 class="text-lg font-black uppercase tracking-tighter mb-2">¿Eliminar Pedido?</h3>
-            <p class="text-xs text-slate-500 font-bold mb-6">Esta acción no se puede deshacer.</p>
-            <div class="flex gap-3">
-                <button onclick="document.getElementById('modal-confirmacion').classList.add('hidden')" class="flex-1 py-3 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
-                <button onclick="confirmarEliminacionDefinitiva()" class="flex-1 bg-red-600 text-white rounded-xl py-3 text-[10px] font-black uppercase shadow-lg hover:bg-red-700">Sí, Eliminar</button>
-            </div>
-        </div>
-    </div>
 
-    <footer class="fixed bottom-0 w-full py-4 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-6 flex justify-between border-slate-100 dark:border-slate-800">
-        <div>v2.2.0 | CREADOR: RAUL CUE</div>
-        <div>CONTACTO: RAULCUE@GMAIL.COM</div>
-        <div>COPYRIGHT 2026-2030</div>
-    </footer>
+    <!-- Toasts -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-2"></div>
 
     <script>
-        let db = [];
-        let isPrivate = false;
-        let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
-        
-        const columns = [
-            { id: 'solicitado', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
-            { id: 'desguace', label: 'Localizado', color: 'border-amber-500', icon: 'fa-search-location' },
-            { id: 'listo', label: 'En Almacén', color: 'border-purple-600', icon: 'fa-box' },
-            { id: 'transito', label: 'Logística', color: 'border-cyan-500', icon: 'fa-truck' },
-            { id: 'entregado', label: 'Cerrado', color: 'border-emerald-500', icon: 'fa-check-circle' },
-            { id: 'incidencia', label: 'Incidencias', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
-        ];
+        // Variables globales
+        let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let pedidos = [];
+        let talleres = [];
+        let clientes = [];
+        let dragElement = null;
 
+        // Inicialización
         async function init() {
-            try {
-                await Promise.all([cargarTalleres(), cargarDatos(), cargarMarcasMaestras()]);
-                showToast('CONECTADO A LA BASE DE DATOS', 'success');
-                document.getElementById('db-status').classList.replace('bg-red-500', 'bg-emerald-500');
-            } catch (error) {
-                showToast('ERROR DE CONEXIÓN', 'error');
+            if (!user.id) {
+                window.location.href = 'index.html';
+                return;
             }
-            
-            const pEst = document.getElementById('p-estado');
-            const expEst = document.getElementById('exp-estado');
-            pEst.innerHTML = '';
-            columns.forEach(c => {
-                pEst.add(new Option(c.label.toUpperCase(), c.id));
-                expEst.add(new Option(c.label.toUpperCase(), c.id));
-            });
 
-            document.getElementById('form-pedido').onsubmit = async (e) => {
-                e.preventDefault();
-                const data = {
-                    id: document.getElementById('p-id').value || null,
-                    pieza: document.getElementById('p-pieza').value,
-                    matricula: document.getElementById('p-matricula').value,
-                    marca_coche: document.getElementById('p-marca').value,
-                    modelo_coche: document.getElementById('p-modelo').value,
-                    usuario_id: document.getElementById('p-taller').value,
-                    nuevoEstado: document.getElementById('p-estado').value,
-                    precio: document.getElementById('p-precio').value || 0,
-                    precio_coste: document.getElementById('p-coste').value || 0,
-                    proveedor: document.getElementById('p-proveedor').value,
-                    bastidor: document.getElementById('p-bastidor').value,
-                    sub_estado_incidencia: document.getElementById('p-subestado').value,
-                    notas_tecnicas: document.getElementById('p-notes').value,
-                    admin_user: 'Admin Root'
-                };
-                try {
-                    await fetch('/api/pedidos/update-status', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(data)
-                    });
-                    showToast('CAMBIOS GUARDADOS EN SERVIDOR', 'success');
-                    cerrarModal(); 
-                    await cargarDatos();
-                } catch(e) { showToast('ERROR AL GUARDAR', 'error'); }
-            };
+            // Configurar usuario en header
+            document.getElementById('user-avatar').innerText = user.iniciales || '--';
+            document.getElementById('user-avatar').className += ` ${user.rol === 'admin' ? 'bg-red-700' : 'bg-blue-700'} text-white`;
+            document.getElementById('user-name').innerText = user.nombre || 'Usuario';
+            document.getElementById('user-rol').innerText = user.rol === 'admin' ? 'ADMINISTRADOR' : 'TALLER';
+            document.getElementById('menu-user-name').innerText = user.nombre || 'Usuario';
+            document.getElementById('menu-user-rol').innerText = user.rol === 'admin' ? 'ADMINISTRADOR' : 'TALLER';
+
+            // Ocultar desguaces en roadmap si es taller
+            if (user.rol === 'taller') {
+                document.getElementById('roadmap-desguaces').classList.add('hidden');
+            }
+
+            // Cargar datos
+            await cargarTalleres();
+            await cargarClientes();
+            await cargarPedidos();
         }
 
+        // FIXED: Cargar talleres desde /api/usuarios?rol=taller
         async function cargarTalleres() {
             try {
-                const res = await fetch('/api/talleres');
-                const data = await res.json();
-                const fT = document.getElementById('filtroTaller');
-                const pT = document.getElementById('p-taller');
-                fT.innerHTML = '<option value="todos">TODOS LOS TALLERES</option>';
-                pT.innerHTML = '';
-                data.forEach(t => {
-                    fT.add(new Option(t.nombre, t.id));
-                    pT.add(new Option(t.nombre, t.id));
+                const res = await fetch('/api/usuarios?rol=taller');
+                if (!res.ok) throw new Error('Error cargando talleres');
+                
+                talleres = await res.json();
+                const selectTaller = document.getElementById('filtro-taller');
+                const selectTallerModal = document.getElementById('p-taller');
+                
+                // Limpiar opciones existentes (excepto la primera)
+                while (selectTaller.options.length > 1) selectTaller.remove(1);
+                while (selectTallerModal.options.length > 1) selectTallerModal.remove(1);
+                
+                // Agregar talleres
+                talleres.forEach(t => {
+                    if (t.id && t.nombre) {
+                        const option = new Option(t.nombre, t.id);
+                        const optionModal = new Option(t.nombre, t.id);
+                        selectTaller.add(option);
+                        selectTallerModal.add(optionModal.cloneNode(true));
+                    }
                 });
-            } catch(e) { console.error("Error cargando talleres"); }
-        }
-
-        async function cargarMarcasMaestras() {
-            try {
-                const res = await fetch('/api/marcas');
-                const marcas = await res.json();
-                document.getElementById('marcas-list').innerHTML = marcas.map(m => `<option value="${m.nombre}">`).join('');
-            } catch(e) { console.error("Error marcas"); }
-        }
-
-        async function cargarDatos() {
-            const board = document.getElementById('kanbanBoard');
-            let tId = document.getElementById('filtroTaller').value;
-            board.style.opacity = '0.5';
-            try {
-                const res = await fetch(`/api/pedidos?taller_id=${tId}`);
-                db = await res.json();
-                renderBoard();
-            } catch(e) { console.error("Error cargando datos"); } 
-            finally { board.style.opacity = '1'; }
-        }
-
-        function renderBoard(dataToRender = null) {
-            const board = document.getElementById('kanbanBoard');
-            board.innerHTML = '';
-            let globalSum = 0;
-            const sourceData = dataToRender || db;
-
-            columns.forEach(col => {
-                const items = sourceData.filter(p => p.estado === col.id);
-                const colSum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
-                globalSum += colSum;
-
-                const columnHtml = `
-                    <div class="kanban-column flex flex-col gap-6 h-full transition-all duration-300" 
-                         ondragover="event.preventDefault()" 
-                         ondragenter="this.classList.add('drag-over')" 
-                         ondragleave="this.classList.remove('drag-over')" 
-                         ondrop="drop(event, '${col.id}')">
-                        <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color} py-1">
-                            <div>
-                                <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
-                            </div>
-                            <span class="text-xs font-black text-blue-600 italic">${colSum.toFixed(0)}€</span>
-                        </div>
-                        <div class="flex-1 space-y-4 pb-10">
-                            ${items.map((p, index) => {
-                                const dias = Math.floor((new Date() - new Date(p.fecha_creacion)) / (1000 * 60 * 60 * 24));
-                                let semColor = 'bg-emerald-500';
-                                if (dias >= ajustesSemaf.rojo) semColor = 'bg-red-600';
-                                else if (dias >= ajustesSemaf.naranja) semColor = 'bg-orange-500';
-
-                                return `
-                                <div draggable="true" 
-                                     ondragstart="start(event, ${p.id})" 
-                                     ondragend="this.classList.remove('dragging')"
-                                     onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
-                                     class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500/40 hover:shadow-xl transition-all cursor-grab active:cursor-grabbing group card-anim" style="animation-delay: ${index * 0.05}s">
-                                    <div class="flex justify-between mb-4">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-8 h-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors">
-                                                <i class="fas ${col.icon} text-[10px]"></i>
-                                            </div>
-                                            <div class="${semColor} w-2 h-2 rounded-full animate-pulse"></div>
-                                            <span class="text-[8px] font-bold text-slate-400 uppercase">${dias}d</span>
-                                        </div>
-                                        <span class="text-[8px] font-bold text-slate-300">#${p.id}</span>
-                                    </div>
-                                    
-                                    <div class="mb-2">
-                                        <span class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
-                                            <i class="fas fa-tools mr-1 opacity-50"></i>
-                                            ${p.nombre_usuario || 'Taller Particular'}
-                                        </span>
-                                    </div>
-
-                                    <h4 class="text-xs font-black uppercase dark:text-white truncate">${p.pieza}</h4>
-                                    <p class="text-[9px] font-bold text-slate-400 mb-4">${p.marca_coche || ''} ${p.modelo_coche || '---'}</p>
-                                    <div class="flex justify-between items-center pt-4 border-t dark:border-slate-800">
-                                        <span class="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-lg">${p.matricula || 'S/M'}</span>
-                                        <span class="text-xs font-black dark:text-white">${p.precio || 0}€</span>
-                                    </div>
-                                </div>`;
-                            }).join('')}
-                        </div>
-                    </div>`;
-                board.insertAdjacentHTML('beforeend', columnHtml);
-            });
-            document.getElementById('total-general').innerText = `${globalSum.toLocaleString()}€`;
-        }
-
-        // --- LÓGICA DE DRAG & DROP ---
-        function start(e, id) {
-            e.dataTransfer.setData("text", id);
-            e.target.classList.add('dragging');
-        }
-
-        async function drop(e, nuevoEstado) {
-            e.preventDefault();
-            const id = e.dataTransfer.getData("text");
-            const column = e.currentTarget;
-            column.classList.remove('drag-over');
-
-            const pedido = db.find(x => x.id == id);
-            if(!pedido) return;
-
-            document.getElementById('kanbanBoard').style.opacity = '0.5';
-
-            try {
-                await fetch('/api/pedidos/update-status', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ ...pedido, id: id, nuevoEstado: nuevoEstado, admin_user: 'Admin (Drag)' })
-                });
-                showToast('ESTADO ACTUALIZADO', 'success');
-                await cargarDatos();
-            } catch(err) {
-                showToast('ERROR AL MOVER', 'error');
-            } finally {
-                document.getElementById('kanbanBoard').style.opacity = '1';
+            } catch (error) {
+                console.error('Error cargando talleres:', error);
+                showToast('Error cargando lista de talleres', 'error');
             }
         }
 
-        function filtrar() {
-            const term = document.getElementById('buscador').value.toLowerCase();
-            const filtrados = db.filter(p => 
-                p.pieza.toLowerCase().includes(term) || 
-                (p.matricula && p.matricula.toLowerCase().includes(term)) ||
-                (p.marca_coche && p.marca_coche.toLowerCase().includes(term)) ||
-                (p.nombre_usuario && p.nombre_usuario.toLowerCase().includes(term))
-            );
-            renderBoard(filtrados);
+        // FIXED: Cargar clientes desde /api/usuarios
+        async function cargarClientes() {
+            try {
+                const res = await fetch('/api/usuarios');
+                if (!res.ok) throw new Error('Error cargando clientes');
+                
+                clientes = await res.json();
+                const selectCliente = document.getElementById('p-cliente');
+                
+                // Limpiar opciones existentes (excepto la primera)
+                while (selectCliente.options.length > 1) selectCliente.remove(1);
+                
+                // Agregar clientes
+                clientes.forEach(c => {
+                    if (c.id && c.nombre) {
+                        const option = new Option(c.nombre, c.id);
+                        selectCliente.add(option);
+                    }
+                });
+            } catch (error) {
+                console.error('Error cargando clientes:', error);
+                showToast('Error cargando lista de clientes', 'error');
+            }
         }
 
-        function abrirAjustes() {
-            document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
-            document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
-            document.getElementById('modalAjustes').classList.remove('hidden');
-        }
-        function cerrarAjustes() { document.getElementById('modalAjustes').classList.add('hidden'); }
-        function guardarAjustes() {
-            ajustesSemaf.naranja = parseInt(document.getElementById('adj-naranja').value);
-            ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value);
-            localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf));
-            cerrarAjustes();
-            renderBoard();
-        }
-
-        function abrirExportar() { document.getElementById('modalExportar').classList.remove('hidden'); }
-        function cerrarExportar() { document.getElementById('modalExportar').classList.add('hidden'); }
-        function ejecutarExportar() {
-            const estado = document.getElementById('exp-estado').value;
-            const vista = document.getElementById('exp-vista').value;
-            let filtrados = db;
-            if (estado !== 'todos') filtrados = db.filter(p => p.estado === estado);
-            const dataToExport = filtrados.map(p => ({
-                'ID': p.id, 'TALLER': p.nombre_usuario, 'FECHA': p.fecha_creacion, 'PIEZA': p.pieza, 'MATRÍCULA': p.matricula, 'ESTADO': p.estado, 'PRECIO VENTA': p.precio,
-                ...(vista === 'avanzada' && { 'PROVEEDOR': p.proveedor, 'MARCA': p.marca_coche, 'MODELO': p.modelo_coche, 'NOTAS': p.notas_tecnicas })
-            }));
-            const ws = XLSX.utils.json_to_sheet(dataToExport);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Pedidos");
-            XLSX.writeFile(wb, `Reporte_Kanban_${new Date().toISOString().split('T')[0]}.xlsx`);
-            cerrarExportar();
+        // Cargar pedidos
+        async function cargarPedidos() {
+            try {
+                const res = await fetch('/api/pedidos');
+                if (!res.ok) throw new Error('Error cargando pedidos');
+                
+                pedidos = await res.json();
+                renderKanban();
+            } catch (error) {
+                console.error('Error cargando pedidos:', error);
+                showToast('Error cargando pedidos', 'error');
+            }
         }
 
-        function togglePrivacy() {
-            isPrivate = !isPrivate;
-            document.body.classList.toggle('privacy-active', isPrivate);
-            document.getElementById('eye-icon').className = isPrivate ? "fas fa-eye-slash text-xs" : "fas fa-eye text-xs";
-        }
-
-        function switchTab(t) {
-            ['gen', 'eco', 'tec'].forEach(id => {
-                document.getElementById(`tab-${id}`).classList.toggle('hidden', id !== t);
-                document.getElementById(`tab-${id}-btn`).classList.toggle('tab-active', id === t);
+        // Renderizar Kanban
+        function renderKanban(pedidosFiltrados = pedidos) {
+            // Limpiar columnas
+            ['solicitud', 'proceso', 'finalizado', 'cancelado'].forEach(estado => {
+                document.getElementById(`columna-${estado}`).innerHTML = '';
+            });
+            
+            // Contadores
+            const contadores = { solicitud: 0, proceso: 0, finalizado: 0, cancelado: 0 };
+            
+            // Crear tarjetas
+            pedidosFiltrados.forEach(pedido => {
+                const tarjeta = crearTarjeta(pedido);
+                document.getElementById(`columna-${pedido.estado}`).appendChild(tarjeta);
+                contadores[pedido.estado]++;
+            });
+            
+            // Actualizar contadores
+            Object.keys(contadores).forEach(estado => {
+                document.getElementById(`count-${estado}`).innerText = contadores[estado];
             });
         }
 
-        function abrirModalNuevo() {
-            document.getElementById('form-pedido').reset();
-            document.getElementById('p-id').value = '';
-            document.getElementById('modal-titulo').innerText = "Nuevo Registro";
-            document.getElementById('modal-estado-badge').innerText = "NUEVO";
-            document.getElementById('modal').classList.remove('hidden');
-            switchTab('gen');
+        // Crear tarjeta HTML
+        function crearTarjeta(pedido) {
+            const div = document.createElement('div');
+            div.className = `kanban-item p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 ${pedido.prioridad}`;
+            div.draggable = true;
+            div.id = `pedido-${pedido.id}`;
+            div.setAttribute('data-id', pedido.id);
+            div.setAttribute('data-estado', pedido.estado);
+            
+            // Prioridad color
+            const prioridadClases = {
+                urgente: 'urgente',
+                alta: 'alta', 
+                media: 'media',
+                baja: 'baja'
+            };
+            
+            const prioridadTexto = {
+                urgente: 'URGENTE',
+                alta: 'ALTA',
+                media: 'MEDIA',
+                baja: 'BAJA'
+            };
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex-1">
+                        <h4 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-1">${pedido.titulo}</h4>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mb-2">${pedido.descripcion || 'Sin descripción'}</p>
+                    </div>
+                    <span class="px-2 py-1 text-[10px] font-black uppercase rounded-lg ${pedido.prioridad === 'urgente' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : 
+                        pedido.prioridad === 'alta' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                        pedido.prioridad === 'baja' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}">
+                        ${prioridadTexto[pedido.prioridad] || 'MEDIA'}
+                    </span>
+                </div>
+                
+                <div class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                    <p class="truncate"><i class="fas fa-car mr-2"></i>${pedido.marca || 'N/A'} ${pedido.modelo || ''}</p>
+                    <p class="truncate"><i class="fas fa-hashtag mr-2"></i>${pedido.matricula || 'Sin matrícula'}</p>
+                </div>
+                
+                <div class="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-black text-blue-600 dark:text-blue-400">
+                            ${pedido.cliente_iniciales || 'CL'}
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400">${pedido.cliente_nombre || 'Cliente'}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500">
+                        ${new Date(pedido.created_at).toLocaleDateString()}
+                    </div>
+                </div>
+            `;
+            
+            // Eventos drag
+            div.addEventListener('dragstart', dragStart);
+            div.addEventListener('dragend', dragEnd);
+            
+            return div;
         }
 
-        function abrirEditar(p) {
-            document.getElementById('p-id').value = p.id;
-            document.getElementById('p-pieza').value = p.pieza || '';
-            document.getElementById('p-matricula').value = p.matricula || '';
-            document.getElementById('p-marca').value = p.marca_coche || '';
-            document.getElementById('p-modelo').value = p.modelo_coche || '';
-            document.getElementById('p-taller').value = p.usuario_id || '';
-            document.getElementById('p-estado').value = p.estado || 'solicitado';
-            document.getElementById('p-precio').value = p.precio || 0;
-            document.getElementById('p-coste').value = p.precio_coste || 0;
-            document.getElementById('p-proveedor').value = p.proveedor || '';
-            document.getElementById('p-bastidor').value = p.bastidor || '';
-            document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
-            document.getElementById('p-notes').value = p.notas_tecnicas || '';
-            document.getElementById('modal-titulo').innerText = "Editar #" + p.id;
-            document.getElementById('modal-estado-badge').innerText = "PEDIDO";
-            document.getElementById('modal').classList.remove('hidden');
-            switchTab('gen');
+        // Drag & Drop Functions
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('drag-over');
         }
 
-        function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
-
-        function eliminarRegistro() {
-            const id = document.getElementById('p-id').value;
-            if(!id) return;
-            document.getElementById('modal-confirmacion').classList.remove('hidden');
+        function dragLeave(ev) {
+            ev.currentTarget.classList.remove('drag-over');
         }
-        
-        async function confirmarEliminacionDefinitiva() {
-            const id = document.getElementById('p-id').value;
+
+        function dragStart(ev) {
+            dragElement = ev.target;
+            setTimeout(() => {
+                ev.target.classList.add('dragging');
+            }, 0);
+            
+            // Guardar datos en dataTransfer
+            ev.dataTransfer.setData('text/plain', ev.target.getAttribute('data-id'));
+            ev.dataTransfer.effectAllowed = 'move';
+        }
+
+        function dragEnd(ev) {
+            ev.target.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+        }
+
+        // FIXED: Función drop que actualiza el estado en el servidor
+        async function drop(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drag-over');
+            
+            const pedidoId = ev.dataTransfer.getData('text/plain');
+            const nuevoEstado = ev.currentTarget.parentElement.id.replace('columna-', '');
+            
+            if (!pedidoId || !nuevoEstado) return;
+            
+            // Encontrar el pedido
+            const pedido = pedidos.find(p => p.id == pedidoId);
+            if (!pedido || pedido.estado === nuevoEstado) return;
+            
             try {
-                await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
-                showToast('REGISTRO ELIMINADO', 'success');
-                document.getElementById('modal-confirmacion').classList.add('hidden');
-                cerrarModal();
-                cargarDatos();
-            } catch(e) { showToast('ERROR AL ELIMINAR', 'error'); }
+                // Actualizar en servidor
+                const res = await fetch(`/api/pedidos/${pedidoId}/estado`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: nuevoEstado })
+                });
+                
+                if (!res.ok) throw new Error('Error actualizando estado');
+                
+                const pedidoActualizado = await res.json();
+                
+                // Actualizar localmente
+                const index = pedidos.findIndex(p => p.id == pedidoId);
+                pedidos[index] = pedidoActualizado;
+                
+                // Re-renderizar
+                renderKanban();
+                showToast('Estado actualizado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error en drop:', error);
+                showToast('Error actualizando estado', 'error');
+                // Revertir visualmente
+                renderKanban();
+            }
         }
 
-        function showToast(msg, type = 'success') {
+        // Filtrado
+        function filtrarKanban() {
+            const filtroTaller = document.getElementById('filtro-taller').value;
+            const filtroEstado = document.getElementById('filtro-estado').value;
+            const filtroPrioridad = document.getElementById('filtro-prioridad').value;
+            const busqueda = document.getElementById('buscador').value.toLowerCase();
+            
+            let filtrados = pedidos;
+            
+            if (filtroTaller) {
+                filtrados = filtrados.filter(p => p.taller_id == filtroTaller);
+            }
+            
+            if (filtroEstado) {
+                filtrados = filtrados.filter(p => p.estado === filtroEstado);
+            }
+            
+            if (filtroPrioridad) {
+                filtrados = filtrados.filter(p => p.prioridad === filtroPrioridad);
+            }
+            
+            if (busqueda) {
+                filtrados = filtrados.filter(p => 
+                    p.titulo.toLowerCase().includes(busqueda) ||
+                    p.descripcion?.toLowerCase().includes(busqueda) ||
+                    p.marca?.toLowerCase().includes(busqueda) ||
+                    p.modelo?.toLowerCase().includes(busqueda) ||
+                    p.matricula?.toLowerCase().includes(busqueda)
+                );
+            }
+            
+            renderKanban(filtrados);
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtro-taller').value = '';
+            document.getElementById('filtro-estado').value = '';
+            document.getElementById('filtro-prioridad').value = '';
+            document.getElementById('buscador').value = '';
+            renderKanban();
+        }
+
+        // Modal Pieza
+        function abrirModalPieza() {
+            document.getElementById('form-pieza').reset();
+            document.getElementById('modal-pieza').classList.remove('hidden');
+            // Establecer fecha mínima como hoy
+            document.getElementById('p-fecha-limite').min = new Date().toISOString().split('T')[0];
+        }
+
+        function cerrarModalPieza() {
+            document.getElementById('modal-pieza').classList.add('hidden');
+        }
+
+        // FIXED: Guardar nueva pieza con persistencia correcta
+        document.getElementById('form-pieza').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                titulo: document.getElementById('p-titulo').value,
+                descripcion: document.getElementById('p-descripcion').value,
+                cliente_id: document.getElementById('p-cliente').value,
+                taller_id: document.getElementById('p-taller').value,
+                estado: 'solicitud',
+                prioridad: document.getElementById('p-prioridad').value,
+                marca: document.getElementById('p-marca').value,
+                modelo: document.getElementById('p-modelo').value,
+                matricula: document.getElementById('p-matricula').value,
+                año: document.getElementById('p-año').value ? parseInt(document.getElementById('p-año').value) : null,
+                fecha_limite: document.getElementById('p-fecha-limite').value || null
+            };
+            
+            try {
+                const res = await fetch('/api/pedidos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!res.ok) {
+                    const error = await res.json();
+                    throw new Error(error.error || 'Error del servidor');
+                }
+                
+                const nuevoPedido = await res.json();
+                
+                // Agregar a lista local
+                pedidos.unshift(nuevoPedido);
+                
+                // Cerrar modal y actualizar
+                cerrarModalPieza();
+                renderKanban();
+                showToast('Pedido creado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error guardando pedido:', error);
+                showToast(`Error: ${error.message}`, 'error');
+            }
+        };
+
+        // Menús
+        function toggleAvatarMenu() {
+            document.getElementById('avatar-menu').classList.toggle('show');
+        }
+
+        function toggleWaffleMenu() {
+            document.getElementById('waffle-menu').classList.toggle('show');
+        }
+
+        function toggleLangMenu() {
+            document.getElementById('lang-menu').classList.toggle('show');
+        }
+
+        // Cerrar menús al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.relative')) {
+                document.getElementById('avatar-menu').classList.remove('show');
+                document.getElementById('waffle-menu').classList.remove('show');
+                document.getElementById('lang-menu').classList.remove('show');
+            }
+        });
+
+        // Cambiar idioma
+        function cambiarIdioma(lang) {
+            // Aquí iría la lógica de internacionalización
+            showToast(`Idioma cambiado a ${lang.toUpperCase()}`, 'success');
+            document.getElementById('lang-menu').classList.remove('show');
+        }
+
+        // Cerrar sesión
+        function cerrarSesion() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-            toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+            
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                warning: 'bg-yellow-600',
+                info: 'bg-blue-600'
+            };
+            
+            toast.className = `${colors[type] || 'bg-blue-600'} text-white px-6 py-4 rounded-xl font-bold text-xs uppercase shadow-2xl animate-slide-in`;
+            toast.innerText = message;
+            
             container.appendChild(toast);
+            
             setTimeout(() => {
                 toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
-        window.onload = init;
+        // Inicializar
+        init();
     </script>
 </body>
 </html>
