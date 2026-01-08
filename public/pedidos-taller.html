@@ -38,8 +38,6 @@
         .excel-table td { padding: 14px 20px; font-size: 11px; font-weight: 600; border-bottom: 1px solid #f1f5f9; white-space: nowrap; transition: background 0.2s; }
         .dark .excel-table td { border-bottom-color: #1e293b; color: #cbd5e1; }
         .excel-table tr:hover td { background-color: rgba(37, 99, 235, 0.04); }
-        .sort-icon { margin-left: 8px; font-size: 0.7rem; opacity: 0.5; }
-        .sort-active { opacity: 1; color: #2563eb; }
 
         /* WAFFLE MENU */
         .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
@@ -48,13 +46,19 @@
         .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
         .waffle-item i { font-size: 1.25rem; }
 
-        /* SELECTOR IDIOMAS (Landing Style) */
+        /* SELECTOR IDIOMAS */
         .lang-dropdown { display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); z-index: 100; min-width: 200px; overflow: hidden; margin-top: -5px; }
         .dark .lang-dropdown { background: #1e293b; border-color: #334155; }
         .group-lang:hover .lang-dropdown { display: block; }
 
         /* MODAL DUAL STYLE */
         .modal-content-dual { border-radius: 2.5rem; overflow: hidden; display: flex; width: 100%; max-width: 56rem; height: 600px; }
+        
+        /* TOASTS */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { padding: 12px 24px; border-radius: 12px; background: #1e293b; color: white; font-weight: 700; font-size: 11px; text-transform: uppercase; margin-top: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
@@ -66,7 +70,7 @@
                     <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
                     <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
-                        PEDIDOS <span style="color: #7cb65d;">Recambio Reciclado</span>
+                        <span data-translate="title_pedidos">PEDIDOS</span> <span style="color: #7cb65d;">Recambio Reciclado</span>
                         <span id="db-status" class="w-2 h-2 rounded-full bg-red-500 transition-colors ml-2" title="Estado BBDD"></span>
                     </h1>
                 </a>
@@ -102,7 +106,7 @@
 
                 <div class="flex items-center gap-4">
                     <div class="flex flex-col items-end">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total Tránsito</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1" data-translate="total_transito">Total Tránsito</span>
                         <span id="total-general" class="text-lg font-black text-blue-600 blur-data leading-none">0€</span>
                     </div>
                     
@@ -141,21 +145,21 @@
                 <select id="filtroTaller" class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg px-4 py-2 text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                     <option value="todos">TODOS LOS TALLERES</option>
                 </select>
-                <button onclick="abrirExportar()" class="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
-                    <i class="fas fa-file-excel mr-2"></i> Exportar
+                <button onclick="abrirExportar()" class="bg-slate-100 dark:bg-slate-800 hover:bg-emerald-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all flex items-center">
+                    <i class="fas fa-file-excel mr-2"></i> <span data-translate="btn_exportar">Exportar</span>
                 </button>
                 <button onclick="toggleView()" id="btnToggleView" class="bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
                     <i class="fas fa-table mr-2"></i> Vista Excel
                 </button>
                 <button onclick="abrirConfiguracionColumnas()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-600 hover:text-white px-5 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
-                    <i class="fas fa-columns mr-2"></i> Columnas
+                    <i class="fas fa-columns mr-2"></i> <span data-translate="btn_columnas">Columnas</span>
                 </button>
                 <button onclick="abrirAjustes()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-600 hover:text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
                     <i class="fas fa-cog"></i>
                 </button>
             </div>
             <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all">
-                <i class="fas fa-plus mr-2"></i> Nuevo Pedido
+                <i class="fas fa-plus mr-2"></i> <span data-translate="btn_nuevo">Nuevo Pedido</span>
             </button>
         </div>
     </nav>
@@ -164,17 +168,44 @@
         <div class="text-center mb-8">
             <div class="flex items-center gap-2 mb-1 justify-center">
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Terminal Activa</span>
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest" data-translate="terminal_activa">Terminal Activa</span>
             </div>
-            <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter italic mb-2">Mis <span class="text-blue-600">Pedidos</span></h1>
-            <p id="contador-piezas" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cargando base de datos...</p>
+            <h1 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter italic mb-2"><span data-translate="mis">Mis</span> <span class="text-blue-600" data-translate="pedidos">Pedidos</span></h1>
+            <p id="contador-piezas" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cargando...</p>
         </div>
 
         <div id="pedidosContainer" class="transition-all duration-300"></div>
     </main>
 
+    <div id="modalExportar" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
+            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-lg font-black uppercase tracking-tighter" data-translate="exportar_titulo">Exportar Reporte</h3>
+            </div>
+            <div class="p-8 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400">Estado</label>
+                        <select id="exp-estado" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold outline-none"></select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400">Detalle</label>
+                        <select id="exp-vista" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold">
+                            <option value="simple">VISTA SIMPLE</option>
+                            <option value="avanzada">VISTA AVANZADA</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="p-8 flex gap-4">
+                <button onclick="cerrarExportar()" class="flex-1 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+                <button onclick="ejecutarExportar()" class="flex-1 bg-emerald-600 text-white p-4 rounded-full text-[10px] font-black uppercase shadow-lg">Descargar Excel</button>
+            </div>
+        </div>
+    </div>
+
     <div id="modalColumnas" class="fixed inset-0 z-[120] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10 animate-slideUp">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
             <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                 <h3 class="text-lg font-black uppercase tracking-tighter italic">Configurar <span class="text-blue-600">Columnas</span></h3>
             </div>
@@ -206,29 +237,48 @@
         </div>
     </div>
 
-    <div id="modalExportar" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
-            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-                <h3 class="text-lg font-black uppercase tracking-tighter">Exportar Reporte</h3>
-            </div>
-            <div class="p-8 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-400">Estado</label>
-                        <select id="exp-estado" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold outline-none"></select>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-400">Detalle</label>
-                        <select id="exp-vista" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold">
-                            <option value="simple">VISTA SIMPLE</option>
-                            <option value="avanzada">VISTA AVANZADA</option>
-                        </select>
-                    </div>
+    <div id="modalPedido" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 shadow-2xl modal-content-dual relative animate-slideUp">
+            <div class="w-1/3 bg-blue-600 p-10 text-white flex flex-col justify-between hidden md:flex">
+                <div>
+                    <i class="fas fa-plus-circle text-4xl mb-6"></i>
+                    <h3 class="text-3xl font-black uppercase italic leading-none mb-4">Nueva<br>Petición</h3>
+                    <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Añade una nueva pieza al flujo logístico de auditoría.</p>
                 </div>
+                <div class="text-[9px] font-black opacity-50 uppercase italic">RR System v4.0</div>
             </div>
-            <div class="p-8 flex gap-4">
-                <button onclick="cerrarExportar()" class="flex-1 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
-                <button onclick="ejecutarExportar()" class="flex-1 bg-emerald-600 text-white p-4 rounded-full text-[10px] font-black uppercase shadow-lg">Descargar Excel</button>
+            <div class="w-full md:w-2/3 p-10 flex flex-col bg-white dark:bg-slate-900">
+                <div class="flex justify-between items-start mb-8">
+                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Formulario de registro</span>
+                    <button onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                </div>
+                <form onsubmit="crearPedido(event)" class="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Nombre de la Pieza</label>
+                        <input type="text" id="new-pieza" placeholder="Ej: Alternador" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Marca/Modelo</label>
+                            <input type="text" id="new-modelo" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Matrícula</label>
+                            <input type="text" id="new-matricula" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white uppercase">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Precio (€)</label>
+                            <input type="number" id="new-precio" step="0.01" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        </div>
+                        <div>
+                             <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Taller (Opcional)</label>
+                             <select id="new-taller" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></select>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-slate-900 dark:bg-blue-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest mt-6 hover:opacity-90 transition-all active:scale-95">Solicitar Ahora</button>
+                </form>
             </div>
         </div>
     </div>
@@ -284,57 +334,6 @@
         </div>
     </div>
 
-    <div id="modalPedido" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 shadow-2xl modal-content-dual relative animate-slideUp">
-            <div class="w-1/3 bg-blue-600 p-10 text-white flex flex-col justify-between hidden md:flex">
-                <div>
-                    <i class="fas fa-plus-circle text-4xl mb-6"></i>
-                    <h3 class="text-3xl font-black uppercase italic leading-none mb-4">Nueva<br>Petición</h3>
-                    <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Añade una nueva pieza al flujo logístico de auditoría.</p>
-                </div>
-                <div class="text-[9px] font-black opacity-50 uppercase italic">RR System v4.0</div>
-            </div>
-
-            <div class="w-full md:w-2/3 p-10 flex flex-col bg-white dark:bg-slate-900">
-                <div class="flex justify-between items-start mb-8">
-                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Formulario de registro</span>
-                    <button onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
-                </div>
-
-                <form onsubmit="crearPedido(event)" class="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Nombre de la Pieza</label>
-                        <input type="text" id="new-pieza" placeholder="Ej: Alternador" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Marca/Modelo</label>
-                            <input type="text" id="new-modelo" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Matrícula</label>
-                            <input type="text" id="new-matricula" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white uppercase">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Precio (€)</label>
-                            <input type="number" id="new-precio" step="0.01" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                        </div>
-                        <div>
-                             <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Taller (Opcional)</label>
-                             <select id="new-taller" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></select>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="w-full bg-slate-900 dark:bg-blue-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest mt-6 hover:opacity-90 transition-all active:scale-95">Solicitar Ahora</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <div id="toast-container"></div>
 
     <footer class="fixed bottom-0 w-full py-4 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-6 flex justify-between border-slate-100 dark:border-slate-800">
@@ -344,16 +343,35 @@
     </footer>
 
     <script>
-        // --- INICIO Y SEGURIDAD ---
+        // --- 1. DICCIONARIO DE IDIOMAS (FIX 1) ---
+        const textosApp = {
+            es: { title_pedidos: "PEDIDOS", btn_exportar: "Exportar", btn_columnas: "Columnas", btn_nuevo: "Nuevo Pedido", terminal_activa: "Terminal Activa", mis: "Mis", pedidos: "Pedidos", total_transito: "Total Tránsito", exportar_titulo: "Exportar Reporte" },
+            en: { title_pedidos: "ORDERS", btn_exportar: "Export", btn_columnas: "Columns", btn_nuevo: "New Order", terminal_activa: "Terminal Active", mis: "My", pedidos: "Orders", total_transito: "Total Transit", exportar_titulo: "Export Report" },
+            it: { title_pedidos: "ORDINI", btn_exportar: "Esportare", btn_columnas: "Colonne", btn_nuevo: "Nuovo Ordine", terminal_activa: "Terminale Attivo", mis: "Miei", pedidos: "Ordini", total_transito: "Totale Transito", exportar_titulo: "Esporta Report" },
+            de: { title_pedidos: "BESTELLUNGEN", btn_exportar: "Exportieren", btn_columnas: "Spalten", btn_nuevo: "Neue Bestellung", terminal_activa: "Terminal Aktiv", mis: "Meine", pedidos: "Bestellungen", total_transito: "Gesamt Transit", exportar_titulo: "Bericht Exportieren" },
+            fr: { title_pedidos: "COMMANDES", btn_exportar: "Exporter", btn_columnas: "Colonnes", btn_nuevo: "Nouvelle Commande", terminal_activa: "Terminal Actif", mis: "Mes", pedidos: "Commandes", total_transito: "Total Transit", exportar_titulo: "Exporter Rapport" }
+        };
+
+        function aplicarIdioma(lang) {
+            const t = textosApp[lang] || textosApp.es;
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.getAttribute('data-translate');
+                if (t[key]) el.innerText = t[key];
+            });
+            // Título principal con HTML
+            const mainTitle = document.querySelector('h1 span[data-translate="title_pedidos"]');
+            if (mainTitle) mainTitle.innerText = t.title_pedidos;
+        }
+
+        // --- INICIO ---
         async function init() {
             const userData = localStorage.getItem('user');
             if (!userData) { window.location.href = 'index.html'; return; }
-            
             let user;
             try { user = JSON.parse(userData); } 
             catch (e) { window.location.href = 'index.html'; return; }
 
-            // Avatar y Rol
+            // Avatar
             const userAvatarEl = document.getElementById('user-initials');
             if (userAvatarEl) {
                 userAvatarEl.innerText = user.iniciales || '??';
@@ -363,9 +381,12 @@
                 userAvatarEl.className = `w-10 h-10 ${color} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg`;
             }
 
+            // Idioma
+            const lang = localStorage.getItem('idioma_seleccionado') || 'es';
+            aplicarIdioma(lang);
+
             if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
             
-            // Cargar datos iniciales
             actualizarIconoVista();
             await cargarTalleres();
             await cargarDatos();
@@ -381,7 +402,6 @@
             document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
             document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
 
-            // Listeners
             document.getElementById('buscador').addEventListener('keyup', filtrar);
             document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
         }
@@ -418,7 +438,7 @@
             { id: 'incidencia', label: 'Incidencias' }
         ];
 
-        // --- FUNCIONES DE CARGA Y FILTRADO ---
+        // --- CARGA DATOS ---
         async function cargarTalleres() {
             try {
                 const res = await fetch('/api/talleres');
@@ -427,9 +447,7 @@
                 const newT = document.getElementById('new-taller');
                 fT.innerHTML = '<option value="todos">TODOS LOS TALLERES</option>';
                 newT.innerHTML = '<option value="">Asignar Automático</option>';
-                
                 data.forEach(t => {
-                    // CAMBIO 2: Usamos ID en value
                     fT.add(new Option(t.nombre_taller.toUpperCase(), t.id));
                     newT.add(new Option(t.nombre_taller.toUpperCase(), t.id));
                 });
@@ -437,12 +455,10 @@
         }
 
         async function cargarDatos() {
-            const container = document.getElementById('pedidosContainer');
             try {
-                // Obtenemos todos los pedidos para poder filtrar localmente si es necesario
                 const res = await fetch('/api/pedidos');
                 allPedidos = await res.json();
-                filtrar(); // Aplicamos filtro local
+                filtrar();
                 actualizarTotal();
             } catch(e) { console.error(e); }
         }
@@ -452,7 +468,6 @@
             const tallerId = document.getElementById('filtroTaller').value;
 
             displayedPedidos = allPedidos.filter(p => {
-                // CAMBIO 2: Lógica de filtro corregida (ID vs ID)
                 const matchTaller = (tallerId === 'todos') || (p.usuario_id && p.usuario_id.toString() === tallerId);
                 const matchTexto = (p.pieza?.toLowerCase().includes(term) || 
                                     p.matricula?.toLowerCase().includes(term) ||
@@ -460,19 +475,6 @@
                 return matchTaller && matchTexto;
             });
             renderPedidos();
-        }
-
-        function toggleView() {
-            viewType = (viewType === 'cards') ? 'excel' : 'cards';
-            localStorage.setItem('taller_view_type', viewType);
-            actualizarIconoVista();
-            renderPedidos();
-        }
-
-        function actualizarIconoVista() {
-            const btn = document.getElementById('btnToggleView');
-            if (viewType === 'excel') btn.innerHTML = '<i class="fas fa-th-large mr-2"></i> Vista Tarjetas';
-            else btn.innerHTML = '<i class="fas fa-table mr-2"></i> Vista Excel';
         }
 
         function renderPedidos() {
@@ -497,7 +499,6 @@
                 html += `<tr onclick="verDetalle(${p.id})" class="cursor-pointer">`;
                 visibleCols.forEach(col => {
                     let val = p[col.id] || '---';
-                    // CAMBIO 1: Colores en Excel para Estado
                     if (col.id === 'estado') {
                         const colorClass = getStatusColor(val);
                         val = `<span class="${colorClass} px-2 py-1 rounded text-[10px] uppercase font-bold">${val}</span>`;
@@ -544,11 +545,43 @@
             return styles[estado] || 'bg-slate-100 text-slate-600';
         }
 
-        // --- CREACIÓN Y EDICIÓN ---
+        // --- EXPORTAR EXCEL (FIX 2: FUNCIÓN IMPLEMENTADA) ---
+        function ejecutarExportar() {
+            const estado = document.getElementById('exp-estado').value;
+            // 1. Filtramos los datos a exportar
+            let datosExportar = allPedidos;
+            if (estado !== 'todos') {
+                datosExportar = allPedidos.filter(p => p.estado === estado);
+            }
+            
+            // 2. Limpiamos y formateamos para el Excel
+            const datosLimpios = datosExportar.map(p => ({
+                ID: p.id,
+                Fecha: new Date(p.fecha_creacion).toLocaleDateString(),
+                Pieza: p.pieza,
+                Matricula: p.matricula,
+                Estado: p.estado.toUpperCase(),
+                Taller: p.nombre_usuario,
+                Precio: parseFloat(p.precio || 0),
+                Bastidor: p.bastidor || ''
+            }));
+
+            // 3. Generamos el archivo usando SheetJS (XLSX)
+            const ws = XLSX.utils.json_to_sheet(datosLimpios);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Pedidos Exportados");
+            
+            // 4. Descargar
+            XLSX.writeFile(wb, `Pedidos_RecambioReciclado_${new Date().toISOString().slice(0,10)}.xlsx`);
+            
+            showToast("Exportación completada", "success");
+            cerrarExportar();
+        }
+
+        // --- FUNCIONES COMUNES ---
         async function crearPedido(e) {
             e.preventDefault();
             const body = {
-                // CAMBIO 3: Recogemos los nuevos campos del modal dual
                 pieza: document.getElementById('new-pieza').value,
                 modelo_coche: document.getElementById('new-modelo').value,
                 matricula: document.getElementById('new-matricula').value,
@@ -556,7 +589,6 @@
                 usuario_id: document.getElementById('new-taller').value || localStorage.getItem('user_id'),
                 admin_user: localStorage.getItem('user_nombre') || 'Taller'
             };
-
             try {
                 const res = await fetch('/api/pedidos', {
                     method: 'POST',
@@ -571,38 +603,10 @@
             } catch(e) { console.error(e); }
         }
 
-        // --- UTILIDADES ---
-        function ordenarPor(key) {
-            if (sortConfig.key === key) sortConfig.direction = (sortConfig.direction === 'asc') ? 'desc' : 'asc';
-            else { sortConfig.key = key; sortConfig.direction = 'asc'; }
-            
-            displayedPedidos.sort((a, b) => {
-                let valA = a[key] || '', valB = b[key] || '';
-                if(key === 'precio') { valA = parseFloat(valA); valB = parseFloat(valB); }
-                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-            renderPedidos();
-        }
-
-        function verDetalle(id) {
-            const p = allPedidos.find(i => i.id === id);
-            if (!p) return;
-            document.getElementById('edit-id').value = p.id;
-            document.getElementById('edit-pieza').value = p.pieza;
-            document.getElementById('edit-matricula').value = p.matricula;
-            document.getElementById('edit-modelo').value = p.modelo_coche;
-            document.getElementById('edit-bastidor').value = p.bastidor || '';
-            document.getElementById('badgeEstadoPopup').innerText = p.estado.toUpperCase();
-            document.getElementById('popupDetalle').classList.add('modal-active');
-        }
-        
-        // --- CAMBIO 6: Función Idiomas ---
         function cambiarIdioma(l) { 
             localStorage.setItem('idioma_seleccionado', l); 
+            aplicarIdioma(l); // Cambio al vuelo
             showToast(`Idioma: ${l.toUpperCase()}`, "success");
-            setTimeout(() => location.reload(), 500);
         }
 
         function showToast(msg, type) {
@@ -615,18 +619,50 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
+        function toggleView() {
+            viewType = (viewType === 'cards') ? 'excel' : 'cards';
+            localStorage.setItem('taller_view_type', viewType);
+            actualizarIconoVista();
+            renderPedidos();
+        }
+        function actualizarIconoVista() {
+            const btn = document.getElementById('btnToggleView');
+            if (viewType === 'excel') btn.innerHTML = '<i class="fas fa-th-large mr-2"></i> Vista Tarjetas';
+            else btn.innerHTML = '<i class="fas fa-table mr-2"></i> Vista Excel';
+        }
         function actualizarTotal() {
             const total = displayedPedidos.reduce((acc, curr) => acc + (parseFloat(curr.precio) || 0), 0);
             document.getElementById('total-general').innerText = `${total.toFixed(2)}€`;
         }
-
-        /* Funciones de Modales Auxiliares (Ajustes, Columnas, etc.) se mantienen igual */
+        function ordenarPor(key) {
+            if (sortConfig.key === key) sortConfig.direction = (sortConfig.direction === 'asc') ? 'desc' : 'asc';
+            else { sortConfig.key = key; sortConfig.direction = 'asc'; }
+            displayedPedidos.sort((a, b) => {
+                let valA = a[key] || '', valB = b[key] || '';
+                if(key === 'precio') { valA = parseFloat(valA); valB = parseFloat(valB); }
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            renderPedidos();
+        }
+        function verDetalle(id) {
+            const p = allPedidos.find(i => i.id === id);
+            if (!p) return;
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-pieza').value = p.pieza;
+            document.getElementById('edit-matricula').value = p.matricula;
+            document.getElementById('edit-modelo').value = p.modelo_coche;
+            document.getElementById('edit-bastidor').value = p.bastidor || '';
+            document.getElementById('badgeEstadoPopup').innerText = p.estado.toUpperCase();
+            document.getElementById('popupDetalle').classList.add('modal-active');
+        }
         function abrirConfiguracionColumnas() {
             const lista = document.getElementById('listaColumnasConfig');
             lista.innerHTML = configColumnas.map((col, idx) => `
-                <div class="switch-col" onclick="toggleColVisible(${idx})">
-                    <span class="text-[10px] font-bold uppercase text-slate-600">${col.label}</span>
-                    <div class="w-10 h-5 rounded-full relative transition-colors ${col.visible ? 'bg-blue-600' : 'bg-slate-200'}">
+                <div class="switch-col flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-lg cursor-pointer" onclick="toggleColVisible(${idx})">
+                    <span class="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300">${col.label}</span>
+                    <div class="w-10 h-5 rounded-full relative transition-colors ${col.visible ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'}">
                         <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${col.visible ? 'translate-x-5' : ''}"></div>
                     </div>
                 </div>
@@ -641,9 +677,9 @@
         function cerrarPopup() { document.getElementById('popupDetalle').classList.remove('modal-active'); }
         function abrirAjustes() { document.getElementById('modalAjustes').classList.remove('hidden'); }
         function cerrarAjustes() { document.getElementById('modalAjustes').classList.add('hidden'); }
+        function guardarAjustes() { ajustesSemaf.naranja = parseInt(document.getElementById('adj-naranja').value); ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value); localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf)); cerrarAjustes(); renderPedidos(); }
         function abrirExportar() { document.getElementById('modalExportar').classList.remove('hidden'); }
         function cerrarExportar() { document.getElementById('modalExportar').classList.add('hidden'); }
-        function ejecutarExportar() { /* ... lógica de exportación original ... */ cerrarExportar(); }
         function togglePrivacy() { isPrivate = !isPrivate; document.body.classList.toggle('privacy-active', isPrivate); }
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
         function cambiarTab(t) {
