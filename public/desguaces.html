@@ -6,6 +6,7 @@
     <title>Gestor de Desguaces - Recambio Reciclado</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
     </script>
@@ -15,196 +16,294 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
         .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; }
-        .workshop-card { border-left: 4px solid #2563eb; }
+        
+        /* Estilos Tabla Excel */
+        .table-container { overflow-x: auto; border-radius: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th { position: sticky; top: 0; background: #f8fafc; z-index: 10; }
+        .dark th { background: #0f172a; }
+        td, th { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+        .dark td, .dark th { border-bottom: 1px solid #1e293b; }
+        tr:hover { background-color: #f1f5f9; }
+        .dark tr:hover { background-color: #1e293b; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen custom-scrollbar">
 
     <div class="bg-orange-600 text-white text-center py-2 text-[10px] font-black uppercase tracking-widest shadow-lg sticky top-0 z-50">
         <i class="fas fa-exclamation-triangle mr-2"></i> 
-        LOGS PENDIENTES: SyntaxError JSON, Integridad de rutas, Registro altas/bajas
+        RECORDATORIO LOGS: SyntaxError JSON, Integridad de rutas, Registro altas/bajas
     </div>
 
-    <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-4">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-4 sticky top-[24px] z-40">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap gap-4 items-center justify-between">
+            
             <div class="flex items-center gap-4">
                 <button onclick="window.location.href='landing.html'" class="hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors">
                     <i class="fas fa-arrow-left"></i>
                 </button>
-                <h1 class="text-xl font-black tracking-tighter uppercase italic">Gestor <span class="text-blue-600">Desguaces</span></h1>
+                <div>
+                    <h1 class="text-xl font-black tracking-tighter uppercase italic leading-none">Gestor <span class="text-blue-600">Desguaces</span></h1>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Base de Datos & Workshops</p>
+                </div>
             </div>
-            
-            <div class="flex items-center gap-3">
-                <button onclick="togglePrivacy()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="relative min-w-[200px]">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="buscador" placeholder="BUSCAR..." class="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <select id="filtro-provincia" onchange="filtrar()" class="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="todas">TODAS LAS PROVINCIAS</option>
+                </select>
+
+                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
+
+                <button onclick="cambiarVista('tabla')" id="btn-vista-tabla" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg">
+                    <i class="fas fa-table mr-2"></i> EXCEL
+                </button>
+                <button onclick="cambiarVista('tarjetas')" id="btn-vista-tarjetas" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
+                    <i class="fas fa-th-large mr-2"></i> TARJETAS
+                </button>
+
+                <button onclick="exportarExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg shadow-green-500/20">
+                    <i class="fas fa-file-export mr-2"></i> EXPORTAR
+                </button>
+
+                <button onclick="togglePrivacy()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
                     <i class="fas fa-eye-slash"></i>
                 </button>
-                <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg flex items-center gap-2 transition-transform active:scale-95">
-                    <i class="fas fa-plus"></i> AÑADIR DESGUACE
+
+                <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg active:scale-95">
+                    <i class="fas fa-plus mr-2"></i> NUEVO
                 </button>
-                <div id="user-initials" class="w-10 h-10 rounded-full flex items-center justify-center font-black text-xs shadow-xl border-2 border-white dark:border-slate-700">--</div>
+
+                <div id="user-initials" class="w-9 h-9 rounded-full flex items-center justify-center font-black text-[10px] shadow-lg border-2 border-white dark:border-slate-800">--</div>
             </div>
         </div>
     </header>
 
-    <main class="p-6 max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row gap-4 mb-8">
-            <div class="relative flex-1">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="buscador" placeholder="Buscar desguace por nombre, provincia, email o CP..." 
-                    class="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium">
-            </div>
-            <div class="bg-white dark:bg-slate-900 px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
-                <span class="text-[10px] font-black uppercase text-slate-500">Total Desguaces</span>
-                <span id="total-count" class="text-2xl font-black text-blue-600">0</span>
-            </div>
+    <main class="p-6 max-w-[1600px] mx-auto">
+        
+        <div id="vista-tabla" class="table-container bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800">
+            <table id="tabla-excel">
+                <thead>
+                    <tr class="uppercase text-[9px] font-black tracking-widest text-slate-500">
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Provincia</th>
+                        <th>Teléfono/s</th>
+                        <th>Email</th>
+                        <th>Dirección</th>
+                        <th>Horario</th>
+                        <th>Origen</th>
+                        <th>Tipo</th>
+                    </tr>
+                </thead>
+                <tbody id="body-tabla" class="font-bold">
+                    </tbody>
+            </table>
         </div>
 
-        <div id="grid-desguaces" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="vista-tarjetas" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             </div>
     </main>
 
     <div id="modal" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center hidden p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden">
             <div class="flex bg-slate-50 dark:bg-slate-800/50">
-                <button id="btnTabInfo" onclick="cambiarTab('info')" class="flex-1 py-5 text-[11px] font-black uppercase tracking-widest tab-active">Datos Generales</button>
-                <button id="btnTabTecnico" onclick="cambiarTab('tec')" class="flex-1 py-5 text-[11px] font-black uppercase tracking-widest">Contacto y Redes</button>
+                <button id="btnTabInfo" onclick="cambiarTab('info')" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest tab-active">Datos Generales</button>
+                <button id="btnTabTecnico" onclick="cambiarTab('tec')" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest">Contacto y Extras</button>
             </div>
 
             <form id="formDesguace" class="p-8">
-                <input type="hidden" id="d-id">
-                
-                <div id="tabInfo" class="space-y-5">
+                <div id="tabInfo" class="space-y-4 text-xs font-bold">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="col-span-2">
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Razón Social / Nombre</label>
-                            <input type="text" id="d-nombre" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+                            <label class="text-[9px] text-slate-400 uppercase">Nombre</label>
+                            <input type="text" id="d-nombre" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-slate-400 uppercase">Provincia</label>
+                            <input type="text" id="d-provincia" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-slate-400 uppercase">C.P.</label>
+                            <input type="text" id="d-cp" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
                         </div>
                         <div class="col-span-2">
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Dirección</label>
-                            <input type="text" id="d-direccion" class="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Provincia</label>
-                            <input type="text" id="d-provincia" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none font-bold">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Código Postal</label>
-                            <input type="text" id="d-cp" class="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none">
+                            <label class="text-[9px] text-slate-400 uppercase">Dirección</label>
+                            <input type="text" id="d-direccion" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
                         </div>
                     </div>
                 </div>
 
-                <div id="tabTecnico" class="hidden space-y-5">
-                    <div class="grid grid-cols-2 gap-4">
+                <div id="tabTecnico" class="hidden space-y-4 text-xs font-bold">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Teléfono Fijo</label>
-                            <input type="text" id="d-fijo" class="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none">
+                            <label class="text-[9px] text-slate-400 uppercase">Fijo</label>
+                            <input type="text" id="d-fijo" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Móvil 1</label>
-                            <input type="text" id="d-movil1" class="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none font-bold">
+                            <label class="text-[9px] text-slate-400 uppercase">Móvil 1</label>
+                            <input type="text" id="d-movil1" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
                         </div>
-                        <div class="col-span-2">
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Email Principal</label>
-                            <input type="email" id="d-email" class="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none">
+                        <div>
+                            <label class="text-[9px] text-slate-400 uppercase">Móvil 2</label>
+                            <input type="text" id="d-movil2" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
                         </div>
-                        <div class="col-span-2">
-                            <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Horario / Notas</label>
-                            <input type="text" id="d-horario" class="w-full p-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl outline-none" placeholder="L-V: 09:00 - 18:00">
+                        <div class="col-span-3">
+                            <label class="text-[9px] text-slate-400 uppercase">Email</label>
+                            <input type="email" id="d-email" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
                         </div>
-                        <div class="col-span-2 flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800">
-                            <input type="checkbox" id="d-workshop" class="w-6 h-6 rounded-lg text-blue-600 focus:ring-blue-500">
-                            <div>
-                                <p class="text-[11px] font-black uppercase text-blue-700 dark:text-blue-400">MARCAR COMO TALLER / WORKSHOP</p>
-                                <p class="text-[9px] text-blue-600/60 font-bold italic">Aparecerá destacado en las listas de pedidos</p>
-                            </div>
+                        <div class="col-span-3">
+                            <label class="text-[9px] text-slate-400 uppercase">Horario</label>
+                            <input type="text" id="d-horario" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
                         </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                        <input type="checkbox" id="d-workshop" class="w-5 h-5 rounded text-blue-600">
+                        <span class="text-[10px] font-black uppercase text-blue-600">Es Workshop (Taller)</span>
                     </div>
                 </div>
 
-                <div class="mt-10 flex gap-4">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 py-4 font-black text-slate-400 uppercase tracking-widest text-[10px]">Cerrar</button>
-                    <button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-[1.2rem] font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-500/30 active:scale-95 transition-all">
-                        Guardar Desguace
-                    </button>
+                <div class="mt-8 flex gap-4">
+                    <button type="button" onclick="cerrarModal()" class="flex-1 py-4 font-black uppercase text-[10px] text-slate-400">Cancelar</button>
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="toast-container" class="fixed bottom-8 right-8 z-[100] flex flex-col gap-3"></div>
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-2"></div>
 
     <script>
         let desguaces = [];
+        let vistaActual = 'tabla';
         let user = JSON.parse(localStorage.getItem('user') || '{}');
 
         async function init() {
             if (!user.id) { window.location.href = 'index.html'; return; }
             
-            // Avatar
             const av = document.getElementById('user-initials');
             av.innerText = user.iniciales || '--';
             av.className += ` ${user.rol === 'admin' ? 'bg-red-700' : 'bg-blue-700'} text-white`;
 
             if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
             
-            await cargarBaseDatos();
+            await cargarDatos();
         }
 
-        async function cargarBaseDatos() {
+        async function cargarDatos() {
             try {
                 const res = await fetch('/api/desguaces');
                 desguaces = await res.json();
-                document.getElementById('total-count').innerText = desguaces.length;
-                renderGrid(desguaces);
-            } catch (e) { showToast('Error al conectar con la base de datos', 'error'); }
+                generarFiltroProvincias();
+                filtrar();
+            } catch (e) { showToast('Error cargando datos', 'error'); }
         }
 
-        function renderGrid(lista) {
-            const grid = document.getElementById('grid-desguaces');
-            grid.innerHTML = '';
-            
-            lista.forEach(d => {
-                const card = document.createElement('div');
-                card.className = `bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-blue-500 transition-colors ${d.es_workshop ? 'workshop-card' : ''}`;
-                
-                card.innerHTML = `
-                    ${d.es_workshop ? '<div class="absolute top-0 right-0 bg-blue-600 text-white text-[8px] font-black px-4 py-1 rounded-bl-xl tracking-tighter italic">WORKSHOP</div>' : ''}
-                    <div class="blur-data">
-                        <h3 class="font-black text-slate-800 dark:text-slate-100 uppercase text-sm mb-1 leading-tight group-hover:text-blue-600">${d.nombre}</h3>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mb-4 flex items-center gap-1">
-                            <i class="fas fa-location-dot"></i> ${d.provincia} ${d.cp ? `(${d.cp})` : ''}
-                        </p>
-                        
-                        <div class="space-y-2 border-t dark:border-slate-800 pt-4">
-                            <div class="flex items-center gap-3 text-xs">
-                                <div class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400"><i class="fas fa-phone"></i></div>
-                                <span class="font-bold">${d.movil_1 || d.telefono_fijo || 'No disponible'}</span>
-                            </div>
-                            <div class="flex items-center gap-3 text-xs">
-                                <div class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400"><i class="fas fa-envelope"></i></div>
-                                <span class="text-slate-500 truncate">${d.email || 'Sin correo'}</span>
-                            </div>
-                        </div>
+        function generarFiltroProvincias() {
+            const select = document.getElementById('filtro-provincia');
+            const provs = [...new Set(desguaces.map(d => d.provincia))].sort();
+            provs.forEach(p => {
+                if(p) select.add(new Option(p.toUpperCase(), p));
+            });
+        }
 
-                        ${d.horario ? `
-                            <div class="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-[9px] font-bold text-slate-500 uppercase italic">
-                                <i class="fas fa-clock mr-1"></i> ${d.horario}
-                            </div>
-                        ` : ''}
+        function filtrar() {
+            const busq = document.getElementById('buscador').value.toLowerCase();
+            const prov = document.getElementById('filtro-provincia').value;
+
+            const filtrados = desguaces.filter(d => {
+                const coincideBusq = d.nombre.toLowerCase().includes(busq) || d.email?.toLowerCase().includes(busq);
+                const coincideProv = prov === 'todas' || d.provincia === prov;
+                return coincideBusq && coincideProv;
+            });
+
+            renderTabla(filtrados);
+            renderTarjetas(filtrados);
+        }
+
+        function renderTabla(lista) {
+            const body = document.getElementById('body-tabla');
+            body.innerHTML = '';
+            lista.forEach(d => {
+                const telefonos = [d.telefono_fijo, d.movil_1, d.movil_2].filter(Boolean).join(' / ');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-slate-400">#${d.id}</td>
+                    <td class="${d.es_workshop ? 'text-blue-600' : ''}">${d.nombre}</td>
+                    <td>${d.provincia || '-'}</td>
+                    <td class="blur-data">${telefonos || '-'}</td>
+                    <td class="blur-data">${d.email || '-'}</td>
+                    <td class="text-[10px] text-slate-500">${d.direccion || '-'}</td>
+                    <td class="text-[10px] italic">${d.horario || '-'}</td>
+                    <td><span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-[8px]">${d.fuente_origen || 'WEB'}</span></td>
+                    <td>${d.es_workshop ? '⭐' : ''}</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function renderTarjetas(lista) {
+            const cont = document.getElementById('vista-tarjetas');
+            cont.innerHTML = '';
+            lista.forEach(d => {
+                // Capturar todos los números (Norma: mostrar todos si hay más de uno)
+                const nums = [d.telefono_fijo, d.movil_1, d.movil_2].filter(Boolean);
+                const telHtml = nums.map(n => `<div><i class="fas fa-phone mr-2 opacity-50"></i>${n}</div>`).join('');
+
+                const card = document.createElement('div');
+                card.className = `bg-white dark:bg-slate-900 p-5 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-sm relative group hover:border-blue-500 transition-all`;
+                card.innerHTML = `
+                    ${d.es_workshop ? '<div class="absolute top-0 right-0 bg-blue-600 text-white text-[8px] font-black px-3 py-1 rounded-bl-xl tracking-tighter italic">WORKSHOP</div>' : ''}
+                    <div class="blur-data">
+                        <h3 class="font-black text-slate-800 dark:text-slate-100 uppercase text-xs mb-1 group-hover:text-blue-600">${d.nombre}</h3>
+                        <p class="text-[9px] text-blue-500 font-bold uppercase mb-4 tracking-widest">${d.provincia}</p>
+                        <div class="space-y-1 text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-4">
+                            ${telHtml || 'Sin teléfonos'}
+                        </div>
+                        <div class="pt-3 border-t dark:border-slate-800 text-[10px]">
+                            <p class="truncate"><i class="fas fa-envelope mr-2 opacity-50"></i>${d.email || '-'}</p>
+                            <p class="mt-1 text-slate-400 leading-tight">${d.direccion || '-'}</p>
+                        </div>
                     </div>
                 `;
-                grid.appendChild(card);
+                cont.appendChild(card);
             });
+        }
+
+        function cambiarVista(v) {
+            vistaActual = v;
+            const vt = document.getElementById('vista-tabla');
+            const vc = document.getElementById('vista-tarjetas');
+            const bt = document.getElementById('btn-vista-tabla');
+            const bc = document.getElementById('btn-vista-tarjetas');
+
+            if(v === 'tabla') {
+                vt.classList.remove('hidden'); vc.classList.add('hidden');
+                bt.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase shadow-lg';
+                bc.className = 'bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-[10px] font-black uppercase';
+            } else {
+                vc.classList.remove('hidden'); vt.classList.add('hidden');
+                bc.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase shadow-lg';
+                bt.className = 'bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-[10px] font-black uppercase';
+            }
+        }
+
+        function exportarExcel() {
+            const wb = XLSX.utils.table_to_book(document.getElementById('tabla-excel'));
+            XLSX.writeFile(wb, `desguaces_${new Date().toLocaleDateString()}.xlsx`);
         }
 
         // NORMA: "Antes de crear nada, comprueba la BBDD"
         document.getElementById('formDesguace').onsubmit = async (e) => {
             e.preventDefault();
-            
             const payload = {
                 nombre: document.getElementById('d-nombre').value,
                 provincia: document.getElementById('d-provincia').value,
@@ -212,22 +311,15 @@
                 cp: document.getElementById('d-cp').value,
                 telefono_fijo: document.getElementById('d-fijo').value,
                 movil_1: document.getElementById('d-movil1').value,
+                movil_2: document.getElementById('d-movil2').value,
                 email: document.getElementById('d-email').value,
                 horario: document.getElementById('d-horario').value,
                 es_workshop: document.getElementById('d-workshop').checked,
                 admin_user: user.nombre
             };
 
-            // Verificación previa en BBDD (Local)
-            const duplicado = desguaces.find(x => 
-                x.nombre.toLowerCase() === payload.nombre.toLowerCase() && 
-                x.provincia.toLowerCase() === payload.provincia.toLowerCase()
-            );
-
-            if (duplicado) {
-                showToast('EL DESGUACE YA EXISTE EN ESTA PROVINCIA', 'error');
-                return;
-            }
+            const dup = desguaces.find(x => x.nombre.toLowerCase() === payload.nombre.toLowerCase() && x.provincia.toLowerCase() === payload.provincia.toLowerCase());
+            if (dup) return showToast('YA EXISTE ESTE DESGUACE EN LA PROVINCIA', 'error');
 
             try {
                 const res = await fetch('/api/desguaces', {
@@ -235,60 +327,34 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
                 if (res.ok) {
-                    showToast('REGISTRO COMPLETADO', 'success');
+                    showToast('REGISTRO GUARDADO', 'success');
                     cerrarModal();
-                    await cargarBaseDatos();
-                } else {
-                    const err = await res.json();
-                    showToast(err.error || 'Error al guardar', 'error');
+                    await cargarDatos();
                 }
-            } catch (e) { showToast('Error crítico de red', 'error'); }
+            } catch (e) { showToast('Error al guardar', 'error'); }
         };
 
-        // UTILIDADES UI
-        function abrirModalNuevo() { 
-            document.getElementById('formDesguace').reset();
-            cambiarTab('info');
-            document.getElementById('modal').classList.remove('hidden'); 
-        }
-
+        function abrirModalNuevo() { document.getElementById('formDesguace').reset(); cambiarTab('info'); document.getElementById('modal').classList.remove('hidden'); }
         function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
-
         function cambiarTab(t) {
             const bI = document.getElementById('btnTabInfo'), bT = document.getElementById('btnTabTecnico');
             const tI = document.getElementById('tabInfo'), tT = document.getElementById('tabTecnico');
-            if (t === 'info') {
-                bI.classList.add('tab-active'); bT.classList.remove('tab-active');
-                tI.classList.remove('hidden'); tT.classList.add('hidden');
-            } else {
-                bT.classList.add('tab-active'); bI.classList.remove('tab-active');
-                tT.classList.remove('hidden'); tI.classList.add('hidden');
-            }
+            if (t === 'info') { bI.classList.add('tab-active'); bT.classList.remove('tab-active'); tI.classList.remove('hidden'); tT.classList.add('hidden'); }
+            else { bT.classList.add('tab-active'); bI.classList.remove('tab-active'); tT.classList.remove('hidden'); tI.classList.add('hidden'); }
         }
 
         function togglePrivacy() { document.body.classList.toggle('privacy-active'); }
+        document.getElementById('buscador').addEventListener('keyup', filtrar);
 
         function showToast(m, t) {
             const c = document.getElementById('toast-container');
             const div = document.createElement('div');
-            div.className = `p-4 rounded-2xl text-white font-black text-[10px] shadow-2xl transition-all duration-300 flex items-center gap-3 animate-bounce ${t==='success'?'bg-green-600':'bg-red-600'}`;
-            div.innerHTML = `<i class="fas ${t==='success'?'fa-check-circle':'fa-exclamation-circle'}"></i> ${m.toUpperCase()}`;
+            div.className = `p-4 rounded-xl text-white font-black text-[10px] shadow-2xl transition-all ${t==='success'?'bg-green-600':'bg-red-600'}`;
+            div.innerHTML = m.toUpperCase();
             c.appendChild(div);
             setTimeout(() => { div.style.opacity='0'; setTimeout(()=>div.remove(),300); }, 3000);
         }
-
-        document.getElementById('buscador').onkeyup = (e) => {
-            const val = e.target.value.toLowerCase();
-            const filtrados = desguaces.filter(d => 
-                d.nombre.toLowerCase().includes(val) || 
-                d.provincia.toLowerCase().includes(val) || 
-                (d.cp && d.cp.includes(val)) ||
-                (d.email && d.email.toLowerCase().includes(val))
-            );
-            renderGrid(filtrados);
-        };
 
         init();
     </script>
