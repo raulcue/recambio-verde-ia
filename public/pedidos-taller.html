@@ -23,15 +23,19 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+        
         .logo-invert { transition: filter 0.3s ease; }
         .dark .logo-invert { filter: brightness(0) invert(1); }
+
+        /* TABS Y MODALES */
         .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; }
         .modal-active { display: flex !important; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
         .dark .glass-card { background: rgba(15, 23, 42, 0.8); }
 
-        /* ESTILOS EXCEL */
+        /* TABLA ESTILO EXCEL */
         .excel-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1200px; }
         .excel-table th { position: sticky; top: 0; background: #f8fafc; padding: 14px 20px; font-size: 10px; font-weight: 900; text-transform: uppercase; color: #64748b; text-align: left; border-bottom: 2px solid #e2e8f0; z-index: 20; white-space: nowrap; letter-spacing: 0.05em; cursor: pointer; }
         .dark .excel-table th { background: #0f172a; border-bottom-color: #1e293b; color: #94a3b8; }
@@ -46,15 +50,13 @@
         .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
         .waffle-item i { font-size: 1.25rem; }
 
-        /* SELECTOR IDIOMAS */
+        /* DROPDOWN IDIOMAS */
         .lang-dropdown { display: none; position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); z-index: 100; min-width: 200px; overflow: hidden; margin-top: -5px; }
         .dark .lang-dropdown { background: #1e293b; border-color: #334155; }
         .group-lang:hover .lang-dropdown { display: block; }
 
-        /* MODAL DUAL STYLE */
         .modal-content-dual { border-radius: 2.5rem; overflow: hidden; display: flex; width: 100%; max-width: 56rem; height: 600px; }
         
-        /* TOASTS */
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
         .toast { padding: 12px 24px; border-radius: 12px; background: #1e293b; color: white; font-weight: 700; font-size: 11px; text-transform: uppercase; margin-top: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); transition: all 0.3s; }
         .toast.success { border-left: 4px solid #10b981; }
@@ -71,7 +73,7 @@
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
                     <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
                         <span data-translate="title_pedidos">PEDIDOS</span> <span style="color: #7cb65d;">Recambio Reciclado</span>
-                        <span id="db-status" class="w-2 h-2 rounded-full bg-red-500 transition-colors ml-2" title="Estado BBDD"></span>
+                        <span id="db-status" class="w-2 h-2 rounded-full bg-red-500 transition-all ml-2" title="Estado BBDD"></span>
                     </h1>
                 </a>
             </div>
@@ -79,7 +81,7 @@
             <div class="flex items-center gap-6">
                 <div class="relative">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="buscador" onkeyup="filtrar()" placeholder="Buscar pieza, matrícula..." class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
+                    <input type="text" id="buscador" placeholder="Buscar pieza, matrícula..." class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
                 </div>
 
                 <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
@@ -96,7 +98,7 @@
                         </div>
                     </div>
 
-                    <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                    <button onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'))" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
                         <i class="fas fa-moon dark:hidden text-xs"></i><i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
                     </button>
                     <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
@@ -178,22 +180,15 @@
     </main>
 
     <div id="modalExportar" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
-            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden">
+            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-800">
                 <h3 class="text-lg font-black uppercase tracking-tighter" data-translate="exportar_titulo">Exportar Reporte</h3>
             </div>
             <div class="p-8 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-400">Estado</label>
+                        <label class="text-[9px] font-black uppercase text-slate-400">Filtrar Estado</label>
                         <select id="exp-estado" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold outline-none"></select>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black uppercase text-slate-400">Detalle</label>
-                        <select id="exp-vista" class="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-xs font-bold">
-                            <option value="simple">VISTA SIMPLE</option>
-                            <option value="avanzada">VISTA AVANZADA</option>
-                        </select>
                     </div>
                 </div>
             </div>
@@ -206,28 +201,28 @@
 
     <div id="modalColumnas" class="fixed inset-0 z-[120] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
-            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+            <div class="p-8 bg-slate-50 dark:bg-slate-800/50 border-b dark:border-slate-800">
                 <h3 class="text-lg font-black uppercase tracking-tighter italic">Configurar <span class="text-blue-600">Columnas</span></h3>
             </div>
             <div id="listaColumnasConfig" class="p-6 space-y-1 max-h-96 overflow-y-auto custom-scrollbar"></div>
-            <div class="p-8 flex gap-4 bg-slate-50/50 dark:bg-slate-800/30">
-                <button onclick="cerrarConfiguracionColumnas()" class="flex-1 text-[10px] font-black uppercase text-slate-400 tracking-widest">Cancelar</button>
-                <button onclick="guardarConfiguracionColumnas()" class="flex-1 bg-blue-600 text-white p-4 rounded-full text-[10px] font-black uppercase shadow-lg hover:bg-blue-700 transition-all tracking-widest">Guardar Cambios</button>
+            <div class="p-8 flex gap-4">
+                <button onclick="cerrarConfiguracionColumnas()" class="flex-1 text-[10px] font-black uppercase text-slate-400">Cancelar</button>
+                <button onclick="guardarConfiguracionColumnas()" class="flex-1 bg-blue-600 text-white p-4 rounded-full text-[10px] font-black uppercase shadow-lg">Guardar</button>
             </div>
         </div>
     </div>
 
     <div id="modalAjustes" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border border-white/10">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8">
             <h3 class="text-sm font-black uppercase tracking-widest mb-6 italic">Días de <span class="text-blue-600">Alerta</span></h3>
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-orange-500 mr-2"></i> Naranja (Días)</span>
-                    <input type="number" id="adj-naranja" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none">
+                    <span class="text-[10px] font-bold uppercase text-slate-500">Naranja (Días)</span>
+                    <input type="number" id="adj-naranja" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center">
                 </div>
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-red-600 mr-2"></i> Rojo (Días)</span>
-                    <input type="number" id="adj-rojo" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none">
+                    <span class="text-[10px] font-bold uppercase text-slate-500">Rojo (Días)</span>
+                    <input type="number" id="adj-rojo" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center">
                 </div>
             </div>
             <div class="mt-8 flex gap-2">
@@ -238,97 +233,62 @@
     </div>
 
     <div id="modalPedido" class="fixed inset-0 z-[100] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 shadow-2xl modal-content-dual relative animate-slideUp">
+        <div class="bg-white dark:bg-slate-900 shadow-2xl modal-content-dual relative">
             <div class="w-1/3 bg-blue-600 p-10 text-white flex flex-col justify-between hidden md:flex">
                 <div>
                     <i class="fas fa-plus-circle text-4xl mb-6"></i>
                     <h3 class="text-3xl font-black uppercase italic leading-none mb-4">Nueva<br>Petición</h3>
-                    <p class="text-blue-100 text-[10px] font-bold uppercase tracking-widest leading-relaxed">Añade una nueva pieza al flujo logístico de auditoría.</p>
+                    <p class="text-[10px] font-bold uppercase">Añade una pieza al flujo de recambio reciclado.</p>
                 </div>
-                <div class="text-[9px] font-black opacity-50 uppercase italic">RR System v4.0</div>
             </div>
-            <div class="w-full md:w-2/3 p-10 flex flex-col bg-white dark:bg-slate-900">
+            <div class="w-full md:w-2/3 p-10 flex flex-col bg-white dark:bg-slate-900 overflow-y-auto">
                 <div class="flex justify-between items-start mb-8">
-                    <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Formulario de registro</span>
-                    <button onclick="cerrarModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                    <span class="text-[10px] font-black text-blue-600 uppercase">Formulario de registro</span>
+                    <button onclick="cerrarModal()" class="text-slate-400"><i class="fas fa-times"></i></button>
                 </div>
-                <form onsubmit="crearPedido(event)" class="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Nombre de la Pieza</label>
-                        <input type="text" id="new-pieza" placeholder="Ej: Alternador" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Marca/Modelo</label>
-                            <input type="text" id="new-modelo" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Matrícula</label>
-                            <input type="text" id="new-matricula" required class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white uppercase">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Precio (€)</label>
-                            <input type="number" id="new-precio" step="0.01" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                        </div>
-                        <div>
-                             <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Taller (Opcional)</label>
-                             <select id="new-taller" class="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></select>
-                        </div>
-                    </div>
-                    <button type="submit" class="w-full bg-slate-900 dark:bg-blue-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest mt-6 hover:opacity-90 transition-all active:scale-95">Solicitar Ahora</button>
+                <form onsubmit="crearPedido(event)" class="space-y-4">
+                    <input type="text" id="new-pieza" placeholder="PIEZA" required class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                    <input type="text" id="new-modelo" placeholder="MODELO" required class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                    <input type="text" id="new-matricula" placeholder="MATRÍCULA" required class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                    <input type="number" id="new-precio" placeholder="PRECIO (€)" step="0.01" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                    <select id="new-taller" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"></select>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest mt-4">Solicitar Ahora</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <div id="popupDetalle" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-end sm:items-center justify-center z-[300] p-0 sm:p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl border-t dark:border-slate-800">
+    <div id="popupDetalle" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-[300] p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[40px] overflow-hidden shadow-2xl">
             <div class="flex border-b dark:border-slate-800">
-                <button onclick="cambiarTab('info')" id="btnTabInfo" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest tab-active">Detalles Pieza</button>
-                <button onclick="cambiarTab('tecnico')" id="btnTabTecnico" class="flex-1 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Ficha Técnica</button>
+                <button onclick="cambiarTab('info')" id="btnTabInfo" class="flex-1 py-5 text-[10px] font-black uppercase tab-active">Detalles</button>
+                <button onclick="cambiarTab('tecnico')" id="btnTabTecnico" class="flex-1 py-5 text-[10px] font-black uppercase text-slate-400">Ficha Técnica</button>
             </div>
             <form id="formEdicion" onsubmit="actualizarPedido(event)" class="p-8">
                 <input type="hidden" id="edit-id">
                 <div id="tabInfo" class="space-y-5">
                     <div class="flex justify-between items-center">
                         <span id="badgeEstadoPopup" class="px-4 py-1.5 rounded-full text-[9px] font-black uppercase bg-blue-100 text-blue-600"></span>
-                        <button type="button" onclick="eliminarPedidoActual()" class="text-red-500 text-[10px] font-black uppercase p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all">
-                            <i class="fas fa-trash-alt mr-1"></i> Cancelar Pedido
-                        </button>
+                        <button type="button" onclick="eliminarPedidoActual()" class="text-red-500 text-[10px] font-black uppercase hover:bg-red-50 p-2 rounded-xl">Eliminar</button>
                     </div>
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-2 block mb-1">Nombre de la Pieza</label>
-                        <input type="text" id="edit-pieza" required class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none font-bold uppercase text-xs text-slate-800 dark:text-white outline-none focus:ring-2 ring-blue-500">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 px-1">Nombre de la pieza</label>
+                        <input type="text" id="edit-pieza" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none font-bold text-xs uppercase dark:text-white outline-none">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-2 block mb-1">Matrícula</label>
-                            <input type="text" id="edit-matricula" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none font-bold uppercase text-xs text-slate-800 dark:text-white outline-none">
-                        </div>
-                        <div>
-                            <label class="text-[9px] font-black text-slate-400 uppercase ml-2 block mb-1">Vehículo/Modelo</label>
-                            <input type="text" id="edit-modelo" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none font-bold uppercase text-xs text-slate-800 dark:text-white outline-none">
-                        </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 px-1">Matrícula</label>
+                        <input type="text" id="edit-matricula" class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none font-bold text-xs uppercase dark:text-white outline-none">
                     </div>
                 </div>
                 <div id="tabTecnico" class="hidden space-y-5">
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-2 block mb-1">Bastidor (VIN completo)</label>
-                        <input type="text" id="edit-bastidor" placeholder="Introducir 17 caracteres..." class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none font-mono text-xs text-blue-600 dark:text-blue-400 outline-none">
-                    </div>
-                    <div class="p-6 bg-slate-900 rounded-[2rem] border border-slate-800">
-                        <p class="text-[8px] font-black text-slate-500 uppercase mb-3">Logs del Servidor</p>
-                        <div class="font-mono text-[10px] text-emerald-500 space-y-1">
-                            <p>> Sincronización SQL: OK</p>
-                            <p id="detLogEstado">> Última modificación: Registrada</p>
-                        </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black uppercase text-slate-400 px-1">Número de Bastidor (VIN)</label>
+                        <input type="text" id="edit-bastidor" placeholder="VIN..." class="w-full p-4 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none font-mono text-xs text-blue-600 outline-none">
                     </div>
                 </div>
                 <div class="flex gap-3 mt-8">
-                    <button type="button" onclick="cerrarPopup()" class="flex-1 py-5 text-slate-500 text-[10px] font-black uppercase tracking-widest">Volver</button>
-                    <button type="submit" class="flex-[2] py-5 bg-blue-600 text-white rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95 transition-all">Actualizar Datos</button>
+                    <button type="button" onclick="cerrarPopup()" class="flex-1 py-5 text-slate-500 text-[10px] font-black uppercase">Volver</button>
+                    <button type="submit" class="flex-[2] py-5 bg-blue-600 text-white rounded-3xl text-[10px] font-black uppercase shadow-xl">Actualizar</button>
                 </div>
             </form>
         </div>
@@ -337,121 +297,93 @@
     <div id="toast-container"></div>
 
     <footer class="fixed bottom-0 w-full py-4 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-6 flex justify-between border-slate-100 dark:border-slate-800">
-        <div>v2.2.1 | CREADOR: RAUL CUE</div>
+        <div>v2.2.1 | RR LOGISTICS</div>
         <div>CONTACTO: RAULCUE@GMAIL.COM</div>
-        <div>COPYRIGHT 2026-2030</div>
     </footer>
 
     <script>
-        // --- 1. DICCIONARIO DE IDIOMAS (FIX 1) ---
         const textosApp = {
             es: { title_pedidos: "PEDIDOS", btn_exportar: "Exportar", btn_columnas: "Columnas", btn_nuevo: "Nuevo Pedido", terminal_activa: "Terminal Activa", mis: "Mis", pedidos: "Pedidos", total_transito: "Total Tránsito", exportar_titulo: "Exportar Reporte" },
+            it: { title_pedidos: "ORDINI", btn_exportar: "Esporta", btn_columnas: "Colonne", btn_nuevo: "Nuovo Ordine", terminal_activa: "Terminale Attivo", mis: "I Miei", pedidos: "Ordini", total_transito: "Totale Transito", exportar_titulo: "Esporta Report" },
             en: { title_pedidos: "ORDERS", btn_exportar: "Export", btn_columnas: "Columns", btn_nuevo: "New Order", terminal_activa: "Terminal Active", mis: "My", pedidos: "Orders", total_transito: "Total Transit", exportar_titulo: "Export Report" },
-            it: { title_pedidos: "ORDINI", btn_exportar: "Esportare", btn_columnas: "Colonne", btn_nuevo: "Nuovo Ordine", terminal_activa: "Terminale Attivo", mis: "Miei", pedidos: "Ordini", total_transito: "Totale Transito", exportar_titulo: "Esporta Report" },
-            de: { title_pedidos: "BESTELLUNGEN", btn_exportar: "Exportieren", btn_columnas: "Spalten", btn_nuevo: "Neue Bestellung", terminal_activa: "Terminal Aktiv", mis: "Meine", pedidos: "Bestellungen", total_transito: "Gesamt Transit", exportar_titulo: "Bericht Exportieren" },
-            fr: { title_pedidos: "COMMANDES", btn_exportar: "Exporter", btn_columnas: "Colonnes", btn_nuevo: "Nouvelle Commande", terminal_activa: "Terminal Actif", mis: "Mes", pedidos: "Commandes", total_transito: "Total Transit", exportar_titulo: "Exporter Rapport" }
+            de: { title_pedidos: "BESTELLUNGEN", btn_exportar: "Exportieren", btn_columnas: "Spalten", btn_nuevo: "Neue Bestellung", terminal_activa: "Terminal Aktiv", mis: "Meine", pedidos: "Bestellungen", total_transito: "Gesamttransit", exportar_titulo: "Bericht Exportieren" },
+            fr: { title_pedidos: "COMMANDES", btn_exportar: "Exporter", btn_columnas: "Colonnes", btn_nuevo: "Nouvelle Commande", terminal_activa: "Terminal Actif", mis: "Mes", pedidos: "Commandes", total_transito: "Total Transit", exportar_titulo: "Exporter le Rapport" }
         };
 
-        function aplicarIdioma(lang) {
-            const t = textosApp[lang] || textosApp.es;
-            document.querySelectorAll('[data-translate]').forEach(el => {
-                const key = el.getAttribute('data-translate');
-                if (t[key]) el.innerText = t[key];
-            });
-            // Título principal con HTML
-            const mainTitle = document.querySelector('h1 span[data-translate="title_pedidos"]');
-            if (mainTitle) mainTitle.innerText = t.title_pedidos;
-        }
+        let allPedidos = [];
+        let displayedPedidos = [];
+        let isPrivate = false;
+        let viewType = 'excel'; // CONFIGURADO POR DEFECTO A EXCEL
+        let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
+        let configColumnas = JSON.parse(localStorage.getItem('taller_column_config')) || [
+            { id: 'id', label: 'ID', visible: true },
+            { id: 'fecha_creacion', label: 'Fecha', visible: true },
+            { id: 'estado', label: 'Estado', visible: true },
+            { id: 'matricula', label: 'Matrícula', visible: true },
+            { id: 'pieza', label: 'Pieza', visible: true },
+            { id: 'nombre_usuario', label: 'Taller', visible: true },
+            { id: 'precio', label: 'Importe', visible: true }
+        ];
 
-        // --- INICIO ---
         async function init() {
+            // 1. Verificación de sesión
             const userData = localStorage.getItem('user');
             if (!userData) { window.location.href = 'index.html'; return; }
-            let user;
-            try { user = JSON.parse(userData); } 
-            catch (e) { window.location.href = 'index.html'; return; }
+            let user = JSON.parse(userData);
 
-            // Avatar
+            // 2. Avatar y Colores
             const userAvatarEl = document.getElementById('user-initials');
             if (userAvatarEl) {
                 userAvatarEl.innerText = user.iniciales || '??';
                 let color = 'bg-blue-700';
                 if (user.rol === 'agente') color = 'bg-green-600';
                 if (user.rol === 'taller') color = 'bg-red-600';
+                if (user.rol === 'admin') color = 'bg-red-700';
                 userAvatarEl.className = `w-10 h-10 ${color} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg`;
             }
 
-            // Idioma
-            const lang = localStorage.getItem('idioma_seleccionado') || 'es';
-            aplicarIdioma(lang);
-
+            // 3. Preferencias
+            aplicarIdioma(localStorage.getItem('idioma_seleccionado') || 'es');
             if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
             
+            // 4. Inicialización
             actualizarIconoVista();
             await cargarTalleres();
             await cargarDatos();
 
-            // Llenar selectores modales
+            // Status BBDD
+            const dbStatus = document.getElementById('db-status');
+            if (dbStatus) {
+                dbStatus.classList.replace('bg-red-500', 'bg-emerald-500');
+                dbStatus.classList.add('shadow-[0_0_8px_#10b981]', 'animate-pulse');
+            }
+
+            // 5. Inits de Modales
             const expEst = document.getElementById('exp-estado');
             expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
-            columns.forEach(c => {
-                const opt = new Option(c.label.toUpperCase(), c.id);
-                expEst.add(opt);
+            ['solicitado', 'desguace', 'transito', 'entregado', 'incidencia'].forEach(st => {
+                expEst.add(new Option(st.toUpperCase(), st));
             });
 
             document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
             document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
 
+            // 6. Eventos
             document.getElementById('buscador').addEventListener('keyup', filtrar);
-            document.getElementById('filtroTaller').addEventListener('change', cargarDatos);
+            document.getElementById('filtroTaller').addEventListener('change', filtrar);
         }
 
-        // --- VARIABLES GLOBALES ---
-        let allPedidos = [];
-        let displayedPedidos = [];
-        let isPrivate = false;
-        let viewType = localStorage.getItem('taller_view_type') || 'excel';
-        let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
-        let sortConfig = { key: 'fecha_creacion', direction: 'desc' };
-
-        // CONFIG DE COLUMNAS
-        let configColumnas = JSON.parse(localStorage.getItem('taller_column_config')) || [
-            { id: 'id', label: 'ID Pedido', visible: true },
-            { id: 'fecha_creacion', label: 'Fecha Alta', visible: true },
-            { id: 'estado', label: 'Estado Actual', visible: true },
-            { id: 'matricula', label: 'Matrícula', visible: true },
-            { id: 'marca_coche', label: 'Marca', visible: true },
-            { id: 'modelo_coche', label: 'Modelo', visible: true },
-            { id: 'pieza', label: 'Pieza Solicitada', visible: true },
-            { id: 'nombre_usuario', label: 'Taller Destino', visible: true },
-            { id: 'precio', label: 'Importe Venta', visible: true },
-            { id: 'proveedor', label: 'Proveedor Origen', visible: false },
-            { id: 'bastidor', label: 'VIN / Bastidor', visible: false }
-        ];
-
-        const columns = [
-            { id: 'solicitado', label: 'Solicitud' },
-            { id: 'desguace', label: 'Localizado' },
-            { id: 'listo', label: 'En Almacén' },
-            { id: 'transito', label: 'Logística' },
-            { id: 'entregado', label: 'Cerrado' },
-            { id: 'incidencia', label: 'Incidencias' }
-        ];
-
-        // --- CARGA DATOS ---
         async function cargarTalleres() {
             try {
                 const res = await fetch('/api/talleres');
                 const data = await res.json();
-                const fT = document.getElementById('filtroTaller');
-                const newT = document.getElementById('new-taller');
+                const fT = document.getElementById('filtroTaller'), nT = document.getElementById('new-taller');
                 fT.innerHTML = '<option value="todos">TODOS LOS TALLERES</option>';
-                newT.innerHTML = '<option value="">Asignar Automático</option>';
                 data.forEach(t => {
                     fT.add(new Option(t.nombre_taller.toUpperCase(), t.id));
-                    newT.add(new Option(t.nombre_taller.toUpperCase(), t.id));
+                    nT.add(new Option(t.nombre_taller.toUpperCase(), t.id));
                 });
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error('Error talleres:', e); }
         }
 
         async function cargarDatos() {
@@ -459,28 +391,32 @@
                 const res = await fetch('/api/pedidos');
                 allPedidos = await res.json();
                 filtrar();
-                actualizarTotal();
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error('Error datos:', e);
+                showToast('Error al conectar con el servidor', 'error');
+            }
         }
 
         function filtrar() {
             const term = document.getElementById('buscador').value.toLowerCase();
             const tallerId = document.getElementById('filtroTaller').value;
-
             displayedPedidos = allPedidos.filter(p => {
-                const matchTaller = (tallerId === 'todos') || (p.usuario_id && p.usuario_id.toString() === tallerId);
-                const matchTexto = (p.pieza?.toLowerCase().includes(term) || 
-                                    p.matricula?.toLowerCase().includes(term) ||
-                                    p.nombre_usuario?.toLowerCase().includes(term));
+                const matchTaller = (tallerId === 'todos') || (p.usuario_id?.toString() === tallerId);
+                const matchTexto = (
+                    (p.pieza?.toLowerCase() || "").includes(term) || 
+                    (p.matricula?.toLowerCase() || "").includes(term) ||
+                    (p.id?.toString() || "").includes(term)
+                );
                 return matchTaller && matchTexto;
             });
             renderPedidos();
+            actualizarTotal();
         }
 
         function renderPedidos() {
             const container = document.getElementById('pedidosContainer');
             if (displayedPedidos.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold uppercase text-[10px] tracking-widest bg-white dark:bg-slate-900 rounded-[3rem]">No hay pedidos registrados</div>`;
+                container.innerHTML = `<div class="text-center py-20 text-slate-400 font-black text-[10px] uppercase tracking-widest">Sin resultados para mostrar</div>`;
                 return;
             }
             viewType === 'excel' ? renderVistaExcel(container) : renderVistaCards(container);
@@ -489,22 +425,17 @@
 
         function renderVistaExcel(container) {
             const visibleCols = configColumnas.filter(c => c.visible);
-            container.className = "bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-x-auto border border-slate-200 dark:border-slate-800 shadow-2xl custom-scrollbar max-w-full";
-            
+            container.className = "bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-x-auto border dark:border-slate-800 shadow-2xl custom-scrollbar";
             let html = `<table class="excel-table"><thead><tr>`;
-            visibleCols.forEach(col => html += `<th onclick="ordenarPor('${col.id}')">${col.label}</th>`);
+            visibleCols.forEach(col => html += `<th>${col.label}</th>`);
             html += `</tr></thead><tbody>`;
-            
             displayedPedidos.forEach(p => {
                 html += `<tr onclick="verDetalle(${p.id})" class="cursor-pointer">`;
                 visibleCols.forEach(col => {
                     let val = p[col.id] || '---';
-                    if (col.id === 'estado') {
-                        const colorClass = getStatusColor(val);
-                        val = `<span class="${colorClass} px-2 py-1 rounded text-[10px] uppercase font-bold">${val}</span>`;
-                    }
-                    if (col.id === 'id') val = `RR-${val}`;
-                    if (col.id === 'precio') val = `${parseFloat(val).toFixed(2)}€`;
+                    if (col.id === 'estado') val = `<span class="${getStatusColor(val)} px-2 py-1 rounded text-[10px] font-bold uppercase">${val}</span>`;
+                    if (col.id === 'precio') val = `${parseFloat(val || 0).toFixed(2)}€`;
+                    if (col.id === 'fecha_creacion') val = new Date(val).toLocaleDateString();
                     html += `<td class="blur-data">${val}</td>`;
                 });
                 html += `</tr>`;
@@ -514,179 +445,200 @@
 
         function renderVistaCards(container) {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6";
-            container.innerHTML = displayedPedidos.map(p => {
-                const colorCls = getStatusColor(p.estado);
-                return `
-                    <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm cursor-pointer hover:border-blue-500/40 transition-all hover:shadow-xl group">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[9px] font-black ${colorCls} px-3 py-1 rounded-full uppercase tracking-widest">${p.estado}</span>
-                            <span class="text-[9px] font-bold text-slate-300 italic">RR-${p.id}</span>
-                        </div>
-                        <h3 class="text-lg font-black dark:text-white uppercase leading-tight group-hover:text-blue-600 transition-colors">${p.pieza}</h3>
-                        <p class="text-[10px] text-blue-500 font-black mt-2 uppercase tracking-widest">${p.matricula}</p>
-                        <div class="flex justify-between items-center mt-6 pt-4 border-t border-slate-50 dark:border-slate-800">
-                            <span class="text-[8px] font-bold text-slate-400 uppercase">${p.nombre_usuario || '---'}</span>
-                            <span class="text-xs font-black dark:text-white blur-data">${parseFloat(p.precio || 0).toFixed(2)}€</span>
-                        </div>
+            container.innerHTML = displayedPedidos.map(p => `
+                <div onclick="verDetalle(${p.id})" class="glass-card p-6 rounded-[35px] border dark:border-slate-800 shadow-sm cursor-pointer hover:scale-[1.02] transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="${getStatusColor(p.estado)} px-3 py-1 rounded-full text-[9px] font-black uppercase">${p.estado}</span>
+                        <span class="text-[9px] font-bold text-slate-300">RR-${p.id}</span>
                     </div>
-                `;
-            }).join('');
+                    <h3 class="text-lg font-black dark:text-white uppercase leading-tight">${p.pieza}</h3>
+                    <p class="text-[10px] text-blue-500 font-black mt-2 uppercase">${p.matricula}</p>
+                    <div class="flex justify-between items-center mt-6 pt-4 border-t dark:border-slate-800">
+                        <span class="text-[8px] font-bold text-slate-400 uppercase">${p.nombre_usuario || 'S/T'}</span>
+                        <span class="text-xs font-black dark:text-white blur-data">${parseFloat(p.precio || 0).toFixed(2)}€</span>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function getStatusColor(estado) {
-            const styles = {
-                'solicitado': 'bg-blue-100 text-blue-600',
-                'desguace': 'bg-orange-100 text-orange-600',
-                'listo': 'bg-indigo-100 text-indigo-600',
-                'transito': 'bg-purple-100 text-purple-600',
-                'entregado': 'bg-emerald-100 text-emerald-600',
-                'incidencia': 'bg-red-100 text-red-600'
-            };
-            return styles[estado] || 'bg-slate-100 text-slate-600';
-        }
-
-        // --- EXPORTAR EXCEL (FIX 2: FUNCIÓN IMPLEMENTADA) ---
-        function ejecutarExportar() {
-            const estado = document.getElementById('exp-estado').value;
-            // 1. Filtramos los datos a exportar
-            let datosExportar = allPedidos;
-            if (estado !== 'todos') {
-                datosExportar = allPedidos.filter(p => p.estado === estado);
-            }
-            
-            // 2. Limpiamos y formateamos para el Excel
-            const datosLimpios = datosExportar.map(p => ({
-                ID: p.id,
-                Fecha: new Date(p.fecha_creacion).toLocaleDateString(),
-                Pieza: p.pieza,
-                Matricula: p.matricula,
-                Estado: p.estado.toUpperCase(),
-                Taller: p.nombre_usuario,
-                Precio: parseFloat(p.precio || 0),
-                Bastidor: p.bastidor || ''
-            }));
-
-            // 3. Generamos el archivo usando SheetJS (XLSX)
-            const ws = XLSX.utils.json_to_sheet(datosLimpios);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Pedidos Exportados");
-            
-            // 4. Descargar
-            XLSX.writeFile(wb, `Pedidos_RecambioReciclado_${new Date().toISOString().slice(0,10)}.xlsx`);
-            
-            showToast("Exportación completada", "success");
-            cerrarExportar();
-        }
-
-        // --- FUNCIONES COMUNES ---
         async function crearPedido(e) {
             e.preventDefault();
-            const body = {
+            const payload = {
                 pieza: document.getElementById('new-pieza').value,
-                modelo_coche: document.getElementById('new-modelo').value,
+                modelo: document.getElementById('new-modelo').value,
                 matricula: document.getElementById('new-matricula').value,
-                precio: document.getElementById('new-precio').value || 0,
-                usuario_id: document.getElementById('new-taller').value || localStorage.getItem('user_id'),
-                admin_user: localStorage.getItem('user_nombre') || 'Taller'
+                precio: document.getElementById('new-precio').value,
+                usuario_id: document.getElementById('new-taller').value,
+                estado: 'solicitado'
             };
             try {
-                const res = await fetch('/api/pedidos', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(body)
+                const res = await fetch('/api/pedidos', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
                 });
-                if(res.ok) {
-                    showToast('Pedido Creado', 'success');
+                if (res.ok) {
+                    showToast('Pedido creado con éxito', 'success');
                     cerrarModal();
                     cargarDatos();
                 }
-            } catch(e) { console.error(e); }
+            } catch(err) { showToast('Error al crear pedido', 'error'); }
         }
 
-        function cambiarIdioma(l) { 
-            localStorage.setItem('idioma_seleccionado', l); 
-            aplicarIdioma(l); // Cambio al vuelo
-            showToast(`Idioma: ${l.toUpperCase()}`, "success");
-        }
-
-        function showToast(msg, type) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-            toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
-        }
-
-        function toggleView() {
-            viewType = (viewType === 'cards') ? 'excel' : 'cards';
-            localStorage.setItem('taller_view_type', viewType);
-            actualizarIconoVista();
-            renderPedidos();
-        }
-        function actualizarIconoVista() {
-            const btn = document.getElementById('btnToggleView');
-            if (viewType === 'excel') btn.innerHTML = '<i class="fas fa-th-large mr-2"></i> Vista Tarjetas';
-            else btn.innerHTML = '<i class="fas fa-table mr-2"></i> Vista Excel';
-        }
-        function actualizarTotal() {
-            const total = displayedPedidos.reduce((acc, curr) => acc + (parseFloat(curr.precio) || 0), 0);
-            document.getElementById('total-general').innerText = `${total.toFixed(2)}€`;
-        }
-        function ordenarPor(key) {
-            if (sortConfig.key === key) sortConfig.direction = (sortConfig.direction === 'asc') ? 'desc' : 'asc';
-            else { sortConfig.key = key; sortConfig.direction = 'asc'; }
-            displayedPedidos.sort((a, b) => {
-                let valA = a[key] || '', valB = b[key] || '';
-                if(key === 'precio') { valA = parseFloat(valA); valB = parseFloat(valB); }
-                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-            renderPedidos();
-        }
         function verDetalle(id) {
-            const p = allPedidos.find(i => i.id === id);
+            const p = allPedidos.find(x => x.id === id);
             if (!p) return;
             document.getElementById('edit-id').value = p.id;
             document.getElementById('edit-pieza').value = p.pieza;
             document.getElementById('edit-matricula').value = p.matricula;
-            document.getElementById('edit-modelo').value = p.modelo_coche;
-            document.getElementById('edit-bastidor').value = p.bastidor || '';
-            document.getElementById('badgeEstadoPopup').innerText = p.estado.toUpperCase();
+            document.getElementById('badgeEstadoPopup').innerText = p.estado;
             document.getElementById('popupDetalle').classList.add('modal-active');
         }
+
+        async function actualizarPedido(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const payload = { 
+                pieza: document.getElementById('edit-pieza').value, 
+                matricula: document.getElementById('edit-matricula').value 
+            };
+            try {
+                const res = await fetch(`/api/pedidos/${id}`, { 
+                    method: 'PUT', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
+                });
+                if (res.ok) {
+                    showToast('Registro actualizado', 'success');
+                    cerrarPopup();
+                    cargarDatos();
+                }
+            } catch(err) { showToast('Error al actualizar', 'error'); }
+        }
+
+        async function eliminarPedidoActual() {
+            if (!confirm('¿Seguro que deseas eliminar este pedido?')) return;
+            const id = document.getElementById('edit-id').value;
+            try {
+                const res = await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Pedido eliminado definitivamente', 'success');
+                    cerrarPopup();
+                    cargarDatos();
+                }
+            } catch(e) { showToast('Error al eliminar', 'error'); }
+        }
+
+        function ejecutarExportar() {
+            const estado = document.getElementById('exp-estado').value;
+            let data = estado === 'todos' ? allPedidos : allPedidos.filter(p => p.estado === estado);
+            const ws = XLSX.utils.json_to_sheet(data.map(p => ({
+                ID: p.id, 
+                Pieza: p.pieza, 
+                Matricula: p.matricula, 
+                Estado: p.estado.toUpperCase(), 
+                Taller: p.nombre_usuario, 
+                Precio: p.precio,
+                Fecha: new Date(p.fecha_creacion).toLocaleDateString()
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Reporte_Pedidos");
+            XLSX.writeFile(wb, "Reporte_Pedidos_RR.xlsx");
+            cerrarExportar();
+        }
+
+        function getStatusColor(est) {
+            const s = { 
+                solicitado: 'bg-blue-100 text-blue-600', 
+                desguace: 'bg-orange-100 text-orange-600', 
+                transito: 'bg-purple-100 text-purple-600', 
+                entregado: 'bg-emerald-100 text-emerald-600', 
+                incidencia: 'bg-red-100 text-red-600' 
+            };
+            return s[est] || 'bg-slate-100 text-slate-600';
+        }
+
+        function toggleView() { 
+            viewType = (viewType === 'excel') ? 'cards' : 'excel'; 
+            actualizarIconoVista(); 
+            renderPedidos(); 
+        }
+
+        function actualizarIconoVista() { 
+            document.getElementById('btnToggleView').innerHTML = (viewType === 'excel') 
+                ? '<i class="fas fa-th-large mr-2"></i> Vista Tarjetas' 
+                : '<i class="fas fa-table mr-2"></i> Vista Excel'; 
+        }
+
+        function actualizarTotal() { 
+            const t = displayedPedidos.reduce((acc, c) => acc + (parseFloat(c.precio) || 0), 0); 
+            document.getElementById('total-general').innerText = `${t.toLocaleString('es-ES', {minimumFractionDigits: 2})}€`; 
+        }
+        
+        function abrirModalNuevo() { document.getElementById('modalPedido').classList.add('modal-active'); }
+        function cerrarModal() { document.getElementById('modalPedido').classList.remove('modal-active'); }
+        function cerrarPopup() { document.getElementById('popupDetalle').classList.remove('modal-active'); }
+        function abrirExportar() { document.getElementById('modalExportar').classList.remove('hidden'); }
+        function cerrarExportar() { document.getElementById('modalExportar').classList.add('hidden'); }
+        
         function abrirConfiguracionColumnas() {
-            const lista = document.getElementById('listaColumnasConfig');
-            lista.innerHTML = configColumnas.map((col, idx) => `
-                <div class="switch-col flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-lg cursor-pointer" onclick="toggleColVisible(${idx})">
-                    <span class="text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300">${col.label}</span>
-                    <div class="w-10 h-5 rounded-full relative transition-colors ${col.visible ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'}">
-                        <div class="absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${col.visible ? 'translate-x-5' : ''}"></div>
-                    </div>
+            const container = document.getElementById('listaColumnasConfig');
+            container.innerHTML = configColumnas.map((c, i) => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl mb-1">
+                    <span class="text-[10px] font-black uppercase text-slate-500">${c.label}</span>
+                    <input type="checkbox" ${c.visible ? 'checked' : ''} onchange="configColumnas[${i}].visible = this.checked" class="w-4 h-4 rounded text-blue-600">
                 </div>
             `).join('');
             document.getElementById('modalColumnas').classList.add('modal-active');
         }
-        function toggleColVisible(idx) { configColumnas[idx].visible = !configColumnas[idx].visible; abrirConfiguracionColumnas(); }
-        function guardarConfiguracionColumnas() { localStorage.setItem('taller_column_config', JSON.stringify(configColumnas)); cerrarConfiguracionColumnas(); renderPedidos(); }
+        function guardarConfiguracionColumnas() { 
+            localStorage.setItem('taller_column_config', JSON.stringify(configColumnas)); 
+            cerrarConfiguracionColumnas(); 
+            renderPedidos(); 
+        }
         function cerrarConfiguracionColumnas() { document.getElementById('modalColumnas').classList.remove('modal-active'); }
-        function abrirModalNuevo() { document.getElementById('modalPedido').classList.add('modal-active'); }
-        function cerrarModal() { document.getElementById('modalPedido').classList.remove('modal-active'); }
-        function cerrarPopup() { document.getElementById('popupDetalle').classList.remove('modal-active'); }
+        
         function abrirAjustes() { document.getElementById('modalAjustes').classList.remove('hidden'); }
         function cerrarAjustes() { document.getElementById('modalAjustes').classList.add('hidden'); }
-        function guardarAjustes() { ajustesSemaf.naranja = parseInt(document.getElementById('adj-naranja').value); ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value); localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf)); cerrarAjustes(); renderPedidos(); }
-        function abrirExportar() { document.getElementById('modalExportar').classList.remove('hidden'); }
-        function cerrarExportar() { document.getElementById('modalExportar').classList.add('hidden'); }
+        function guardarAjustes() { 
+            ajustesSemaf.naranja = parseInt(document.getElementById('adj-naranja').value); 
+            ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value); 
+            localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf)); 
+            cerrarAjustes(); 
+            renderPedidos(); 
+        }
+
+        function aplicarIdioma(lang) {
+            localStorage.setItem('idioma_seleccionado', lang);
+            const t = textosApp[lang] || textosApp.es;
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.getAttribute('data-translate');
+                if (t[key]) el.innerText = t[key];
+            });
+        }
+        function cambiarIdioma(l) { aplicarIdioma(l); showToast(`Idioma: ${l.toUpperCase()}`, 'success'); }
         function togglePrivacy() { isPrivate = !isPrivate; document.body.classList.toggle('privacy-active', isPrivate); }
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+        function showToast(m, t) {
+            const c = document.getElementById('toast-container');
+            const div = document.createElement('div');
+            div.className = `toast ${t}`;
+            div.innerHTML = `<i class="fas ${t==='success'?'fa-check-circle':'fa-exclamation-circle'}"></i> ${m}`;
+            c.appendChild(div);
+            setTimeout(() => { div.style.opacity='0'; setTimeout(()=>div.remove(),300); }, 2500);
+        }
+
         function cambiarTab(t) {
-            const btnI = document.getElementById('btnTabInfo'), btnT = document.getElementById('btnTabTecnico');
-            const tabI = document.getElementById('tabInfo'), tabT = document.getElementById('tabTecnico');
-            if (t === 'info') { btnI.classList.add('tab-active'); btnT.classList.remove('tab-active'); tabI.classList.remove('hidden'); tabT.classList.add('hidden'); }
-            else { btnT.classList.add('tab-active'); btnI.classList.remove('tab-active'); tabT.classList.remove('hidden'); tabI.classList.add('hidden'); }
+            const bI = document.getElementById('btnTabInfo'), bT = document.getElementById('btnTabTecnico');
+            const tI = document.getElementById('tabInfo'), tT = document.getElementById('tabTecnico');
+            if (t === 'info') { 
+                bI.classList.add('tab-active'); bT.classList.remove('tab-active'); 
+                tI.classList.remove('hidden'); tT.classList.add('hidden'); 
+            } else { 
+                bT.classList.add('tab-active'); bI.classList.remove('tab-active'); 
+                tT.classList.remove('hidden'); tI.classList.add('hidden'); 
+            }
         }
 
         document.addEventListener('DOMContentLoaded', init);
