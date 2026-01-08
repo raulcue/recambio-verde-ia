@@ -1,333 +1,316 @@
 const express = require('express');
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-const { Pool } = require('pg');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+
 const app = express();
-const port = process.env.PORT || 10000;
+const PORT = 3000;
 
-// Configuración de conexión a PostgreSQL
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-});
-
+// Middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-/**
- * SISTEMA DE AUDITORÍA (LOGS)
- * Lista de control activa: 
- * 1. SyntaxError JSON, Integridad de rutas, Registro de altas/bajas de talleres.
- */
-const registrarLog = async (usuario, accion, detalle, ip) => {
-    try {
-        const iniciales = usuario 
-            ? usuario.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) 
-            : 'SY';
-        const query = `
-            INSERT INTO logs (usuario_nombre, usuario_iniciales, accion, detalle, ip_address, fecha)
-            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
-        `;
-        const cleanIp = ip === '::1' ? '127.0.0.1' : ip;
-        await pool.query(query, [usuario || 'Sistema', iniciales, accion, detalle, cleanIp]);
-    } catch (err) {
-        console.error('CRITICAL ERROR en Auditoría:', err);
-    }
-};
+// Base de datos
+const db = new sqlite3.Database('./database.db', (err) => {
+    if (err) console.error('Error DB:', err.message);
+    else console.log('Conectado a SQLite');
+});
 
-/**
- * MIDDLEWARE DE VALIDACIÓN
- */
-const validarPedido = (req, res, next) => {
-    const { pieza, matricula } = req.body;
-    if (!pieza || !matricula) {
-        return res.status(400).json({ error: 'Pieza y Matrícula son obligatorios' });
-    }
-    next();
-};
+// Inicialización de tablas
+db.serialize(() => {
+    // Tabla de usuarios
+    db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        nombre TEXT NOT NULL,
+        iniciales TEXT NOT NULL,
+        rol TEXT CHECK(rol IN ('admin', 'taller')) DEFAULT 'taller',
+        email TEXT,
+        telefono TEXT,
+        provincia TEXT,
+        direccion TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 
-// --- RUTAS DE AUTENTICACIÓN ---
+    // Tabla de desguaces
+    db.run(`CREATE TABLE IF NOT EXISTS desguaces (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        provincia TEXT,
+        direccion TEXT,
+        cp TEXT,
+        telefono_fijo TEXT,
+        movil_1 TEXT,
+        movil_2 TEXT,
+        email TEXT,
+        horario TEXT,
+        es_workshop BOOLEAN DEFAULT 0,
+        fuente_origen TEXT DEFAULT 'WEB',
+        admin_user TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
 
-app.post('/auth/login', async (req, res) => {
-    const { email, password } = req.body;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    // Tabla de pedidos/piezas
+    db.run(`CREATE TABLE IF NOT EXISTS pedidos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        titulo TEXT NOT NULL,
+        descripcion TEXT,
+        cliente_id INTEGER NOT NULL,
+        taller_id INTEGER NOT NULL,
+        estado TEXT CHECK(estado IN ('solicitud', 'proceso', 'finalizado', 'cancelado')) DEFAULT 'solicitud',
+        prioridad TEXT CHECK(prioridad IN ('baja', 'media', 'alta', 'urgente')) DEFAULT 'media',
+        marca TEXT,
+        modelo TEXT,
+        matricula TEXT,
+        año INTEGER,
+        fecha_limite DATE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cliente_id) REFERENCES usuarios(id),
+        FOREIGN KEY (taller_id) REFERENCES usuarios(id)
+    )`);
+
+    // Insertar usuario admin por defecto si no existe
+    const adminPassword = bcrypt.hashSync('admin123', 10);
+    db.run(`INSERT OR IGNORE INTO usuarios (username, password, nombre, iniciales, rol) 
+            VALUES (?, ?, ?, ?, ?)`, 
+            ['admin', adminPassword, 'Administrador', 'AD', 'admin']);
+});
+
+// API RUTAS
+
+// === USUARIOS ===
+// Login
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
     
-    try {
-        const result = await pool.query(
-            "SELECT id, nombre_taller, rol, password FROM usuarios WHERE email = $1", 
-            [email]
-        );
-
-        if (result.rows.length > 0) {
-            const user = result.rows[0];
-            if (user.password === password) {
-                const iniciales = user.nombre_taller 
-                    ? user.nombre_taller.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) 
-                    : '??';
-
-                await registrarLog(user.nombre_taller, 'LOGIN', `Inicio de sesión exitoso (Rol: ${user.rol})`, ip);
-                
-                return res.json({ 
-                    success: true, 
-                    redirect: 'landing.html',
-                    user: {
-                        id: user.id,
-                        nombre: user.nombre_taller,
-                        rol: user.rol,
-                        iniciales: iniciales
-                    }
-                });
-            }
-        }
+    db.get('SELECT * FROM usuarios WHERE username = ?', [username], (err, user) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!user) return res.status(401).json({ error: 'Usuario no encontrado' });
         
-        await registrarLog(email, 'LOGIN_FAIL', 'Intento de acceso fallido', ip);
-        res.json({ success: false, message: 'Credenciales incorrectas' });
-    } catch (err) {
-        console.error('LOGIN_ERROR:', err);
-        res.status(500).json({ success: false, message: 'Error en el servidor' });
-    }
-});
-
-// --- API DE PEDIDOS ---
-
-app.get('/api/pedidos', async (req, res) => {
-    const userRol = req.headers['x-user-role'];
-    const userId = req.headers['x-user-id'];
-
-    try {
-        let query = "SELECT * FROM pedidos";
-        let params = [];
-
-        if (userRol === 'taller' && userId) {
-            query += " WHERE usuario_id = $1";
-            params.push(userId);
-        }
-        
-        query += " ORDER BY fecha_creacion DESC";
-        
-        const result = await pool.query(query, params);
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET_PEDIDOS_ERROR:', err);
-        res.status(500).json({ error: 'Error al obtener pedidos' });
-    }
-});
-
-app.post('/api/pedidos', validarPedido, async (req, res) => {
-    const { id, pieza, matricula, marca_coche, modelo_coche, estado, precio, precio_coste, usuario_id, proveedor, bastidor, sub_estado_incidencia, notas_tecnicas, admin_user } = req.body;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-
-    try {
-        const uId = usuario_id || null;
-        const nuevoEstado = estado || 'solicitado';
-
-        if (id) {
-            const query = `
-                UPDATE pedidos SET 
-                pieza=$1, matricula=$2, marca_coche=$3, modelo_coche=$4, estado=$5, 
-                precio=$6, precio_coste=$7, usuario_id=$8, proveedor=$9, bastidor=$10, 
-                sub_estado_incidencia=$11, notas_tecnicas=$12, fecha_actualizacion=CURRENT_TIMESTAMP
-                WHERE id=$13
-            `;
-            await pool.query(query, [
-                pieza, matricula, marca_coche, modelo_coche, nuevoEstado, 
-                parseFloat(precio) || 0, parseFloat(precio_coste) || 0, uId,
-                proveedor, bastidor, sub_estado_incidencia, notas_tecnicas, id
-            ]);
-            await registrarLog(admin_user, 'UPDATE', `Pedido #${id} actualizado: ${pieza}`, ip);
-            res.json({ success: true });
-        } else {
-            const query = `
-                INSERT INTO pedidos 
-                (pieza, matricula, marca_coche, modelo_coche, estado, precio, precio_coste, usuario_id, proveedor, bastidor, sub_estado_incidencia, notas_tecnicas)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id
-            `;
-            const result = await pool.query(query, [
-                pieza, matricula, marca_coche, modelo_coche, nuevoEstado, 
-                parseFloat(precio) || 0, parseFloat(precio_coste) || 0, uId,
-                proveedor || null, bastidor || null, 
-                sub_estado_incidencia || null, notas_tecnicas || null
-            ]);
-            await registrarLog(admin_user, 'CREATE', `Nueva pieza: ${pieza}`, ip);
-            res.json({ success: true, id: result.rows[0].id });
-        }
-    } catch (err) {
-        console.error('ERROR_UPSERT:', err.message);
-        res.status(500).json({ error: 'Error al procesar pedido' });
-    }
-});
-
-app.delete('/api/pedidos/:id', async (req, res) => {
-    const { id } = req.params;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    try {
-        await pool.query("DELETE FROM pedidos WHERE id = $1", [id]);
-        await registrarLog('Admin', 'DELETE', `Pedido #${id} eliminado`, ip);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Error al eliminar' });
-    }
-});
-
-app.get('/api/logs', async (req, res) => {
-    try {
-        const result = await pool.query("SELECT * FROM logs ORDER BY fecha DESC LIMIT 100");
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: 'Error al obtener logs' });
-    }
-});
-
-app.get('/api/talleres', async (req, res) => {
-    try {
-        const result = await pool.query("SELECT id, nombre_taller, email, rol FROM usuarios WHERE rol = 'taller' ORDER BY nombre_taller ASC");
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: 'Error al obtener talleres' });
-    }
-});
-
-// --- LÓGICA DE USUARIOS ---
-
-app.get('/api/usuarios', async (req, res) => {
-    try {
-        const result = await pool.query("SELECT * FROM usuarios ORDER BY id ASC");
-        res.json(result.rows);
-    } catch (err) {
-        res.status(500).json({ error: 'Error al obtener usuarios' });
-    }
-});
-
-app.post('/api/usuarios', async (req, res) => {
-    const { id, nombre_taller, email, password, rol, admin_user } = req.body;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    try {
-        if (id) {
-            await pool.query(
-                "UPDATE usuarios SET nombre_taller=$1, email=$2, password=$3, rol=$4 WHERE id=$5",
-                [nombre_taller, email, password, rol, id]
-            );
-            await registrarLog(admin_user, 'USER_UPDATE', `Usuario ${nombre_taller} actualizado`, ip);
-        } else {
-            await pool.query(
-                "INSERT INTO usuarios (nombre_taller, email, password, rol) VALUES ($1, $2, $3, $4)",
-                [nombre_taller, email, password, rol]
-            );
-            await registrarLog(admin_user, 'USER_CREATE', `Nuevo usuario creado: ${nombre_taller}`, ip);
-        }
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Error al procesar usuario' });
-    }
-});
-
-app.delete('/api/usuarios/:id', async (req, res) => {
-    const { id } = req.params;
-    const { admin_user } = req.query;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    try {
-        await pool.query("DELETE FROM usuarios WHERE id = $1", [id]);
-        await registrarLog(admin_user, 'USER_DELETE', `Usuario ID ${id} eliminado`, ip);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: 'Error al eliminar usuario' });
-    }
-});
-
-// --- API DE ESTADÍSTICAS (MEJORADA PARA COMPATIBILIDAD CON FRONTEND) ---
-
-app.get('/api/stats/dashboard', async (req, res) => {
-    try {
-        const totalPedidos = await pool.query("SELECT COUNT(*) FROM pedidos");
-        const pedidosMes = await pool.query("SELECT COUNT(*) FROM pedidos WHERE fecha_creacion > CURRENT_DATE - INTERVAL '1 month'");
-        const ventasTotales = await pool.query("SELECT SUM(precio) FROM pedidos WHERE estado = 'finalizado'");
-        
-        res.json({
-            total: totalPedidos.rows[0].count,
-            mes: pedidosMes.rows[0].count,
-            ventas: ventasTotales.rows[0].sum || 0
+        bcrypt.compare(password, user.password, (err, match) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!match) return res.status(401).json({ error: 'Contraseña incorrecta' });
+            
+            // Eliminar password de la respuesta
+            delete user.password;
+            res.json(user);
         });
-    } catch (err) {
-        res.status(500).json({ error: 'Error al obtener estadísticas' });
-    }
+    });
 });
 
-app.get('/api/stats/graficos', async (req, res) => {
-    try {
-        // Obtenemos los datos agrupados por mes
-        const result = await pool.query(`
-            SELECT to_char(fecha_creacion, 'Mon') as mes, 
-                   SUM(precio) as total_ventas,
-                   SUM(precio - precio_coste) as total_beneficio
-            FROM pedidos 
-            WHERE estado = 'finalizado'
-            GROUP BY mes 
-            ORDER BY MIN(fecha_creacion)
-        `);
-
-        // Formateamos para que stats.html lo entienda directamente
-        const labels = result.rows.map(r => r.mes);
-        const ventas = result.rows.map(r => parseFloat(r.total_ventas) || 0);
-        const beneficios = result.rows.map(r => parseFloat(r.total_beneficio) || 0);
-
-        res.json({
-            labels: labels,
-            ventas: ventas,
-            beneficios: beneficios
-        });
-    } catch (err) {
-        console.error('ERROR_GRAFICOS:', err);
-        res.status(500).json({ error: 'Error al obtener gráficos' });
+// Obtener todos los usuarios (talleres para filtros)
+app.get('/api/usuarios', (req, res) => {
+    const { rol } = req.query;
+    let query = 'SELECT id, username, nombre, iniciales, rol, email, telefono, provincia FROM usuarios';
+    let params = [];
+    
+    if (rol) {
+        query += ' WHERE rol = ?';
+        params.push(rol);
     }
-});
-// --- API DE DESGUACES (NUEVA SECCIÓN) ---
-
-app.get('/api/desguaces', async (req, res) => {
-    try {
-        // Antes de nada, comprobamos la BBDD (Norma: Antes de crear nada, comprueba la BBDD)
-        const result = await pool.query('SELECT * FROM desguaces ORDER BY provincia ASC, nombre ASC');
-        res.json(result.rows);
-    } catch (err) {
-        console.error('GET_DESGUACES_ERROR:', err);
-        res.status(500).json({ error: 'Error al obtener desguaces' });
-    }
+    
+    db.all(query, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
 });
 
-app.post('/api/desguaces', async (req, res) => {
-    const d = req.body;
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    try {
-        // Verificación preventiva para evitar duplicados (Norma: Comprobar BBDD)
-        const check = await pool.query('SELECT id FROM desguaces WHERE nombre = $1 AND provincia = $2', [d.nombre, d.provincia]);
-        if (check.rows.length > 0) {
-            return res.status(400).json({ error: 'El desguace ya existe en esta provincia.' });
-        }
+// Obtener usuario por ID
+app.get('/api/usuarios/:id', (req, res) => {
+    db.get('SELECT id, username, nombre, iniciales, rol, email, telefono, provincia FROM usuarios WHERE id = ?', 
+           [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Usuario no encontrado' });
+        res.json(row);
+    });
+});
 
-        const query = `
-            INSERT INTO desguaces 
-            (nombre, direccion, provincia, cp, telefono_fijo, movil_1, movil_2, email, horario, web, es_workshop, fuente_origen, fecha_registro)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
-            RETURNING *`;
-        const values = [
-            d.nombre, d.direccion, d.provincia, d.cp, 
-            d.telefono_fijo, d.movil_1, d.movil_2, d.email, 
-            d.horario, d.web, d.es_workshop, d.fuente_origen
-        ];
-        const result = await pool.query(query, values);
+// === DESGUACES ===
+// Obtener todos los desguaces
+app.get('/api/desguaces', (req, res) => {
+    db.all('SELECT * FROM desguaces ORDER BY nombre', [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Crear nuevo desguace
+app.post('/api/desguaces', (req, res) => {
+    const desguace = req.body;
+    
+    const sql = `INSERT INTO desguaces (nombre, provincia, direccion, cp, telefono_fijo, movil_1, movil_2, 
+                email, horario, es_workshop, fuente_origen, admin_user) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    
+    const params = [
+        desguace.nombre, desguace.provincia, desguace.direccion, desguace.cp,
+        desguace.telefono_fijo, desguace.movil_1, desguace.movil_2,
+        desguace.email, desguace.horario, desguace.es_workshop ? 1 : 0,
+        desguace.fuente_origen || 'WEB', desguace.admin_user
+    ];
+    
+    db.run(sql, params, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ id: this.lastID, message: 'Desguace creado' });
+    });
+});
+
+// === PEDIDOS/PIEZAS ===
+// Obtener todos los pedidos
+app.get('/api/pedidos', (req, res) => {
+    const { estado, taller_id, cliente_id } = req.query;
+    
+    let query = `
+        SELECT p.*, 
+               c.nombre as cliente_nombre,
+               c.iniciales as cliente_iniciales,
+               t.nombre as taller_nombre,
+               t.iniciales as taller_iniciales
+        FROM pedidos p
+        LEFT JOIN usuarios c ON p.cliente_id = c.id
+        LEFT JOIN usuarios t ON p.taller_id = t.id
+        WHERE 1=1
+    `;
+    let params = [];
+    
+    if (estado) {
+        query += ' AND p.estado = ?';
+        params.push(estado);
+    }
+    
+    if (taller_id) {
+        query += ' AND p.taller_id = ?';
+        params.push(taller_id);
+    }
+    
+    if (cliente_id) {
+        query += ' AND p.cliente_id = ?';
+        params.push(cliente_id);
+    }
+    
+    query += ' ORDER BY p.created_at DESC';
+    
+    db.all(query, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Crear nuevo pedido
+app.post('/api/pedidos', (req, res) => {
+    const pedido = req.body;
+    
+    const sql = `INSERT INTO pedidos (titulo, descripcion, cliente_id, taller_id, estado, prioridad, 
+                marca, modelo, matricula, año, fecha_limite) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    
+    const params = [
+        pedido.titulo, pedido.descripcion, pedido.cliente_id, pedido.taller_id,
+        pedido.estado || 'solicitud', pedido.prioridad || 'media',
+        pedido.marca, pedido.modelo, pedido.matricula, pedido.año, pedido.fecha_limite
+    ];
+    
+    db.run(sql, params, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
         
-        // Registro en log usando tu función existente
-        await registrarLog(d.admin_user || 'Admin', 'DESGUACE_CREATE', `Nuevo desguace: ${d.nombre}`, ip);
-        res.json({ success: true, id: result.rows[0].id });
-    } catch (err) {
-        console.error('POST_DESGUACE_ERROR:', err);
-        res.status(500).json({ error: 'Error al procesar desguace' });
-    }
+        // Obtener el pedido recién creado con los datos de cliente y taller
+        db.get(`
+            SELECT p.*, 
+                   c.nombre as cliente_nombre,
+                   c.iniciales as cliente_iniciales,
+                   t.nombre as taller_nombre,
+                   t.iniciales as taller_iniciales
+            FROM pedidos p
+            LEFT JOIN usuarios c ON p.cliente_id = c.id
+            LEFT JOIN usuarios t ON p.taller_id = t.id
+            WHERE p.id = ?
+        `, [this.lastID], (err, row) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(row);
+        });
+    });
 });
-// --- SERVIDO DE ARCHIVOS ---
 
+// Actualizar estado de pedido (Drag & Drop)
+app.put('/api/pedidos/:id/estado', (req, res) => {
+    const { estado } = req.body;
+    const { id } = req.params;
+    
+    if (!estado || !['solicitud', 'proceso', 'finalizado', 'cancelado'].includes(estado)) {
+        return res.status(400).json({ error: 'Estado no válido' });
+    }
+    
+    db.run('UPDATE pedidos SET estado = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', 
+           [estado, id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Pedido no encontrado' });
+        }
+        
+        // Obtener el pedido actualizado
+        db.get(`
+            SELECT p.*, 
+                   c.nombre as cliente_nombre,
+                   c.iniciales as cliente_iniciales,
+                   t.nombre as taller_nombre,
+                   t.iniciales as taller_iniciales
+            FROM pedidos p
+            LEFT JOIN usuarios c ON p.cliente_id = c.id
+            LEFT JOIN usuarios t ON p.taller_id = t.id
+            WHERE p.id = ?
+        `, [id], (err, row) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(row);
+        });
+    });
+});
+
+// Actualizar pedido completo
+app.put('/api/pedidos/:id', (req, res) => {
+    const { id } = req.params;
+    const pedido = req.body;
+    
+    const sql = `UPDATE pedidos SET 
+                titulo = ?, descripcion = ?, cliente_id = ?, taller_id = ?, 
+                estado = ?, prioridad = ?, marca = ?, modelo = ?, 
+                matricula = ?, año = ?, fecha_limite = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?`;
+    
+    const params = [
+        pedido.titulo, pedido.descripcion, pedido.cliente_id, pedido.taller_id,
+        pedido.estado, pedido.prioridad, pedido.marca, pedido.modelo,
+        pedido.matricula, pedido.año, pedido.fecha_limite, id
+    ];
+    
+    db.run(sql, params, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        if (this.changes === 0) {
+            return res.status(404).json({ error: 'Pedido no encontrado' });
+        }
+        
+        res.json({ message: 'Pedido actualizado', changes: this.changes });
+    });
+});
+
+// Eliminar pedido
+app.delete('/api/pedidos/:id', (req, res) => {
+    db.run('DELETE FROM pedidos WHERE id = ?', [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Pedido eliminado', changes: this.changes });
+    });
+});
+
+// Ruta para el frontend
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, () => {
-    console.log(`Servidor activo en puerto ${port}`);
+app.listen(PORT, () => {
+    console.log(`Servidor en http://localhost:${PORT}`);
 });
