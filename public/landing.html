@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recambio Reciclado - Menu Principal</title>
+    <title>Menu principal - Recambio reciclado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // ACTIVACIÓN DE MODO OSCURO
         tailwind.config = { darkMode: 'class' }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -15,257 +14,242 @@
         body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
         .logo-invert { transition: filter 0.3s ease; }
         .dark .logo-invert { filter: brightness(0) invert(1); }
+        
+        /* Estilos Waffle Menu (Paridad Dashboard) */
         .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
         .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
-        .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 16px; transition: all 0.2s; }
-        .waffle-item:hover { background: rgba(0,0,0,0.05); }
-        .dark .waffle-item:hover { background: rgba(255,255,255,0.1); }
+        .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
+        .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
+
+        /* Dropdown Idioma Optimizado */
+        .lang-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            z-index: 100;
+            min-width: 140px;
+        }
+        .dark .lang-dropdown { background: #1e293b; border-color: #334155; }
+        .group-lang:hover .lang-dropdown { display: block; }
+
+        /* Estilos originales de tus tarjetas */
+        .card-menu {
+            background: white;
+            border: 1px solid #f1f5f9;
+            border-radius: 2.5rem;
+            padding: 2.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 320px;
+        }
+        .dark .card-menu { background: #0f172a; border-color: #1e293b; }
+        .card-menu:hover { transform: translateY(-10px); box-shadow: 0 30px 50px -12px rgba(0,0,0,0.1); border-color: #3b82f6; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex flex-col">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
 
-    <nav class="px-8 py-6 flex justify-between items-center">
-        <div class="flex items-center gap-4">
-            <img src="https://www.recambioreciclado.com/images/logo.png" class="h-8 logo-invert" alt="Logo">
-            <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-800"></div>
-            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 italic">Ecosystem <span class="text-blue-600">v2.0</span></span>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <select id="langSelect" onchange="cambiarIdioma(this.value)" class="bg-transparent border-none text-[10px] font-bold uppercase tracking-widest text-slate-400 outline-none cursor-pointer">
-                <option value="es">Español</option>
-                <option value="en">English</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-                <option value="it">Italiano</option>
-                <option value="pt">Português</option>
-            </select>
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
             
-            <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
-                <i class="fas fa-moon"></i>
-            </button>
+            <div class="flex items-center gap-4">
+                <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <img src="assets/logo.png" alt="Logo" class="h-8 w-auto logo-invert">
+                    <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
+                        Auditoría <span style="color: #7cb65d;">Recambio Reciclado</span>
+                        <span id="db-status" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    </h1>
+                </a>
+            </div>
 
-            <div class="relative group">
-                <div id="avatar-circle" class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg cursor-pointer">
-                    --
-                </div>
-                <div class="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                    <div class="px-6 py-3 border-b border-slate-50 dark:border-slate-800 mb-2">
-                        <p id="user-name-dropdown" class="text-[10px] font-black uppercase text-slate-800 dark:text-white truncate">Usuario</p>
-                        <p id="user-role-dropdown" class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Cargando...</p>
-                    </div>
-                    <button onclick="cerrarSesion()" class="w-full text-left px-6 py-3 text-[10px] font-black uppercase text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-                        <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+            <div class="flex items-center gap-4">
+                <div class="relative group-lang py-2">
+                    <button class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-50 transition-colors">
+                        <i class="fas fa-globe text-xs text-slate-500"></i>
                     </button>
+                    <div class="lang-dropdown mt-1 overflow-hidden">
+                        <button onclick="cambiarIdioma('es')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800">Español</button>
+                        <button onclick="cambiarIdioma('en')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800">English</button>
+                        <button onclick="cambiarIdioma('fr')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Français</button>
+                    </div>
+                </div>
+
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                    <i class="fas fa-moon dark:hidden text-xs"></i>
+                    <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+                </button>
+
+                <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
+
+                <div id="avatar-circle" onclick="cerrarSesion()" class="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg cursor-pointer">A</div>
+
+                <div class="waffle-container group">
+                    <button class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 hover:text-blue-600">
+                        <i class="fas fa-th text-xs"></i>
+                    </button>
+                    <div class="absolute right-0 top-full mt-0 hidden group-hover:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[2rem] overflow-hidden z-[60]">
+                        <div class="waffle-grid">
+                            <a href="landing.html" class="waffle-item text-blue-600 bg-blue-50 dark:bg-blue-900/20"><i class="fas fa-home"></i><span class="text-[9px] font-black uppercase">Principal</span></a>
+                            <a href="dashboard.html" class="waffle-item text-indigo-500"><i class="fas fa-columns"></i><span class="text-[9px] font-black uppercase text-slate-500">Flujos</span></a>
+                            <a href="stats.html" class="waffle-item text-emerald-500"><i class="fas fa-chart-line"></i><span class="text-[9px] font-black uppercase text-slate-500">BI Stats</span></a>
+                            <a href="talleres.html" class="waffle-item text-orange-500"><i class="fas fa-users-cog"></i><span class="text-[9px] font-black uppercase text-slate-500">Equipo</span></a>
+                            <a href="pedidos-taller.html" class="waffle-item text-purple-500"><i class="fas fa-list-check"></i><span class="text-[9px] font-black uppercase text-slate-500">Pedidos</span></a>
+                            <a href="admin-logs.html" class="waffle-item text-red-600"><i class="fas fa-history"></i><span class="text-[9px] font-black uppercase text-slate-500">Logs</span></a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-6 -mt-12">
-        <div class="text-center mb-16">
-            <h2 id="txt-title-main" class="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter mb-4 uppercase">
-                Bienvenido al <span class="text-blue-600">Ecosistema</span>
+    <main class="max-w-7xl mx-auto px-6 py-12">
+        <div class="mb-16">
+            <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4">Central de Inteligencia Logística</p>
+            <h2 class="text-6xl font-black uppercase tracking-tighter italic leading-none">
+                Bienvenido, <span id="user-name" class="text-blue-600">---</span>
             </h2>
-            <p id="txt-title-sub" class="text-slate-400 dark:text-slate-500 font-bold uppercase tracking-[0.3em] text-[10px]">
-                Selecciona una herramienta para comenzar
-            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full">
-            <a href="dashboard.html" id="btn-c1" class="group bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 transition-all">
-                <div class="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-th-large text-blue-600 text-xl"></i>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <a href="dashboard.html" id="btn-c1" class="card-menu group">
+                <div class="flex justify-between items-start">
+                    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-3xl flex items-center justify-center text-blue-600">
+                        <i class="fas fa-columns text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 01</span>
                 </div>
-                <h3 id="txt-c1-title" class="text-xs font-black uppercase tracking-widest mb-2 dark:text-white">Dashboard</h3>
-                <p id="txt-c1-desc" class="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Gestión Integral</p>
+                <div>
+                    <h3 class="text-2xl font-black uppercase italic mb-2">Panel de Control</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Gestión de flujos logísticos, estados de pedidos y automatización de procesos en tiempo real.</p>
+                </div>
+                <div class="flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
+                    Acceder <i class="fas fa-arrow-right"></i>
+                </div>
             </a>
 
-            <a href="talleres.html" id="btn-c2" class="group bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-2 transition-all">
-                <div class="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-tools text-emerald-600 text-xl"></i>
+            <a href="talleres.html" id="btn-c2" class="card-menu group">
+                <div class="flex justify-between items-start">
+                    <div class="w-16 h-16 bg-orange-50 dark:bg-orange-900/20 rounded-3xl flex items-center justify-center text-orange-500">
+                        <i class="fas fa-users-cog text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 02</span>
                 </div>
-                <h3 id="txt-c2-title" class="text-xs font-black uppercase tracking-widest mb-2 dark:text-white">Talleres</h3>
-                <p id="txt-c2-desc" class="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Red de Partners</p>
+                <div>
+                    <h3 class="text-2xl font-black uppercase italic mb-2">Equipo y Workshops</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Administración de usuarios, roles de talleres y configuración de red de colaboradores.</p>
+                </div>
+                <div class="flex items-center gap-2 text-orange-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
+                    Gestionar <i class="fas fa-arrow-right"></i>
+                </div>
             </a>
 
-            <a href="stats.html" id="btn-c3" class="group bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-violet-500/10 hover:-translate-y-2 transition-all">
-                <div class="w-14 h-14 bg-violet-50 dark:bg-violet-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-chart-pie text-violet-600 text-xl"></i>
+            <a href="stats.html" id="btn-c3" class="card-menu group">
+                <div class="flex justify-between items-start">
+                    <div class="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl flex items-center justify-center text-emerald-500">
+                        <i class="fas fa-chart-line text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 03</span>
                 </div>
-                <h3 id="txt-c3-title" class="text-xs font-black uppercase tracking-widest mb-2 dark:text-white">Business Intelligence</h3>
-                <p id="txt-c3-desc" class="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Análisis de Datos</p>
+                <div>
+                    <h3 class="text-2xl font-black uppercase italic mb-2">BI & Estadísticas</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Análisis de datos, rendimiento de ventas y métricas de eficiencia operativa.</p>
+                </div>
+                <div class="flex items-center gap-2 text-emerald-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
+                    Ver Reportes <i class="fas fa-arrow-right"></i>
+                </div>
             </a>
 
-            <a href="pedidos-taller.html" id="btn-c4" class="group bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2 transition-all">
-                <div class="w-14 h-14 bg-orange-50 dark:bg-orange-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-box-open text-orange-600 text-xl"></i>
+            <a href="pedidos-taller.html" id="btn-c4" class="card-menu group">
+                <div class="flex justify-between items-start">
+                    <div class="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-3xl flex items-center justify-center text-purple-500">
+                        <i class="fas fa-list-check text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 04</span>
                 </div>
-                <h3 id="txt-c4-title" class="text-xs font-black uppercase tracking-widest mb-2 dark:text-white">Pedidos Workshop</h3>
-                <p id="txt-c4-desc" class="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Estado de Piezas</p>
+                <div>
+                    <h3 class="text-2xl font-black uppercase italic mb-2">Mis Pedidos</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Seguimiento de solicitudes, órdenes de compra y estados de envío para talleres.</p>
+                </div>
+                <div class="flex items-center gap-2 text-purple-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
+                    Consultar <i class="fas fa-arrow-right"></i>
+                </div>
             </a>
 
-            <a href="admin-logs.html" id="btn-c5" class="group bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-slate-500/10 hover:-translate-y-2 transition-all">
-                <div class="w-14 h-14 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-fingerprint text-slate-600 text-xl"></i>
+            <a href="admin-logs.html" id="btn-c5" class="card-menu group border-red-100 dark:border-red-900/20">
+                <div class="flex justify-between items-start">
+                    <div class="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-3xl flex items-center justify-center text-red-600">
+                        <i class="fas fa-history text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 05</span>
                 </div>
-                <h3 id="txt-c5-title" class="text-xs font-black uppercase tracking-widest mb-2 dark:text-white">Auditoría</h3>
-                <p id="txt-c5-desc" class="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Logs del Sistema</p>
+                <div>
+                    <h3 class="text-2xl font-black uppercase italic mb-2">Auditoría Root</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Registro histórico de acciones de administradores, IPs y seguridad del sistema.</p>
+                </div>
+                <div class="flex items-center gap-2 text-red-600 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
+                    Investigar <i class="fas fa-arrow-right"></i>
+                </div>
             </a>
 
-            <div id="btn-c6" class="group bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 transition-all cursor-pointer">
-                <div class="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-cog text-blue-600 text-xl"></i>
+            <div id="btn-c6" class="card-menu group opacity-50 cursor-not-allowed">
+                <div class="flex justify-between items-start">
+                    <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-3xl flex items-center justify-center text-slate-400">
+                        <i class="fas fa-cog text-2xl"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 06</span>
                 </div>
-                <h3 id="txt-c6-title" class="text-xs font-black uppercase tracking-widest mb-2 dark:text-white">Ajustes</h3>
-                <p id="txt-c6-desc" class="text-[10px] font-bold text-slate-400 uppercase leading-relaxed">Configuración IA</p>
+                <div>
+                    <h3 class="text-2xl font-black uppercase italic mb-2 text-slate-400">Configuración</h3>
+                    <p class="text-slate-400 text-xs font-medium leading-relaxed">Ajustes generales del sistema, parámetros de API e integraciones externas.</p>
+                </div>
+                <div class="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                    Próximamente
+                </div>
             </div>
         </div>
     </main>
 
-    <footer class="p-8 text-center">
-        <p class="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-[0.4em]">
-            <span id="txt-footer-creator">Created by Recambio Reciclado IA</span> | <span id="txt-footer-contact">Contact support</span>
-        </p>
-    </footer>
-
     <script>
-        // --- TRADUCCIONES (MANTENIDAS AL 100%) ---
-        const translations = {
-            es: {
-                title_main: "BIENVENIDO AL ECOSISTEMA",
-                title_sub: "SELECCIONA UNA HERRAMIENTA PARA COMENZAR",
-                c1_title: "DASHBOARD", c1_desc: "GESTIÓN INTEGRAL",
-                c2_title: "TALLERES", c2_desc: "RED DE PARTNERS",
-                c3_title: "BUSINESS INTELLIGENCE", c3_desc: "ANÁLISIS DE DATOS",
-                c4_title: "PEDIDOS WORKSHOP", c4_desc: "ESTADO DE PIEZAS",
-                c5_title: "AUDITORÍA", c5_desc: "LOGS DEL SISTEMA",
-                c6_title: "AJUSTES", c6_desc: "CONFIGURACIÓN IA",
-                f_creator: "CREADO POR RECAMBIO RECICLADO IA",
-                f_contact: "CONTACTAR SOPORTE"
-            },
-            en: {
-                title_main: "WELCOME TO THE ECOSYSTEM",
-                title_sub: "CHOOSE A TOOL TO GET STARTED",
-                c1_title: "DASHBOARD", c1_desc: "GLOBAL MANAGEMENT",
-                c2_title: "WORKSHOPS", c2_desc: "PARTNERS NETWORK",
-                c3_title: "BUSINESS INTELLIGENCE", c3_desc: "DATA ANALYSIS",
-                c4_title: "WORKSHOP ORDERS", c4_desc: "PARTS STATUS",
-                c5_title: "AUDIT", c5_desc: "SYSTEM LOGS",
-                c6_title: "SETTINGS", c6_desc: "AI CONFIGURATION",
-                f_creator: "CREATED BY RECAMBIO RECICLADO IA",
-                f_contact: "CONTACT SUPPORT"
-            },
-            fr: {
-                title_main: "BIENVENUE DANS L'ÉCOSYSTÈME",
-                title_sub: "CHOISISSEZ UN OUTIL POUR COMMENCER",
-                c1_title: "TABLEAU DE BORD", c1_desc: "GESTION GLOBALE",
-                c2_title: "ATELIERS", c2_desc: "RÉSEAU DE PARTENAIRES",
-                c3_title: "BUSINESS INTELLIGENCE", c3_desc: "ANALYSE DE DONNÉES",
-                c4_title: "COMMANDES ATELIER", c4_desc: "ÉTAT DES PIÈCES",
-                c5_title: "AUDIT", c5_desc: "LOGS DU SYSTÈME",
-                c6_title: "PARAMÈTRES", c6_desc: "CONFIGURATION IA",
-                f_creator: "CRÉÉ PAR RECAMBIO RECICLADO IA",
-                f_contact: "CONTACTER LE SUPPORT"
-            },
-            de: {
-                title_main: "WILLKOMMEN IM ÖKOSYSTEM",
-                title_sub: "WÄHLEN SIE EIN WERKZEUG, UM ZU BEGINNEN",
-                c1_title: "DASHBOARD", c1_desc: "UMFASSENDE VERWALTUNG",
-                c2_title: "WERKSTÄTTEN", c2_desc: "PARTNER-NETZWERK",
-                c3_title: "BUSINESS INTELLIGENCE", c3_desc: "DATENANALYSE",
-                c4_title: "WERKSTATT-AUFTRÄGE", c4_desc: "TEILESTATUS",
-                c5_title: "AUDIT", c5_desc: "SYSTEMPROTOKOLLE",
-                c6_title: "EINSTELLUNGEN", c6_desc: "KI-KONFIGURATION",
-                f_creator: "ERSTELLT VON RECAMBIO RECICLADO IA",
-                f_contact: "SUPPORT KONTAKTIEREN"
-            },
-            it: {
-                title_main: "BENVENUTO NELL'ECOSISTEMA",
-                title_sub: "SCEGLI UNO STRUMENTO PER INIZIARE",
-                c1_title: "DASHBOARD", c1_desc: "GESTIONE INTEGRALE",
-                c2_title: "OFFICINE", c2_desc: "RETE PARTNER",
-                c3_title: "BUSINESS INTELLIGENCE", c3_desc: "ANALISI DATI",
-                c4_title: "ORDINI OFFICINA", c4_desc: "STATO RICAMBI",
-                c5_title: "AUDIT", c5_desc: "LOG DI SISTEMA",
-                c6_title: "IMPOSTAZIONI", c6_desc: "CONFIGURAZIONE IA",
-                f_creator: "CREATO DA RECAMBIO RECICLADO IA",
-                f_contact: "CONTATTA IL SUPPORTO"
-            },
-            pt: {
-                title_main: "BEM-VINDO AO ECOSSISTEMA",
-                title_sub: "ESCOLHA UMA FERRAMENTA PARA COMEÇAR",
-                c1_title: "DASHBOARD", c1_desc: "GESTÃO INTEGRAL",
-                c2_title: "OFICINAS", c2_desc: "REDE DE PARCEIROS",
-                c3_title: "BUSINESS INTELLIGENCE", c3_desc: "ANÁLISE DE DADOS",
-                c4_title: "PEDIDOS OFICINA", c4_desc: "ESTADO DE PEÇAS",
-                c5_title: "AUDITORIA", c5_desc: "LOGS DO SISTEMA",
-                c6_title: "AJUSTES", c6_desc: "CONFIGURAÇÃO IA",
-                f_creator: "CRIADO POR RECAMBIO RECICLADO IA",
-                f_contact: "CONTATAR SUPORTE"
-            }
-        };
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+        }
 
         function cambiarIdioma(lang) {
             localStorage.setItem('idioma_seleccionado', lang);
-            document.getElementById('langSelect').value = lang;
-            const t = translations[lang];
-            if(!t) return;
-
-            const safeUpdate = (id, text) => { if(document.getElementById(id)) document.getElementById(id).innerText = text; };
-
-            safeUpdate('txt-title-main', t.title_main);
-            safeUpdate('txt-title-sub', t.title_sub);
-            safeUpdate('txt-c1-title', t.c1_title);
-            safeUpdate('txt-c1-desc', t.c1_desc);
-            safeUpdate('txt-c2-title', t.c2_title);
-            safeUpdate('txt-c2-desc', t.c2_desc);
-            safeUpdate('txt-c3-title', t.c3_title);
-            safeUpdate('txt-c3-desc', t.c3_desc);
-            safeUpdate('txt-c4-title', t.c4_title);
-            safeUpdate('txt-c4-desc', t.c4_desc);
-            safeUpdate('txt-c5-title', t.c5_title);
-            safeUpdate('txt-c5-desc', t.c5_desc);
-            safeUpdate('txt-c6-title', t.c6_title);
-            safeUpdate('txt-c6-desc', t.c6_desc);
-            safeUpdate('txt-footer-creator', t.f_creator);
-            safeUpdate('txt-footer-contact', t.f_contact);
+            location.reload(); 
         }
 
-        // --- LÓGICA DE SESIÓN (SOLUCIÓN AL ERROR DE REDIRECCIÓN) ---
         function initSession() {
-            const userData = localStorage.getItem('user');
-            
-            // Si no hay datos, redirigimos al login
-            if (!userData) {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
                 window.location.href = 'index.html';
                 return;
             }
 
-            const user = JSON.parse(userData);
-            const { nombre, rol, iniciales } = user;
-
-            // Actualizar Interfaz (Dropdown y Avatar)
-            const nameLabel = document.getElementById('user-name-dropdown');
-            const roleLabel = document.getElementById('user-role-dropdown');
-            const avatarCircle = document.getElementById('avatar-circle');
-
-            if (nameLabel) nameLabel.innerText = nombre;
-            if (roleLabel) roleLabel.innerText = rol;
-            
-            if (avatarCircle) {
-                // Color según rol
-                const colorClass = rol === 'admin' ? 'bg-red-600' : (rol === 'taller' ? 'bg-emerald-600' : 'bg-blue-600');
-                avatarCircle.className = `w-10 h-10 ${colorClass} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg cursor-pointer`;
-                avatarCircle.innerText = iniciales || '??';
+            // Aplicar Modo Oscuro guardado
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
             }
 
-            // Aplicar Restricciones según rol
-            aplicarRestricciones(rol);
+            // Personalizar Interfaz
+            document.getElementById('user-name').innerText = user.nombre || 'Usuario';
+            
+            const avatarCircle = document.getElementById('avatar-circle');
+            if (avatarCircle) {
+                avatarCircle.innerText = user.iniciales || '??';
+            }
 
-            // Idioma
-            const savedLang = localStorage.getItem('idioma_seleccionado') || 'es';
-            cambiarIdioma(savedLang);
+            aplicarRestricciones(user.rol);
         }
 
         function aplicarRestricciones(rol) {
@@ -276,16 +260,14 @@
                 }
             };
 
-            // REGLA: El Admin tiene acceso total
             if (rol === 'admin') return;
 
             if (rol === 'taller') {
-                // El taller solo ve Pedidos. Todo lo demás gris.
-                disableLink('btn-c1'); // Dashboard
-                disableLink('btn-c2'); // Talleres
-                disableLink('btn-c3'); // Stats
-                disableLink('btn-c5'); // Logs
-                disableLink('btn-c6'); // Ajustes
+                disableLink('btn-c1'); 
+                disableLink('btn-c2'); 
+                disableLink('btn-c3'); 
+                disableLink('btn-c5'); 
+                disableLink('btn-c6'); 
             } else if (rol === 'agente') {
                 disableLink('btn-c5');
             }
