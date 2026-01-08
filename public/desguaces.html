@@ -276,6 +276,8 @@
                 const res = await fetch('/api/desguaces');
                 desguaces = await res.json();
                 generarFiltroProvincias();
+                // Inicializar datosFiltrados con todos los datos
+                datosFiltrados = [...desguaces];
                 filtrar();
             } catch (e) { showToast('Error cargando datos', 'error'); }
         }
@@ -284,7 +286,7 @@
             const select = document.getElementById('filtro-provincia');
             // Añadir todas las provincias de España al filtro
             provinciasEspana.forEach(p => {
-                if(p) select.add(new Option(p.toUpperCase(), p));
+                select.add(new Option(p.toUpperCase(), p));
             });
         }
 
@@ -300,7 +302,7 @@
                 return coincideBusq && coincideProv;
             });
 
-            // Si hay un orden aplicado, mantenerlo
+            // Siempre renderizar después de filtrar
             if (ordenActual.campo) {
                 aplicarOrden(datosFiltrados, ordenActual.campo, ordenActual.direccion);
             } else {
