@@ -15,13 +15,13 @@
         .logo-invert { transition: filter 0.3s ease; }
         .dark .logo-invert { filter: brightness(0) invert(1); }
         
-        /* Estilos Waffle Menu (Paridad Dashboard) */
+        /* Estilos Waffle Menu */
         .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
         .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
         .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
         .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
 
-        /* Dropdown Idioma Optimizado */
+        /* Selector de Idioma Optimizado y Estable */
         .lang-dropdown {
             display: none;
             position: absolute;
@@ -29,15 +29,17 @@
             right: 0;
             background: white;
             border: 1px solid #e2e8f0;
-            border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            border-radius: 1.25rem;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             z-index: 100;
-            min-width: 140px;
+            min-width: 180px;
+            overflow: hidden;
+            margin-top: -5px; /* Solapamiento para evitar que cierre al bajar el mouse */
         }
         .dark .lang-dropdown { background: #1e293b; border-color: #334155; }
         .group-lang:hover .lang-dropdown { display: block; }
 
-        /* Estilos originales de tus tarjetas */
+        /* Estilos de tarjetas originales */
         .card-menu {
             background: white;
             border: 1px solid #f1f5f9;
@@ -65,21 +67,33 @@
                     <img src="assets/logo.png" alt="Logo" class="h-8 w-auto logo-invert">
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
                     <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
-                        Menu principal<span style="color: #7cb65d;">Recambio Reciclado</span>
+                        Auditoría <span style="color: #7cb65d;">Recambio Reciclado</span>
                         <span id="db-status" class="w-2 h-2 rounded-full bg-emerald-500"></span>
                     </h1>
                 </a>
             </div>
 
             <div class="flex items-center gap-4">
-                <div class="relative group-lang py-2">
+                <div class="relative group-lang py-3">
                     <button class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-50 transition-colors">
                         <i class="fas fa-globe text-xs text-slate-500"></i>
                     </button>
-                    <div class="lang-dropdown mt-1 overflow-hidden">
-                        <button onclick="cambiarIdioma('es')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800">Español</button>
-                        <button onclick="cambiarIdioma('en')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800">English</button>
-                        <button onclick="cambiarIdioma('fr')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Français</button>
+                    <div class="lang-dropdown">
+                        <button onclick="cambiarIdioma('es')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                            <span class="text-base">🇪🇸</span> Español (España)
+                        </button>
+                        <button onclick="cambiarIdioma('it')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                            <span class="text-base">🇮🇹</span> Italiano
+                        </button>
+                        <button onclick="cambiarIdioma('en')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                            <span class="text-base">🇬🇧</span> English (UK)
+                        </button>
+                        <button onclick="cambiarIdioma('de')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+                            <span class="text-base">🇩🇪</span> Deutsch
+                        </button>
+                        <button onclick="cambiarIdioma('fr')" class="w-full px-4 py-3 text-left text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center gap-3">
+                            <span class="text-base">🇫🇷</span> Français
+                        </button>
                     </div>
                 </div>
 
@@ -90,7 +104,18 @@
 
                 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
 
-                <div id="avatar-circle" onclick="cerrarSesion()" class="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg cursor-pointer">A</div>
+                <div class="relative group">
+                    <div id="avatar-circle" class="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg cursor-pointer">A</div>
+                    <div class="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                        <div class="px-6 py-3 border-b border-slate-50 dark:border-slate-800 mb-2">
+                            <p id="user-name-dropdown" class="text-[10px] font-black uppercase text-slate-800 dark:text-white truncate">Admin</p>
+                            <p id="user-role-dropdown" class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">admin</p>
+                        </div>
+                        <button onclick="cerrarSesion()" class="w-full text-left px-6 py-3 text-[10px] font-black uppercase text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
 
                 <div class="waffle-container group">
                     <button class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 bg-slate-100 dark:bg-slate-800 hover:text-blue-600">
@@ -129,7 +154,7 @@
                 </div>
                 <div>
                     <h3 class="text-2xl font-black uppercase italic mb-2">Panel de Control</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Gestión de flujos logísticos, estados de pedidos y automatización de procesos en tiempo real.</p>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Gestión de flujos logísticos y automatización en tiempo real.</p>
                 </div>
                 <div class="flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
                     Acceder <i class="fas fa-arrow-right"></i>
@@ -145,7 +170,7 @@
                 </div>
                 <div>
                     <h3 class="text-2xl font-black uppercase italic mb-2">Equipo y Workshops</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Administración de usuarios, roles de talleres y configuración de red de colaboradores.</p>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Administración de usuarios y roles de talleres.</p>
                 </div>
                 <div class="flex items-center gap-2 text-orange-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
                     Gestionar <i class="fas fa-arrow-right"></i>
@@ -161,7 +186,7 @@
                 </div>
                 <div>
                     <h3 class="text-2xl font-black uppercase italic mb-2">BI & Estadísticas</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Análisis de datos, rendimiento de ventas y métricas de eficiencia operativa.</p>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Análisis de datos y métricas de eficiencia operativa.</p>
                 </div>
                 <div class="flex items-center gap-2 text-emerald-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
                     Ver Reportes <i class="fas fa-arrow-right"></i>
@@ -177,7 +202,7 @@
                 </div>
                 <div>
                     <h3 class="text-2xl font-black uppercase italic mb-2">Mis Pedidos</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Seguimiento de solicitudes, órdenes de compra y estados de envío para talleres.</p>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Seguimiento de solicitudes y estados de envío para talleres.</p>
                 </div>
                 <div class="flex items-center gap-2 text-purple-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
                     Consultar <i class="fas fa-arrow-right"></i>
@@ -192,8 +217,8 @@
                     <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 05</span>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-black uppercase italic mb-2">Auditoría Root</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Registro histórico de acciones de administradores, IPs y seguridad del sistema.</p>
+                    <h3 class="text-2xl font-black uppercase italic mb-2 text-red-600">Auditoría Root</h3>
+                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Registro histórico de acciones de administradores y seguridad.</p>
                 </div>
                 <div class="flex items-center gap-2 text-red-600 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
                     Investigar <i class="fas fa-arrow-right"></i>
@@ -209,7 +234,7 @@
                 </div>
                 <div>
                     <h3 class="text-2xl font-black uppercase italic mb-2 text-slate-400">Configuración</h3>
-                    <p class="text-slate-400 text-xs font-medium leading-relaxed">Ajustes generales del sistema, parámetros de API e integraciones externas.</p>
+                    <p class="text-slate-400 text-xs font-medium leading-relaxed">Ajustes generales e integraciones externas.</p>
                 </div>
                 <div class="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
                     Próximamente
@@ -226,7 +251,8 @@
 
         function cambiarIdioma(lang) {
             localStorage.setItem('idioma_seleccionado', lang);
-            location.reload(); 
+            console.log("Idioma global:", lang);
+            // location.reload(); // Opcional si el contenido se traduce en carga
         }
 
         function initSession() {
@@ -236,13 +262,18 @@
                 return;
             }
 
-            // Aplicar Modo Oscuro guardado
             if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             }
 
-            // Personalizar Interfaz
+            // Persistencia de Idioma (Defecto Español)
+            const lang = localStorage.getItem('idioma_seleccionado') || 'es';
+            console.log("Idioma activo:", lang);
+
+            // Datos de Interfaz
             document.getElementById('user-name').innerText = user.nombre || 'Usuario';
+            document.getElementById('user-name-dropdown').innerText = user.nombre || 'Usuario';
+            document.getElementById('user-role-dropdown').innerText = user.rol || 'admin';
             
             const avatarCircle = document.getElementById('avatar-circle');
             if (avatarCircle) {
@@ -255,19 +286,11 @@
         function aplicarRestricciones(rol) {
             const disableLink = (id) => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
-                }
+                if (el) el.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
             };
-
             if (rol === 'admin') return;
-
             if (rol === 'taller') {
-                disableLink('btn-c1'); 
-                disableLink('btn-c2'); 
-                disableLink('btn-c3'); 
-                disableLink('btn-c5'); 
-                disableLink('btn-c6'); 
+                ['btn-c1', 'btn-c2', 'btn-c3', 'btn-c5', 'btn-c6'].forEach(disableLink);
             } else if (rol === 'agente') {
                 disableLink('btn-c5');
             }
