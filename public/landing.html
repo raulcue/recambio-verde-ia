@@ -13,10 +13,12 @@
         .logo-invert { transition: filter 0.3s ease; }
         .dark .logo-invert { filter: brightness(0) invert(1); }
         
+        /* Estilos Waffle Menu */
         .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
         .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
         .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
 
+        /* Selector de Idioma */
         .lang-dropdown {
             display: none;
             position: absolute;
@@ -28,6 +30,7 @@
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             z-index: 100;
             min-width: 200px;
+            overflow: hidden;
             margin-top: -5px; 
         }
         .dark .lang-dropdown { background: #1e293b; border-color: #334155; }
@@ -124,11 +127,14 @@
             </h2>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-8 flex items-center gap-4">
+            Módulos del Sistema <div class="h-[1px] flex-1 bg-slate-200 dark:bg-slate-800"></div>
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
             <a href="dashboard.html" id="btn-c1" class="card-menu group">
                 <div class="flex justify-between items-start">
                     <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-3xl flex items-center justify-center text-blue-600"><i class="fas fa-columns text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase">Módulo 01</span>
+                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Módulo 01</span>
                 </div>
                 <div><h3 id="t1-title" class="text-2xl font-black uppercase italic mb-2">Panel de Control</h3><p id="t1-desc" class="text-slate-500 text-xs font-medium">Gestión de flujos logísticos y automatización.</p></div>
                 <div class="flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase group-hover:gap-4 transition-all"><span class="txt-access">Acceder</span> <i class="fas fa-arrow-right"></i></div>
@@ -137,162 +143,141 @@
             <a href="talleres.html" id="btn-c2" class="card-menu group">
                 <div class="flex justify-between items-start">
                     <div class="w-16 h-16 bg-orange-50 dark:bg-orange-900/20 rounded-3xl flex items-center justify-center text-orange-500"><i class="fas fa-users-cog text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase">Módulo 02</span>
+                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Módulo 02</span>
                 </div>
                 <div><h3 id="t2-title" class="text-2xl font-black uppercase italic mb-2">Equipo y Workshops</h3><p id="t2-desc" class="text-slate-500 text-xs font-medium">Administración de usuarios y roles de talleres.</p></div>
                 <div class="flex items-center gap-2 text-orange-500 text-[10px] font-black uppercase group-hover:gap-4 transition-all"><span class="txt-manage">Gestionar</span> <i class="fas fa-arrow-right"></i></div>
             </a>
 
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
+            <a href="stats.html" id="btn-c3" class="card-menu group">
                 <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-search-plus text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
+                    <div class="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl flex items-center justify-center text-emerald-500"><i class="fas fa-chart-pie text-2xl"></i></div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Módulo 03</span>
                 </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Stock Externo</h3><p class="text-slate-400 text-xs font-medium">Conexión vía API con bases de datos de desguaces.</p></div>
-            </div>
+                <div><h3 class="text-2xl font-black uppercase italic mb-2">Estadísticas BI</h3><p class="text-slate-500 text-xs font-medium">Análisis de rendimiento y métricas operativas.</p></div>
+                <div class="flex items-center gap-2 text-emerald-500 text-[10px] font-black uppercase group-hover:gap-4 transition-all"><span class="txt-access">Acceder</span> <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
+            <a href="pedidos-taller.html" id="btn-c4" class="card-menu group">
                 <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-file-invoice-dollar text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
+                    <div class="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-3xl flex items-center justify-center text-purple-600"><i class="fas fa-list-check text-2xl"></i></div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Módulo 04</span>
                 </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Presupuestos</h3><p class="text-slate-400 text-xs font-medium">Envío masivo de peticiones a múltiples proveedores.</p></div>
-            </div>
+                <div><h3 class="text-2xl font-black uppercase italic mb-2">Gestión Pedidos</h3><p class="text-slate-500 text-xs font-medium">Listado detallado y estados de pedidos activos.</p></div>
+                <div class="flex items-center gap-2 text-purple-600 text-[10px] font-black uppercase group-hover:gap-4 transition-all"><span class="txt-access">Acceder</span> <i class="fas fa-arrow-right"></i></div>
+            </a>
 
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
+            <a href="admin-logs.html" id="btn-c5" class="card-menu group">
                 <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-star text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
+                    <div class="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-3xl flex items-center justify-center text-red-600"><i class="fas fa-history text-2xl"></i></div>
+                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Módulo 05</span>
                 </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Fidelización</h3><p class="text-slate-400 text-xs font-medium">Sistema de recompensas para talleres recurrentes.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-car-side text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Gestión de Flotas</h3><p class="text-slate-400 text-xs font-medium">Vinculación de piezas a matrículas de clientes finales.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-wallet text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Portal Facturación</h3><p class="text-slate-400 text-xs font-medium">Descarga de facturas y control de estados de cuenta.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-map-marked-alt text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Mapa de Demanda</h3><p class="text-slate-400 text-xs font-medium">Visualización geográfica de pedidos y talleres activos.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-truck-fast text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Tracking Tracking</h3><p class="text-slate-400 text-xs font-medium">Integración directa con agencias de mensajería.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-route text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Rutas Logísticas</h3><p class="text-slate-400 text-xs font-medium">Optimización de recogida propia en desguaces.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-boxes text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Centro de Tránsito</h3><p class="text-slate-400 text-xs font-medium">Control de stock temporal y Cross-docking.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-camera text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Calidad Visual</h3><p class="text-slate-400 text-xs font-medium">Control de calidad mediante reportes fotográficos.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-brain text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Predicción Precios</h3><p class="text-slate-400 text-xs font-medium">Análisis de mercado con inteligencia artificial.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-bell text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Alertas Stock</h3><p class="text-slate-400 text-xs font-medium">Notificaciones automáticas de piezas buscadas.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-award text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Ranking Fiabilidad</h3><p class="text-slate-400 text-xs font-medium">Métricas de calidad por marca y proveedor.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-comments text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Chat Directo</h3><p class="text-slate-400 text-xs font-medium">Comunicación directa Agente-Taller.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-exclamation-triangle text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Incidencias Log.</h3><p class="text-slate-400 text-xs font-medium">Gestión de reclamaciones por daños de transporte.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-calendar-alt text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Agenda Entregas</h3><p class="text-slate-400 text-xs font-medium">Calendario visual de llegadas de mercancía.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-bullhorn text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Marketing</h3><p class="text-slate-400 text-xs font-medium">Promociones y ofertas de stock excedente.</p></div>
-            </div>
-
-            <div class="card-menu opacity-50 grayscale cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-book text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Próximamente</span>
-                </div>
-                <div><h3 class="text-2xl font-black uppercase italic mb-2">Doc. Técnica</h3><p class="text-slate-400 text-xs font-medium">Manuales de despiece y guías de compatibilidad.</p></div>
-            </div>
+                <div><h3 class="text-2xl font-black uppercase italic mb-2">Logs & Auditoría</h3><p class="text-slate-500 text-xs font-medium">Historial de acciones y seguridad del sistema.</p></div>
+                <div class="flex items-center gap-2 text-red-600 text-[10px] font-black uppercase group-hover:gap-4 transition-all"><span class="txt-access">Acceder</span> <i class="fas fa-arrow-right"></i></div>
+            </a>
 
             <div id="btn-c6" class="card-menu opacity-50 grayscale cursor-not-allowed">
                 <div class="flex justify-between items-start">
                     <div class="w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-3xl flex items-center justify-center text-slate-400"><i class="fas fa-cog text-2xl"></i></div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase">Módulo 06</span>
+                    <span class="text-[10px] font-black text-slate-300 uppercase italic">Módulo 06</span>
                 </div>
                 <div><h3 class="text-2xl font-black uppercase italic mb-2">Configuración</h3><p class="text-slate-400 text-xs font-medium">Ajustes generales e integraciones externas.</p></div>
+            </div>
+        </div>
+
+        <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-8 flex items-center gap-4">
+            Roadmap - Nuevas Funcionalidades <div class="h-[1px] flex-1 bg-slate-200 dark:bg-slate-800"></div>
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-search-plus text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Stock Externo</h4>
+                <p class="text-[10px] text-slate-400">Conexión API desguaces.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-file-invoice-dollar text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Presupuestos</h4>
+                <p class="text-[10px] text-slate-400">Solicitudes masivas.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-star text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Fidelización</h4>
+                <p class="text-[10px] text-slate-400">Puntos para talleres.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-car-side text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Gestión Flotas</h4>
+                <p class="text-[10px] text-slate-400">Control por matrícula.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-wallet text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Facturación</h4>
+                <p class="text-[10px] text-slate-400">Portal de auto-pago.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-map-marked-alt text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Mapa Demanda</h4>
+                <p class="text-[10px] text-slate-400">Geolocalización ventas.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-truck-fast text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Tracking Real</h4>
+                <p class="text-[10px] text-slate-400">Integración logística.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-route text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Rutas Recogida</h4>
+                <p class="text-[10px] text-slate-400">Optimización logística.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-boxes text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Almacén Tránsito</h4>
+                <p class="text-[10px] text-slate-400">Cross-docking.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-camera text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Control Visual</h4>
+                <p class="text-[10px] text-slate-400">Verificación por foto.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-brain text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">IA de Precios</h4>
+                <p class="text-[10px] text-slate-400">Predicción inteligente.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-bell text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Alertas Stock</h4>
+                <p class="text-[10px] text-slate-400">Aviso pieza buscada.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-award text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Ranking Calidad</h4>
+                <p class="text-[10px] text-slate-400">Reputación CATs.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-comments text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Chat Directo</h4>
+                <p class="text-[10px] text-slate-400">Soporte Agente-Taller.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-exclamation-triangle text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Incidencias</h4>
+                <p class="text-[10px] text-slate-400">Gestión de daños.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-calendar-alt text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Calendario</h4>
+                <p class="text-[10px] text-slate-400">Agenda de entregas.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-bullhorn text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Marketing</h4>
+                <p class="text-[10px] text-slate-400">Ofertas de stock.</p>
+            </div>
+            <div class="card-menu opacity-50 grayscale cursor-not-allowed min-h-[220px] p-8">
+                <i class="fas fa-book text-xl text-slate-400 mb-4"></i>
+                <h4 class="text-sm font-black uppercase italic">Doc. Técnica</h4>
+                <p class="text-[10px] text-slate-400">Guías de despiece.</p>
             </div>
         </div>
     </main>
@@ -350,12 +335,15 @@
             };
             if (rol === 'admin') return;
             if (rol === 'taller') {
-                ['btn-c1', 'btn-c2'].forEach(disableLink);
+                // El taller solo ve Pedidos (Módulo 04).
+                ['btn-c1', 'btn-c2', 'btn-c3', 'btn-c5', 'btn-c6'].forEach(disableLink);
+            } else if (rol === 'agente') {
+                // El agente no ve Logs (Módulo 05).
+                disableLink('btn-c5');
             }
         }
 
         function cerrarSesion() { localStorage.clear(); window.location.href = 'index.html'; }
-
         document.addEventListener('DOMContentLoaded', initSession);
     </script>
 </body>
