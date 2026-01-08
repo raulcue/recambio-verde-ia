@@ -23,12 +23,16 @@
         /* Estilos Tabla Excel */
         .table-container { overflow-x: auto; border-radius: 1rem; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        th { position: sticky; top: 0; background: #f8fafc; z-index: 10; }
+        th { position: sticky; top: 0; background: #f8fafc; z-index: 10; cursor: pointer; user-select: none; }
         .dark th { background: #0f172a; }
         td, th { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
         .dark td, .dark th { border-bottom: 1px solid #1e293b; }
         tr:hover { background-color: #f1f5f9; }
         .dark tr:hover { background-color: #1e293b; }
+        .sortable:hover { background-color: #e2e8f0; }
+        .dark .sortable:hover { background-color: #1e293b; }
+        .sort-asc::after { content: " ↑"; font-weight: bold; color: #2563eb; }
+        .sort-desc::after { content: " ↓"; font-weight: bold; color: #2563eb; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen custom-scrollbar">
@@ -93,15 +97,15 @@
             <table id="tabla-excel">
                 <thead>
                     <tr class="uppercase text-[9px] font-black tracking-widest text-slate-500">
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Provincia</th>
-                        <th>Teléfono/s</th>
-                        <th>Email</th>
-                        <th>Dirección</th>
-                        <th>Horario</th>
-                        <th>Origen</th>
-                        <th>Tipo</th>
+                        <th onclick="ordenarTabla('id')" class="sortable">ID</th>
+                        <th onclick="ordenarTabla('nombre')" class="sortable">Nombre</th>
+                        <th onclick="ordenarTabla('provincia')" class="sortable">Provincia</th>
+                        <th onclick="ordenarTabla('telefonos')" class="sortable">Teléfono/s</th>
+                        <th onclick="ordenarTabla('email')" class="sortable">Email</th>
+                        <th onclick="ordenarTabla('direccion')" class="sortable">Dirección</th>
+                        <th onclick="ordenarTabla('horario')" class="sortable">Horario</th>
+                        <th onclick="ordenarTabla('origen')" class="sortable">Origen</th>
+                        <th onclick="ordenarTabla('tipo')" class="sortable">Tipo</th>
                     </tr>
                 </thead>
                 <tbody id="body-tabla" class="font-bold">
@@ -129,7 +133,62 @@
                         </div>
                         <div>
                             <label class="text-[9px] text-slate-400 uppercase">Provincia</label>
-                            <input type="text" id="d-provincia" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
+                            <select id="d-provincia" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
+                                <option value="">Seleccione provincia</option>
+                                <option value="Albacete">Albacete</option>
+                                <option value="Alicante/Alacant">Alicante/Alacant</option>
+                                <option value="Almería">Almería</option>
+                                <option value="Áraba">Áraba</option>
+                                <option value="Asturias">Asturias</option>
+                                <option value="Ávila">Ávila</option>
+                                <option value="Badajoz">Badajoz</option>
+                                <option value="Balears (Illes)">Balears (Illes)</option>
+                                <option value="Barcelona">Barcelona</option>
+                                <option value="Bizkaia">Bizkaia</option>
+                                <option value="Burgos">Burgos</option>
+                                <option value="Cáceres">Cáceres</option>
+                                <option value="Cádiz">Cádiz</option>
+                                <option value="Cantabria">Cantabria</option>
+                                <option value="Castellón/Castelló">Castellón/Castelló</option>
+                                <option value="Ciudad Real">Ciudad Real</option>
+                                <option value="Córdoba">Córdoba</option>
+                                <option value="Coruña (A)">Coruña (A)</option>
+                                <option value="Cuenca">Cuenca</option>
+                                <option value="Gipuzkoa">Gipuzkoa</option>
+                                <option value="Girona">Girona</option>
+                                <option value="Granada">Granada</option>
+                                <option value="Guadalajara">Guadalajara</option>
+                                <option value="Huelva">Huelva</option>
+                                <option value="Huesca">Huesca</option>
+                                <option value="Jaén">Jaén</option>
+                                <option value="León">León</option>
+                                <option value="Lleida">Lleida</option>
+                                <option value="Lugo">Lugo</option>
+                                <option value="Madrid">Madrid</option>
+                                <option value="Málaga">Málaga</option>
+                                <option value="Murcia">Murcia</option>
+                                <option value="Navarra">Navarra</option>
+                                <option value="Ourense">Ourense</option>
+                                <option value="Palencia">Palencia</option>
+                                <option value="Palmas (Las)">Palmas (Las)</option>
+                                <option value="Pontevedra">Pontevedra</option>
+                                <option value="Rioja (La)">Rioja (La)</option>
+                                <option value="Salamanca">Salamanca</option>
+                                <option value="Santa Cruz de Tenerife">Santa Cruz de Tenerife</option>
+                                <option value="Segovia">Segovia</option>
+                                <option value="Sevilla">Sevilla</option>
+                                <option value="Soria">Soria</option>
+                                <option value="Tarragona">Tarragona</option>
+                                <option value="Teruel">Teruel</option>
+                                <option value="Toledo">Toledo</option>
+                                <option value="Valencia/València">Valencia/València</option>
+                                <option value="Valladolid">Valladolid</option>
+                                <option value="Zamora">Zamora</option>
+                                <option value="Zaragoza">Zaragoza</option>
+                                <option value="Ceuta">Ceuta</option>
+                                <option value="Melilla">Melilla</option>
+                                <option value="OTROS">OTROS</option>
+                            </select>
                         </div>
                         <div>
                             <label class="text-[9px] text-slate-400 uppercase">C.P.</label>
@@ -185,6 +244,20 @@
         let desguaces = [];
         let vistaActual = 'tabla';
         let user = JSON.parse(localStorage.getItem('user') || '{}');
+        let ordenActual = { campo: null, direccion: 'asc' };
+        let datosFiltrados = [];
+
+        // Lista de provincias para el filtro (las mismas que en el modal)
+        const provinciasEspana = [
+            "Albacete", "Alicante/Alacant", "Almería", "Áraba", "Asturias", "Ávila", "Badajoz",
+            "Balears (Illes)", "Barcelona", "Bizkaia", "Burgos", "Cáceres", "Cádiz", "Cantabria",
+            "Castellón/Castelló", "Ciudad Real", "Córdoba", "Coruña (A)", "Cuenca", "Gipuzkoa",
+            "Girona", "Granada", "Guadalajara", "Huelva", "Huesca", "Jaén", "León", "Lleida",
+            "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Ourense", "Palencia", "Palmas (Las)",
+            "Pontevedra", "Rioja (La)", "Salamanca", "Santa Cruz de Tenerife", "Segovia", "Sevilla",
+            "Soria", "Tarragona", "Teruel", "Toledo", "Valencia/València", "Valladolid", "Zamora",
+            "Zaragoza", "Ceuta", "Melilla", "OTROS"
+        ];
 
         async function init() {
             if (!user.id) { window.location.href = 'index.html'; return; }
@@ -209,8 +282,8 @@
 
         function generarFiltroProvincias() {
             const select = document.getElementById('filtro-provincia');
-            const provs = [...new Set(desguaces.map(d => d.provincia))].sort();
-            provs.forEach(p => {
+            // Añadir todas las provincias de España al filtro
+            provinciasEspana.forEach(p => {
                 if(p) select.add(new Option(p.toUpperCase(), p));
             });
         }
@@ -219,14 +292,100 @@
             const busq = document.getElementById('buscador').value.toLowerCase();
             const prov = document.getElementById('filtro-provincia').value;
 
-            const filtrados = desguaces.filter(d => {
-                const coincideBusq = d.nombre.toLowerCase().includes(busq) || d.email?.toLowerCase().includes(busq);
+            datosFiltrados = desguaces.filter(d => {
+                const coincideBusq = d.nombre.toLowerCase().includes(busq) || 
+                                   d.email?.toLowerCase().includes(busq) ||
+                                   d.direccion?.toLowerCase().includes(busq);
                 const coincideProv = prov === 'todas' || d.provincia === prov;
                 return coincideBusq && coincideProv;
             });
 
-            renderTabla(filtrados);
-            renderTarjetas(filtrados);
+            // Si hay un orden aplicado, mantenerlo
+            if (ordenActual.campo) {
+                aplicarOrden(datosFiltrados, ordenActual.campo, ordenActual.direccion);
+            } else {
+                renderTabla(datosFiltrados);
+                renderTarjetas(datosFiltrados);
+            }
+        }
+
+        function ordenarTabla(campo) {
+            // Cambiar dirección si es el mismo campo
+            if (ordenActual.campo === campo) {
+                ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
+            } else {
+                ordenActual.campo = campo;
+                ordenActual.direccion = 'asc';
+            }
+            
+            // Remover clases de ordenación anteriores
+            document.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+            
+            // Añadir clase al th actual
+            const thActual = document.querySelector(`th[onclick="ordenarTabla('${campo}')"]`);
+            if (thActual) {
+                thActual.classList.add(ordenActual.direccion === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+            
+            aplicarOrden(datosFiltrados, campo, ordenActual.direccion);
+        }
+
+        function aplicarOrden(lista, campo, direccion) {
+            const listaOrdenada = [...lista].sort((a, b) => {
+                let valorA, valorB;
+                
+                switch(campo) {
+                    case 'id':
+                        valorA = a.id || 0;
+                        valorB = b.id || 0;
+                        break;
+                    case 'nombre':
+                        valorA = a.nombre?.toLowerCase() || '';
+                        valorB = b.nombre?.toLowerCase() || '';
+                        break;
+                    case 'provincia':
+                        valorA = a.provincia?.toLowerCase() || '';
+                        valorB = b.provincia?.toLowerCase() || '';
+                        break;
+                    case 'telefonos':
+                        const telA = [a.telefono_fijo, a.movil_1, a.movil_2].filter(Boolean).join(' ');
+                        const telB = [b.telefono_fijo, b.movil_1, b.movil_2].filter(Boolean).join(' ');
+                        valorA = telA.toLowerCase();
+                        valorB = telB.toLowerCase();
+                        break;
+                    case 'email':
+                        valorA = a.email?.toLowerCase() || '';
+                        valorB = b.email?.toLowerCase() || '';
+                        break;
+                    case 'direccion':
+                        valorA = a.direccion?.toLowerCase() || '';
+                        valorB = b.direccion?.toLowerCase() || '';
+                        break;
+                    case 'horario':
+                        valorA = a.horario?.toLowerCase() || '';
+                        valorB = b.horario?.toLowerCase() || '';
+                        break;
+                    case 'origen':
+                        valorA = a.fuente_origen?.toLowerCase() || '';
+                        valorB = b.fuente_origen?.toLowerCase() || '';
+                        break;
+                    case 'tipo':
+                        valorA = a.es_workshop ? '⭐' : '';
+                        valorB = b.es_workshop ? '⭐' : '';
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (valorA < valorB) return direccion === 'asc' ? -1 : 1;
+                if (valorA > valorB) return direccion === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            renderTabla(listaOrdenada);
+            renderTarjetas(listaOrdenada);
         }
 
         function renderTabla(lista) {
@@ -335,13 +494,28 @@
             } catch (e) { showToast('Error al guardar', 'error'); }
         };
 
-        function abrirModalNuevo() { document.getElementById('formDesguace').reset(); cambiarTab('info'); document.getElementById('modal').classList.remove('hidden'); }
+        function abrirModalNuevo() { 
+            document.getElementById('formDesguace').reset(); 
+            cambiarTab('info'); 
+            document.getElementById('modal').classList.remove('hidden'); 
+        }
+        
         function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
+        
         function cambiarTab(t) {
             const bI = document.getElementById('btnTabInfo'), bT = document.getElementById('btnTabTecnico');
             const tI = document.getElementById('tabInfo'), tT = document.getElementById('tabTecnico');
-            if (t === 'info') { bI.classList.add('tab-active'); bT.classList.remove('tab-active'); tI.classList.remove('hidden'); tT.classList.add('hidden'); }
-            else { bT.classList.add('tab-active'); bI.classList.remove('tab-active'); tT.classList.remove('hidden'); tI.classList.add('hidden'); }
+            if (t === 'info') { 
+                bI.classList.add('tab-active'); 
+                bT.classList.remove('tab-active'); 
+                tI.classList.remove('hidden'); 
+                tT.classList.add('hidden'); 
+            } else { 
+                bT.classList.add('tab-active'); 
+                bI.classList.remove('tab-active'); 
+                tT.classList.remove('hidden'); 
+                tI.classList.add('hidden'); 
+            }
         }
 
         function togglePrivacy() { document.body.classList.toggle('privacy-active'); }
