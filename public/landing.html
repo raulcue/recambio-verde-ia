@@ -21,7 +21,7 @@
         .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
         .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
 
-        /* Selector de Idioma Optimizado y Estable */
+        /* Selector de Idioma Estable */
         .lang-dropdown {
             display: none;
             position: absolute;
@@ -32,22 +32,20 @@
             border-radius: 1.25rem;
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             z-index: 100;
-            min-width: 180px;
+            min-width: 200px;
             overflow: hidden;
-            margin-top: -5px; /* Solapamiento para evitar que cierre al bajar el mouse */
+            margin-top: -5px; 
         }
         .dark .lang-dropdown { background: #1e293b; border-color: #334155; }
         .group-lang:hover .lang-dropdown { display: block; }
 
-        /* Estilos de tarjetas originales */
+        /* Tarjetas Originales */
         .card-menu {
             background: white;
             border: 1px solid #f1f5f9;
             border-radius: 2.5rem;
             padding: 2.5rem;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -63,7 +61,7 @@
         <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
             
             <div class="flex items-center gap-4">
-                <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <a href="landing.html" class="flex items-center gap-3">
                     <img src="assets/logo.png" alt="Logo" class="h-8 w-auto logo-invert">
                     <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
                     <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
@@ -97,7 +95,7 @@
                     </div>
                 </div>
 
-                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-blue-500 transition-colors">
                     <i class="fas fa-moon dark:hidden text-xs"></i>
                     <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
                 </button>
@@ -112,7 +110,7 @@
                             <p id="user-role-dropdown" class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">admin</p>
                         </div>
                         <button onclick="cerrarSesion()" class="w-full text-left px-6 py-3 text-[10px] font-black uppercase text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
-                            <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+                            <i class="fas fa-sign-out-alt mr-2"></i> <span class="txt-logout">Cerrar Sesión</span>
                         </button>
                     </div>
                 </div>
@@ -138,149 +136,151 @@
 
     <main class="max-w-7xl mx-auto px-6 py-12">
         <div class="mb-16">
-            <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4">Central de Inteligencia Logística</p>
+            <p id="txt-subtitle" class="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4">Central de Inteligencia Logística</p>
             <h2 class="text-6xl font-black uppercase tracking-tighter italic leading-none">
-                Bienvenido, <span id="user-name" class="text-blue-600">---</span>
+                <span id="txt-welcome">Bienvenido</span>, <span id="user-name" class="text-blue-600">---</span>
             </h2>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <a href="dashboard.html" id="btn-c1" class="card-menu group">
                 <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-3xl flex items-center justify-center text-blue-600">
-                        <i class="fas fa-columns text-2xl"></i>
-                    </div>
+                    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-3xl flex items-center justify-center text-blue-600"><i class="fas fa-columns text-2xl"></i></div>
                     <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 01</span>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-black uppercase italic mb-2">Panel de Control</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Gestión de flujos logísticos y automatización en tiempo real.</p>
+                    <h3 id="t1-title" class="text-2xl font-black uppercase italic mb-2">Panel de Control</h3>
+                    <p id="t1-desc" class="text-slate-500 text-xs font-medium leading-relaxed">Gestión de flujos logísticos y automatización en tiempo real.</p>
                 </div>
-                <div class="flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
-                    Acceder <i class="fas fa-arrow-right"></i>
+                <div class="flex items-center gap-2 text-blue-600 text-[10px] font-black uppercase group-hover:gap-4 transition-all">
+                    <span class="txt-access">Acceder</span> <i class="fas fa-arrow-right"></i>
                 </div>
             </a>
 
             <a href="talleres.html" id="btn-c2" class="card-menu group">
                 <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-orange-50 dark:bg-orange-900/20 rounded-3xl flex items-center justify-center text-orange-500">
-                        <i class="fas fa-users-cog text-2xl"></i>
-                    </div>
+                    <div class="w-16 h-16 bg-orange-50 dark:bg-orange-900/20 rounded-3xl flex items-center justify-center text-orange-500"><i class="fas fa-users-cog text-2xl"></i></div>
                     <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 02</span>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-black uppercase italic mb-2">Equipo y Workshops</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Administración de usuarios y roles de talleres.</p>
+                    <h3 id="t2-title" class="text-2xl font-black uppercase italic mb-2">Equipo y Workshops</h3>
+                    <p id="t2-desc" class="text-slate-500 text-xs font-medium leading-relaxed">Administración de usuarios y roles de talleres.</p>
                 </div>
-                <div class="flex items-center gap-2 text-orange-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
-                    Gestionar <i class="fas fa-arrow-right"></i>
+                <div class="flex items-center gap-2 text-orange-500 text-[10px] font-black uppercase group-hover:gap-4 transition-all">
+                    <span class="txt-manage">Gestionar</span> <i class="fas fa-arrow-right"></i>
                 </div>
             </a>
 
             <a href="stats.html" id="btn-c3" class="card-menu group">
                 <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl flex items-center justify-center text-emerald-500">
-                        <i class="fas fa-chart-line text-2xl"></i>
-                    </div>
+                    <div class="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl flex items-center justify-center text-emerald-500"><i class="fas fa-chart-line text-2xl"></i></div>
                     <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 03</span>
                 </div>
                 <div>
-                    <h3 class="text-2xl font-black uppercase italic mb-2">BI & Estadísticas</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Análisis de datos y métricas de eficiencia operativa.</p>
+                    <h3 id="t3-title" class="text-2xl font-black uppercase italic mb-2">BI & Estadísticas</h3>
+                    <p id="t3-desc" class="text-slate-500 text-xs font-medium leading-relaxed">Análisis de datos y métricas de eficiencia operativa.</p>
                 </div>
-                <div class="flex items-center gap-2 text-emerald-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
-                    Ver Reportes <i class="fas fa-arrow-right"></i>
-                </div>
-            </a>
-
-            <a href="pedidos-taller.html" id="btn-c4" class="card-menu group">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-3xl flex items-center justify-center text-purple-500">
-                        <i class="fas fa-list-check text-2xl"></i>
-                    </div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 04</span>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black uppercase italic mb-2">Mis Pedidos</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Seguimiento de solicitudes y estados de envío para talleres.</p>
-                </div>
-                <div class="flex items-center gap-2 text-purple-500 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
-                    Consultar <i class="fas fa-arrow-right"></i>
+                <div class="flex items-center gap-2 text-emerald-500 text-[10px] font-black uppercase group-hover:gap-4 transition-all">
+                    <span class="txt-reports">Ver Reportes</span> <i class="fas fa-arrow-right"></i>
                 </div>
             </a>
-
-            <a href="admin-logs.html" id="btn-c5" class="card-menu group border-red-100 dark:border-red-900/20">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-3xl flex items-center justify-center text-red-600">
-                        <i class="fas fa-history text-2xl"></i>
-                    </div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 05</span>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black uppercase italic mb-2 text-red-600">Auditoría Root</h3>
-                    <p class="text-slate-500 text-xs font-medium leading-relaxed">Registro histórico de acciones de administradores y seguridad.</p>
-                </div>
-                <div class="flex items-center gap-2 text-red-600 text-[10px] font-black uppercase tracking-widest group-hover:gap-4 transition-all">
-                    Investigar <i class="fas fa-arrow-right"></i>
-                </div>
-            </a>
-
-            <div id="btn-c6" class="card-menu group opacity-50 cursor-not-allowed">
-                <div class="flex justify-between items-start">
-                    <div class="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-3xl flex items-center justify-center text-slate-400">
-                        <i class="fas fa-cog text-2xl"></i>
-                    </div>
-                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Módulo 06</span>
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black uppercase italic mb-2 text-slate-400">Configuración</h3>
-                    <p class="text-slate-400 text-xs font-medium leading-relaxed">Ajustes generales e integraciones externas.</p>
-                </div>
-                <div class="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                    Próximamente
-                </div>
-            </div>
         </div>
     </main>
 
     <script>
-        function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
-        }
+        // DICCIONARIO DE TRADUCCIONES
+        const translations = {
+            es: { 
+                welcome: "Bienvenido", subtitle: "Central de Inteligencia Logística", 
+                access: "Acceder", manage: "Gestionar", reports: "Ver Reportes", logout: "Cerrar Sesión",
+                t1_title: "Panel de Control", t1_desc: "Gestión de flujos logísticos y automatización en tiempo real.",
+                t2_title: "Equipo y Workshops", t2_desc: "Administración de usuarios y roles de talleres.",
+                t3_title: "BI & Estadísticas", t3_desc: "Análisis de datos y métricas de eficiencia operativa."
+            },
+            en: { 
+                welcome: "Welcome", subtitle: "Logistics Intelligence Center", 
+                access: "Access", manage: "Manage", reports: "View Reports", logout: "Logout",
+                t1_title: "Control Panel", t1_desc: "Real-time logistics flow management and automation.",
+                t2_title: "Team & Workshops", t2_desc: "User administration and workshop roles.",
+                t3_title: "BI & Statistics", t3_desc: "Data analysis and operational efficiency metrics."
+            },
+            it: { 
+                welcome: "Benvenuto", subtitle: "Centro di Intelligence Logistica", 
+                access: "Accedere", manage: "Gestire", reports: "Vedi Report", logout: "Disconnettersi",
+                t1_title: "Pannello di Controllo", t1_desc: "Gestione dei flussi logistici e automazione in tempo reale.",
+                t2_title: "Team e Workshop", t2_desc: "Amministrazione utenti e ruoli officina.",
+                t3_title: "BI e Statistiche", t3_desc: "Analisi dei dati e metriche di efficienza operativa."
+            },
+            de: { 
+                welcome: "Willkommen", subtitle: "Logistik-Intelligence-Zentrum", 
+                access: "Zugreifen", manage: "Verwalten", reports: "Berichte ansehen", logout: "Abmelden",
+                t1_title: "Kontrollpanel", t1_desc: "Echtzeit-Logistikflussmanagement und Automatisierung.",
+                t2_title: "Team & Workshops", t2_desc: "Benutzerverwaltung und Werkstattrollen.",
+                t3_title: "BI & Statistiken", t3_desc: "Datenanalyse und operative Effizienzkennzahlen."
+            },
+            fr: { 
+                welcome: "Bienvenue", subtitle: "Centre d'Intelligence Logistique", 
+                access: "Accéder", manage: "Gérer", reports: "Voir Rapports", logout: "Déconnexion",
+                t1_title: "Panneau de Contrôle", t1_desc: "Gestion des flux logistiques et automatisation en temps réel.",
+                t2_title: "Équipe et Ateliers", t2_desc: "Administration des utilisateurs et rôles d'ateliers.",
+                t3_title: "BI & Statistiques", t3_desc: "Analyse des données et mesures d'efficacité opérationnelle."
+            }
+        };
 
         function cambiarIdioma(lang) {
             localStorage.setItem('idioma_seleccionado', lang);
-            console.log("Idioma global:", lang);
-            // location.reload(); // Opcional si el contenido se traduce en carga
+            aplicarTextos(lang);
+        }
+
+        function aplicarTextos(lang) {
+            const t = translations[lang] || translations.es;
+            
+            // Textos Hero
+            document.getElementById('txt-welcome').innerText = t.welcome;
+            document.getElementById('txt-subtitle').innerText = t.subtitle;
+            
+            // Botones comunes
+            document.querySelectorAll('.txt-access').forEach(el => el.innerText = t.access);
+            document.querySelectorAll('.txt-manage').forEach(el => el.innerText = t.manage);
+            document.querySelectorAll('.txt-reports').forEach(el => el.innerText = t.reports);
+            document.querySelectorAll('.txt-logout').forEach(el => el.innerText = t.logout);
+
+            // Títulos y Descripciones de Tarjetas
+            if(document.getElementById('t1-title')) document.getElementById('t1-title').innerText = t.t1_title;
+            if(document.getElementById('t1-desc')) document.getElementById('t1-desc').innerText = t.t1_desc;
+            if(document.getElementById('t2-title')) document.getElementById('t2-title').innerText = t.t2_title;
+            if(document.getElementById('t2-desc')) document.getElementById('t2-desc').innerText = t.t2_desc;
+            if(document.getElementById('t3-title')) document.getElementById('t3-title').innerText = t.t3_title;
+            if(document.getElementById('t3-desc')) document.getElementById('t3-desc').innerText = t.t3_desc;
+
+            console.log("Interfaz actualizada a:", lang);
         }
 
         function initSession() {
             const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) {
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!user) { window.location.href = 'index.html'; return; }
 
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.documentElement.classList.add('dark');
-            }
+            // Cargar Modo Oscuro
+            if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
 
-            // Persistencia de Idioma (Defecto Español)
+            // Cargar Idioma Persistente (IMPORTANTE)
             const lang = localStorage.getItem('idioma_seleccionado') || 'es';
-            console.log("Idioma activo:", lang);
+            aplicarTextos(lang);
 
-            // Datos de Interfaz
+            // Rellenar Datos Usuario
             document.getElementById('user-name').innerText = user.nombre || 'Usuario';
             document.getElementById('user-name-dropdown').innerText = user.nombre || 'Usuario';
             document.getElementById('user-role-dropdown').innerText = user.rol || 'admin';
             
             const avatarCircle = document.getElementById('avatar-circle');
-            if (avatarCircle) {
-                avatarCircle.innerText = user.iniciales || '??';
-            }
+            if (avatarCircle) avatarCircle.innerText = user.iniciales || '??';
 
             aplicarRestricciones(user.rol);
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
         }
 
         function aplicarRestricciones(rol) {
@@ -290,16 +290,11 @@
             };
             if (rol === 'admin') return;
             if (rol === 'taller') {
-                ['btn-c1', 'btn-c2', 'btn-c3', 'btn-c5', 'btn-c6'].forEach(disableLink);
-            } else if (rol === 'agente') {
-                disableLink('btn-c5');
+                ['btn-c1', 'btn-c2', 'btn-c3'].forEach(disableLink);
             }
         }
 
-        function cerrarSesion() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
+        function cerrarSesion() { localStorage.clear(); window.location.href = 'index.html'; }
 
         document.addEventListener('DOMContentLoaded', initSession);
     </script>
