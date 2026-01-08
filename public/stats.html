@@ -19,292 +19,243 @@
         
         .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 2.5rem; transition: all 0.3s ease; }
         .dark .glass-card { background: #0f172a; border-color: #1e293b; }
-        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
+
+        .stat-badge { font-size: 9px; font-weight: 900; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 10px; text-transform: uppercase; }
         
-        .chart-container { position: relative; height: 300px; width: 100%; }
-        
-        .logo-invert { transition: filter 0.3s ease; }
-        .dark .logo-invert { filter: brightness(0) invert(1); }
-        
-        .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
-        .waffle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; width: 280px; }
-        .waffle-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px; border-radius: 12px; transition: all 0.2s; text-decoration: none; }
-        .waffle-item:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
-        
-        .select-custom { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+        .nav-btn { width: 42px; height: 42px; border-radius: 15px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+
+        canvas { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.02)); }
     </style>
 </head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen pb-12">
 
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
-
-    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <img src="assets/logo.png" alt="Logo" class="h-8 w-auto logo-invert">
-                    <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
-                        <span id="txt-title-main">Recambio Reciclado</span> <span id="txt-title-sub" style="color: #7cb65d;">- BI</span>
-                    </h1>
-                </a>
-            </div>
-            
-            <div class="flex items-center gap-6">
-                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl px-2 border border-slate-200 dark:border-slate-700">
-                    <select id="langSelect" onchange="cambiarIdioma(this.value)" class="bg-transparent border-none text-xl cursor-pointer py-1.5 focus:outline-none">
-                        <option value="es">🇪🇸</option>
-                        <option value="it">🇮🇹</option>
-                        <option value="en">🇬🇧</option>
-                    </select>
-                </div>
-
-                <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:text-blue-500 transition-colors">
-                    <i class="fas fa-moon dark:hidden text-xs"></i><i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-8 py-5">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-5">
+                <button onclick="window.location.href='landing.html'" class="nav-btn bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-blue-600 hover:text-white">
+                    <i class="fas fa-arrow-left"></i>
                 </button>
-
-                <div class="flex items-center gap-4">
-                    <div id="avatar-container" class="relative group cursor-pointer">
-                        <div id="user-initials" class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg">
-                            ??
-                        </div>
-                    </div>
-
-                    <div class="waffle-container group">
-                        <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-blue-600">
-                            <i class="fas fa-th text-xs"></i>
-                        </button>
-                        <div class="absolute right-0 top-full mt-0 hidden group-hover:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[2rem] overflow-hidden z-[60]">
-                            <div class="waffle-grid">
-                                <a href="landing.html" class="waffle-item text-blue-600"><i class="fas fa-home"></i><span class="text-[9px] font-black uppercase text-slate-500">Principal</span></a>
-                                <a href="dashboard.html" class="waffle-item text-indigo-500"><i class="fas fa-columns"></i><span class="text-[9px] font-black uppercase text-slate-500">Flujos</span></a>
-                                <a href="stats.html" class="waffle-item text-emerald-500"><i class="fas fa-chart-line"></i><span class="text-[9px] font-black uppercase text-slate-500">BI Stats</span></a>
-                                <a href="talleres.html" class="waffle-item text-orange-500"><i class="fas fa-users-cog"></i><span class="text-[9px] font-black uppercase text-slate-500">Equipo</span></a>
-                                <a href="pedidos-taller.html" class="waffle-item text-purple-500"><i class="fas fa-list-check"></i><span class="text-[9px] font-black uppercase text-slate-500">Pedidos</span></a>
-                                <a href="admin-logs.html" class="waffle-item text-slate-500"><i class="fas fa-history"></i><span class="text-[9px] font-black uppercase text-slate-500">Logs</span></a>
-                            </div>
-                        </div>
-                    </div>
-                    <button onclick="window.location.href='index.html'; localStorage.clear();" class="text-slate-400 hover:text-red-600">
-                        <i class="fas fa-power-off text-sm"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="p-8 max-w-[1600px] mx-auto">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
-            <div>
-                <h2 id="txt-main-title" class="text-3xl font-black tracking-tighter">Business Intelligence</h2>
-                <p id="txt-main-subtitle" class="text-slate-500 text-sm font-semibold uppercase tracking-widest mt-1">Análisis de rendimiento y rentabilidad</p>
-            </div>
-            
-            <div class="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <select id="tallerFilter" class="select-custom bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider min-w-[200px]">
-                    <option value="">Todos los Talleres</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <div class="glass-card p-6 flex flex-col justify-between">
-                <div class="flex justify-between items-start">
-                    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-blue-600">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <div class="relative group">
-                        <i class="fas fa-info-circle text-slate-200 cursor-help hover:text-blue-500 transition-colors"></i>
-                        <div class="absolute right-0 bottom-full mb-2 w-48 bg-slate-800 text-white text-[10px] p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-                            Total de piezas solicitadas en el periodo.
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <span class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Pedidos Totales</span>
-                    <h3 class="text-3xl font-black mt-1">1,284</h3>
-                </div>
-            </div>
-
-            <div class="glass-card p-6 flex flex-col justify-between">
-                <div class="flex justify-between items-start">
-                    <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl flex items-center justify-center text-emerald-600">
-                        <i class="fas fa-euro-sign"></i>
-                    </div>
-                    <div class="relative group">
-                        <i class="fas fa-info-circle text-slate-200 cursor-help hover:text-emerald-500 transition-colors"></i>
-                        <div class="absolute right-0 bottom-full mb-2 w-48 bg-slate-800 text-white text-[10px] p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-                            Beneficio real: Venta - Coste.
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <span class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Beneficio Real</span>
-                    <h3 class="text-3xl font-black mt-1">42.5k€</h3>
-                </div>
-            </div>
-
-            <div class="glass-card p-6 flex flex-col justify-between">
-                <div class="flex justify-between items-start">
-                    <div class="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center text-orange-600">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="relative group">
-                        <i class="fas fa-info-circle text-slate-200 cursor-help hover:text-orange-500 transition-colors"></i>
-                        <div class="absolute right-0 bottom-full mb-2 w-48 bg-slate-800 text-white text-[10px] p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-                            Tiempo medio de respuesta.
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <span class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Tiempo Medio</span>
-                    <h3 class="text-3xl font-black mt-1">14min</h3>
-                </div>
-            </div>
-
-            <div class="glass-card p-6 flex flex-col justify-between">
-                <div class="flex justify-between items-start">
-                    <div class="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center text-purple-600">
-                        <i class="fas fa-percentage"></i>
-                    </div>
-                    <div class="relative group">
-                        <i class="fas fa-info-circle text-slate-200 cursor-help hover:text-purple-500 transition-colors"></i>
-                        <div class="absolute right-0 bottom-full mb-2 w-48 bg-slate-800 text-white text-[10px] p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none">
-                            Tasa de pedidos convertidos a venta.
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <span class="text-slate-500 text-[10px] font-black uppercase tracking-widest">Efectividad</span>
-                    <h3 class="text-3xl font-black mt-1">82%</h3>
-                </div>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-            <div class="glass-card p-8 bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-none relative overflow-hidden group">
-                <div class="relative z-10">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-black uppercase text-xs tracking-widest">IA Forecast (Mes Próx.)</h3>
-                        <div class="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-brain text-xs"></i>
-                        </div>
-                    </div>
-                    <div class="flex items-end gap-2">
-                        <span class="text-5xl font-black tracking-tighter">€58,420</span>
-                        <span class="text-blue-200 text-xs font-bold pb-1 flex items-center gap-1">
-                            <i class="fas fa-arrow-up text-[10px]"></i> 12.4%
-                        </span>
-                    </div>
-                    <div class="mt-8 pt-6 border-t border-white/10">
-                        <p class="text-[10px] font-medium leading-relaxed opacity-90 uppercase tracking-wider">
-                            Análisis predictivo: Basado en estacionalidad histórica y demanda actual de talleres vinculados.
-                        </p>
-                    </div>
-                </div>
-                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors"></div>
-            </div>
-
-            <div class="lg:col-span-2 glass-card p-8 flex flex-col justify-between">
                 <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-black uppercase text-xs tracking-widest">Análisis de Rentabilidad</h3>
-                        <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[9px] font-black rounded-full uppercase">Punto de Equilibrio</span>
-                    </div>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Objetivo Mensual de Cubrimiento de Gastos</p>
+                    <h1 class="text-xl font-black uppercase tracking-tighter leading-none">Business <span class="text-blue-600 italic">Stats</span></h1>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Análisis de Rendimiento IA</p>
                 </div>
+            </div>
 
-                <div class="mt-8">
-                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-4 rounded-full overflow-hidden p-1 shadow-inner">
-                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-1000 shadow-lg" style="width: 72%;"></div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-1.5 pr-4 rounded-2xl">
+                    <div id="user-avatar" class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-[10px]">--</div>
+                    <span id="user-name" class="text-[10px] font-black uppercase tracking-tight">Cargando...</span>
+                </div>
+                <button onclick="toggleDarkMode()" class="nav-btn bg-slate-100 dark:bg-slate-800 text-slate-400">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-8 mt-10">
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="glass-card p-8">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600">
+                        <i class="fas fa-chart-line text-lg"></i>
                     </div>
-                    <div class="flex justify-between mt-5">
-                        <div class="flex flex-col">
-                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Ventas Actuales</span>
-                            <span class="text-xl font-black text-slate-900 dark:text-white">€57,600</span>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Umbral Crítico</span>
-                            <span class="text-xl font-black text-slate-900 dark:text-white">€80,000</span>
-                        </div>
+                    <span class="stat-badge bg-blue-100 text-blue-600">Mensual</span>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventas Totales</p>
+                <h3 id="stat-ventas" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
+                <div class="flex items-center gap-2 mt-4 text-[10px] font-bold text-emerald-500">
+                    <i class="fas fa-arrow-up"></i> 12.5% <span class="text-slate-400 font-normal">vs mes anterior</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-8">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600">
+                        <i class="fas fa-wallet text-lg"></i>
                     </div>
+                    <span class="stat-badge bg-emerald-100 text-emerald-600">Neto</span>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Beneficio Estimado</p>
+                <h3 id="stat-beneficio" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
+                <div class="flex items-center gap-2 mt-4 text-[10px] font-bold text-emerald-500">
+                    <i class="fas fa-arrow-up"></i> 8.2% <span class="text-slate-400 font-normal">eficiencia alzada</span>
+                </div>
+            </div>
+
+            <div class="glass-card p-8">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-600">
+                        <i class="fas fa-box text-lg"></i>
+                    </div>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pedidos Procesados</p>
+                <h3 id="stat-pedidos" class="text-3xl font-black mt-1 tracking-tighter">0</h3>
+                <p class="text-[10px] text-slate-400 mt-4 font-bold uppercase">Volumen total histórico</p>
+            </div>
+
+            <div class="glass-card p-8 bg-slate-900 text-white border-none">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-blue-400">
+                        <i class="fas fa-bullseye text-lg"></i>
+                    </div>
+                </div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tasa de Cierre</p>
+                <h3 class="text-3xl font-black mt-1 tracking-tighter">94.2%</h3>
+                <div class="w-full bg-white/10 h-1.5 rounded-full mt-6 overflow-hidden">
+                    <div class="bg-blue-500 h-full w-[94%] shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="glass-card p-8">
-                <h3 id="txt-chart1-title" class="font-black uppercase text-xs tracking-widest mb-8">Evolución: Ventas vs Beneficio</h3>
-                <div class="chart-container">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="lg:col-span-2 glass-card p-10">
+                <div class="flex justify-between items-center mb-10">
+                    <div>
+                        <h2 class="text-sm font-black uppercase tracking-widest">Evolución de Ingresos</h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Comparativa Ventas vs Beneficio</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-[9px] font-black uppercase tracking-tighter">Día</button>
+                        <button class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase tracking-tighter shadow-lg shadow-blue-500/20">Mes</button>
+                    </div>
+                </div>
+                <div class="h-[350px] w-full">
                     <canvas id="chartVentas"></canvas>
                 </div>
             </div>
 
-            <div class="glass-card p-8">
-                <h3 id="txt-chart2-title" class="font-black uppercase text-xs tracking-widest mb-8">Tasa de Incidencias Operativas</h3>
-                <div class="chart-container">
+            <div class="glass-card p-10">
+                <h2 class="text-sm font-black uppercase tracking-widest mb-10 text-center">Incidencias y Logística</h2>
+                <div class="h-[250px] w-full mb-10">
                     <canvas id="chartIncidencias"></canvas>
                 </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                            <span class="text-[10px] font-black uppercase tracking-tighter">Rechazados</span>
+                        </div>
+                        <span class="text-xs font-black">12.4%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <span class="text-[10px] font-black uppercase tracking-tighter">Devoluciones</span>
+                        </div>
+                        <span class="text-xs font-black">4.2%</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="glass-card mt-6 overflow-hidden">
+            <div class="p-8 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center">
+                <h2 class="text-xs font-black uppercase tracking-widest">Zonas de Mayor Actividad</h2>
+                <button class="text-[9px] font-black text-blue-600 uppercase tracking-widest">Ver Mapa Completo</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-800/30 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            <th class="px-8 py-4">Provincia</th>
+                            <th class="px-8 py-4 text-center">Nº Pedidos</th>
+                            <th class="px-8 py-4 text-center">Volumen €</th>
+                            <th class="px-8 py-4 text-right">Crecimiento</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-xs font-bold text-slate-600 dark:text-slate-400">
+                        <tr class="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                            <td class="px-8 py-5 text-slate-900 dark:text-white font-black uppercase tracking-tighter italic">Madrid</td>
+                            <td class="px-8 py-5 text-center">142</td>
+                            <td class="px-8 py-5 text-center">24.500€</td>
+                            <td class="px-8 py-5 text-right text-emerald-500">+14%</td>
+                        </tr>
+                        <tr class="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                            <td class="px-8 py-5 text-slate-900 dark:text-white font-black uppercase tracking-tighter italic">Barcelona</td>
+                            <td class="px-8 py-5 text-center">98</td>
+                            <td class="px-8 py-5 text-center">18.200€</td>
+                            <td class="px-8 py-5 text-right text-emerald-500">+8%</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                            <td class="px-8 py-5 text-slate-900 dark:text-white font-black uppercase tracking-tighter italic">Sevilla</td>
+                            <td class="px-8 py-5 text-center">64</td>
+                            <td class="px-8 py-5 text-center">9.800€</td>
+                            <td class="px-8 py-5 text-right text-red-400">-2%</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+
     </main>
 
     <script>
-        const translations = {
-            es: { title_main: "Recambio Reciclado", title_sub: "- BI", main_title: "Business Intelligence", main_subtitle: "Análisis de rendimiento y rentabilidad", chart1: "Evolución: Ventas vs Beneficio", chart2: "Tasa de Incidencias Operativas" },
-            it: { title_main: "Ricambio Riciclato", title_sub: "- BI", main_title: "Analisi Dati", main_subtitle: "Analisi delle prestazioni", chart1: "Evoluzione: Vendite vs Profitto", chart2: "Tasso di Incidenti" },
-            en: { title_main: "Recycled Spare Parts", title_sub: "- BI", main_title: "Intelligence", main_subtitle: "Performance Analysis", chart1: "Evolution: Sales vs Profit", chart2: "Incidence Rate" }
-        };
+        async function init() {
+            const userData = localStorage.getItem('user');
+            if (!userData) { window.location.href = 'index.html'; return; }
 
-        function checkAccess() {
-            const rol = localStorage.getItem('user_rol');
-            const iniciales = localStorage.getItem('user_iniciales') || 'AD';
-            
-            if (!rol) { window.location.href = 'index.html'; return; }
-            
-            let color = 'bg-blue-700';
-            if(rol === 'agente') color = 'bg-green-600';
-            if(rol === 'taller') color = 'bg-red-600';
-            
-            const avatarDiv = document.getElementById('user-initials');
-            if(avatarDiv) {
-                avatarDiv.innerText = iniciales;
-                avatarDiv.className = `w-10 h-10 ${color} text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg`;
+            try {
+                const user = JSON.parse(userData);
+                // El rol admin y agente tienen acceso a stats
+                if (user.rol !== 'admin' && user.rol !== 'agente') {
+                    alert("Acceso restringido a administración.");
+                    window.location.href = 'landing.html';
+                    return;
+                }
+
+                const userNameEl = document.getElementById('user-name');
+                const userAvatarEl = document.getElementById('user-avatar');
+
+                if (userNameEl) userNameEl.innerText = user.nombre || 'Admin';
+                if (userAvatarEl) {
+                    userAvatarEl.innerText = user.iniciales || 'AD';
+                    if (user.rol === 'admin') {
+                        userAvatarEl.classList.remove('bg-blue-600');
+                        userAvatarEl.classList.add('bg-red-600');
+                    }
+                }
+            } catch (e) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+
+            await cargarStats();
+            inicializarGraficos();
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        async function cargarStats() {
+            try {
+                const res = await fetch('/api/stats/global');
+                const data = await res.json();
+                
+                document.getElementById('stat-ventas').innerText = `${parseFloat(data.ventas).toLocaleString()}€`;
+                document.getElementById('stat-beneficio').innerText = `${(data.ventas * 0.25).toLocaleString()}€`;
+                document.getElementById('stat-pedidos').innerText = data.total;
+            } catch (err) {
+                console.error("Error cargando stats:", err);
             }
         }
 
-        function cambiarIdioma(lang) {
-            localStorage.setItem('idioma_seleccionado', lang);
-            document.getElementById('langSelect').value = lang;
-            const t = translations[lang];
-            if(!t) return;
-            
-            const safeUpdate = (id, text) => { if(document.getElementById(id)) document.getElementById(id).innerText = text; };
-            safeUpdate('txt-title-main', t.title_main);
-            safeUpdate('txt-title-sub', t.title_sub);
-            safeUpdate('txt-main-title', t.main_title);
-            safeUpdate('txt-main-subtitle', t.main_subtitle);
-            safeUpdate('txt-chart1-title', t.chart1);
-            safeUpdate('txt-chart2-title', t.chart2);
-        }
-
-        async function cargarTalleres() {
-            try {
-                const res = await fetch('/api/talleres');
-                const data = await res.json();
-                const select = document.getElementById('tallerFilter');
-                data.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t.id; opt.textContent = t.nombre; select.appendChild(opt);
-                });
-            } catch (err) { console.error(err); }
-        }
-
-        const initCharts = () => {
-            Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = "'Inter', sans-serif";
+        function inicializarGraficos() {
+            // GRÁFICO DE VENTAS
             new Chart(document.getElementById('chartVentas'), {
                 type: 'line',
                 data: {
-                    labels: ['Ene', 'Feb', 'Mar', 'Abr'],
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
                     datasets: [
                         { label: 'Ventas', data: [1200, 1900, 1500, 2100], borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.4 }, 
                         { label: 'Beneficio', data: [300, 900, 600, 800], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }
@@ -324,15 +275,9 @@
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
-        };
+        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAccess();
-            const savedLang = localStorage.getItem('idioma_seleccionado') || 'es';
-            cambiarIdioma(savedLang);
-            cargarTalleres();
-            initCharts();
-        });
+        window.onload = init;
     </script>
 </body>
 </html>
