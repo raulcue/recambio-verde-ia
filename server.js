@@ -217,41 +217,27 @@ app.post('/api/desguaces', async (req, res) => {
 
 // === PEDIDOS/PIEZAS ===
 app.get('/api/pedidos', async (req, res) => {
-  const { estado, taller_id, cliente_id } = req.query;
+  const { taller_id } = req.query;
   
+  // Usamos p.* para traer todas las columnas largas de tu tabla
+  // Unimos con usuarios para sacar el nombre del taller/usuario asignado
   let sql = `
     SELECT p.*, 
-           c.nombre as cliente_nombre,
-           c.iniciales as cliente_iniciales,
-           t.nombre as taller_nombre,
-           t.iniciales as taller_iniciales
+           u.nombre as nombre_usuario,
+           u.iniciales as taller_iniciales
     FROM pedidos p
-    LEFT JOIN usuarios c ON p.cliente_id = c.id
-    LEFT JOIN usuarios t ON p.taller_id = t.id
+    LEFT JOIN usuarios u ON p.usuario_id = u.id
     WHERE 1=1
   `;
   const params = [];
-  let paramCount = 0;
   
-  if (estado) {
-    paramCount++;
-    sql += ` AND p.estado = $${paramCount}`;
-    params.push(estado);
-  }
-  
-  if (taller_id) {
-    paramCount++;
-    sql += ` AND p.taller_id = $${paramCount}`;
+  if (taller_id && taller_id !== 'todos') {
+    sql += ` AND p.usuario_id = $1`;
     params.push(taller_id);
   }
   
-  if (cliente_id) {
-    paramCount++;
-    sql += ` AND p.cliente_id = $${paramCount}`;
-    params.push(cliente_id);
-  }
-  
-  sql += ' ORDER BY p.created_at DESC';
+  // Cambiamos created_at por fecha_creacion (que es el nombre en tu BBDD)
+  sql += ' ORDER BY p.fecha_creacion DESC';
   
   try {
     const result = await query(sql, params);
@@ -262,33 +248,23 @@ app.get('/api/pedidos', async (req, res) => {
 });
 
 app.post('/api/pedidos', async (req, res) => {
-  const pedido = req.body;
+  const p = req.body;
   try {
     const result = await query(`
-      INSERT INTO pedidos (titulo, descripcion, cliente_id, taller_id, estado, prioridad, 
-        marca, modelo, matricula, año, fecha_limite) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      INSERT INTO pedidos (
+        pieza, matricula, marca_coche, modelo_coche, estado, 
+        precio, precio_coste, proveedor, bastidor, 
+        sub_estado_incidencia, notas_tecnicas, usuario_id, fecha_creacion
+      ) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
       RETURNING id
     `, [
-      pedido.titulo, pedido.descripcion, pedido.cliente_id, pedido.taller_id,
-      pedido.estado || 'solicitud', pedido.prioridad || 'media',
-      pedido.marca, pedido.modelo, pedido.matricula, pedido.año, pedido.fecha_limite
+      p.pieza, p.matricula, p.marca_coche, p.modelo_coche, p.estado || 'solicitado',
+      p.precio || 0, p.precio_coste || 0, p.proveedor, p.bastidor,
+      p.sub_estado_incidencia, p.notas_tecnicas, p.usuario_id
     ]);
     
-    const newId = result.rows[0].id;
-    const pedidoCompleto = await query(`
-      SELECT p.*, 
-             c.nombre as cliente_nombre,
-             c.iniciales as cliente_iniciales,
-             t.nombre as taller_nombre,
-             t.iniciales as taller_iniciales
-      FROM pedidos p
-      LEFT JOIN usuarios c ON p.cliente_id = c.id
-      LEFT JOIN usuarios t ON p.taller_id = t.id
-      WHERE p.id = $1
-    `, [newId]);
-    
-    res.json(pedidoCompleto.rows[0]);
+    res.json({ id: result.rows[0].id, message: 'Pedido creado con éxito' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -298,11 +274,8 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
   const { estado } = req.body;
   const { id } = req.params;
   
-  if (!estado || !['solicitud', 'proceso', 'finalizado', 'cancelado'].includes(estado)) {
-    return res.status(400).json({ error: 'Estado no válido' });
-  }
-  
   try {
+    // Actualizamos el estado y la fecha de modificación
     const result = await query(
       'UPDATE pedidos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       [estado, id]
@@ -311,20 +284,7 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Pedido no encontrado' });
     }
-    
-    const pedidoActualizado = await query(`
-      SELECT p.*, 
-             c.nombre as cliente_nombre,
-             c.iniciales as cliente_iniciales,
-             t.nombre as taller_nombre,
-             t.iniciales as taller_iniciales
-      FROM pedidos p
-      LEFT JOIN usuarios c ON p.cliente_id = c.id
-      LEFT JOIN usuarios t ON p.taller_id = t.id
-      WHERE p.id = $1
-    `, [id]);
-    
-    res.json(pedidoActualizado.rows[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -332,27 +292,28 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
 
 app.put('/api/pedidos/:id', async (req, res) => {
   const { id } = req.params;
-  const pedido = req.body;
+  const p = req.body;
   
   try {
     const result = await query(`
       UPDATE pedidos SET 
-        titulo = $1, descripcion = $2, cliente_id = $3, taller_id = $4, 
-        estado = $5, prioridad = $6, marca = $7, modelo = $8, 
-        matricula = $9, año = $10, fecha_limite = $11, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $12
+        pieza = $1, matricula = $2, marca_coche = $3, modelo_coche = $4, 
+        estado = $5, precio = $6, precio_coste = $7, proveedor = $8, 
+        bastidor = $9, sub_estado_incidencia = $10, notas_tecnicas = $11, 
+        usuario_id = $12, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $13
       RETURNING *
     `, [
-      pedido.titulo, pedido.descripcion, pedido.cliente_id, pedido.taller_id,
-      pedido.estado, pedido.prioridad, pedido.marca, pedido.modelo,
-      pedido.matricula, pedido.año, pedido.fecha_limite, id
+      p.pieza, p.matricula, p.marca_coche, p.modelo_coche, 
+      p.estado, p.precio, p.precio_coste, p.proveedor, 
+      p.bastidor, p.sub_estado_incidencia, p.notas_tecnicas, 
+      p.usuario_id, id
     ]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Pedido no encontrado' });
     }
-    
-    res.json({ message: 'Pedido actualizado', changes: result.rowCount });
+    res.json({ message: 'Pedido actualizado correctamente' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
