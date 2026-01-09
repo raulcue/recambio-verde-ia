@@ -283,6 +283,7 @@
         let db = [];
         let isPrivate = false;
         let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
+        let dragSource = null; // Variable para rastrear la fuente del drag
         
         const columns = [
             { id: 'solicitud', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
@@ -293,7 +294,6 @@
 
         async function init() {
             try {
-                // SOLUCIÓN: Quitar cargarMarcasMaestras del Promise.all ya que no existe la API
                 await cargarTalleres();
                 await cargarDatos();
                 
@@ -303,6 +303,9 @@
                 showToast('ERROR DE CONEXIÓN', 'error');
                 console.error('Error en init:', error);
             }
+            
+            // CARGAR MARCAS DESDE LOS DATOS EXISTENTES - SOLUCIÓN PARA ERROR DE MARCAS
+            cargarMarcasDesdeDatos();
             
             const pEst = document.getElementById('p-estado');
             const expEst = document.getElementById('exp-estado');
@@ -352,6 +355,30 @@
             };
         }
 
+        // SOLUCIÓN PARA ERROR DE MARCAS: Cargar marcas desde los datos existentes
+        function cargarMarcasDesdeDatos() {
+            try {
+                // Extraer marcas únicas de los datos cargados
+                const marcas = [...new Set(db.filter(p => p.marca_coche).map(p => p.marca_coche))];
+                
+                // Ordenar alfabéticamente
+                marcas.sort();
+                
+                // Llenar el datalist con las marcas
+                const marcasList = document.getElementById('marcas-list');
+                marcasList.innerHTML = '';
+                marcas.forEach(marca => {
+                    const option = document.createElement('option');
+                    option.value = marca;
+                    marcasList.appendChild(option);
+                });
+                
+                console.log('Marcas cargadas desde datos:', marcas.length);
+            } catch(e) {
+                console.error('Error cargando marcas desde datos:', e);
+            }
+        }
+
         async function cargarTalleres() {
             try {
                 const res = await fetch('/api/usuarios?rol=taller');
@@ -370,14 +397,6 @@
             }
         }
 
-        // SOLUCIÓN: Eliminar completamente la función cargarMarcasMaestras o desactivarla
-        async function cargarMarcasMaestras() {
-            // Esta función ahora no hace nada para evitar errores
-            // Si necesitas cargar marcas en el futuro, implementa la API primero
-            console.log("Función cargarMarcasMaestras desactivada temporalmente");
-            return;
-        }
-
         async function cargarDatos() {
             const board = document.getElementById('kanbanBoard');
             let tId = document.getElementById('filtroTaller').value;
@@ -387,6 +406,9 @@
                 db = await res.json();
                 console.log('Datos cargados:', db.length, 'registros');
                 renderBoard();
+                
+                // Actualizar marcas después de cargar datos
+                cargarMarcasDesdeDatos();
             } catch(e) { 
                 console.error("Error cargando datos:", e); 
                 showToast('ERROR CARGANDO DATOS', 'error');
@@ -407,10 +429,11 @@
 
                 const columnHtml = `
                     <div class="kanban-column flex flex-col gap-4 h-full transition-all duration-300" 
-                         ondragover="event.preventDefault()" 
+                         data-column-id="${col.id}"
+                         ondragover="event.preventDefault(); this.classList.add('drag-over')" 
                          ondragenter="this.classList.add('drag-over')" 
                          ondragleave="this.classList.remove('drag-over')" 
-                         ondrop="drop(event, '${col.id}')">
+                         ondrop="dropHandler(event, '${col.id}')">
                         <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color} py-1">
                             <div>
                                 <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
@@ -428,10 +451,12 @@
 
                                 return `
                                 <div draggable="true" 
-                                     ondragstart="start(event, ${p.id})" 
-                                     ondragend="this.classList.remove('dragging')"
+                                     data-pedido-id="${p.id}"
+                                     data-estado-actual="${col.id}"
+                                     ondragstart="dragStartHandler(event, ${p.id})" 
+                                     ondragend="dragEndHandler(event)"
                                      onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
-                                     class="bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500/40 hover:shadow-xl transition-all cursor-grab active:cursor-grabbing group card-anim" style="animation-delay: ${index * 0.05}s">
+                                     class="drag-item bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500/40 hover:shadow-xl transition-all cursor-grab active:cursor-grabbing group card-anim" style="animation-delay: ${index * 0.05}s">
                                     <div class="flex justify-between mb-3">
                                         <div class="flex items-center gap-2">
                                             <div class="w-8 h-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors">
@@ -465,25 +490,60 @@
             document.getElementById('total-general').innerText = `${globalSum.toLocaleString()}€`;
         }
 
-        // --- LÓGICA DE DRAG & DROP ---
-        function start(e, id) {
-            e.dataTransfer.setData("text", id);
-            e.target.classList.add('dragging');
+        // --- LÓGICA DE DRAG & DROP CORREGIDA ---
+        function dragStartHandler(e, id) {
+            e.dataTransfer.setData("text/plain", id);
+            e.dataTransfer.effectAllowed = "move";
+            dragSource = e.currentTarget;
+            
+            // Añadir clase de arrastre
+            e.currentTarget.classList.add('dragging');
+            
+            // Establecer una imagen de arrastre (opcional)
+            e.dataTransfer.setDragImage(e.currentTarget, 0, 0);
+            
+            console.log('Drag start - ID:', id, 'Desde:', e.currentTarget.dataset.estadoActual);
         }
 
-        async function drop(e, nuevoEstado) {
+        function dragEndHandler(e) {
+            // Remover clases de arrastre
+            e.currentTarget.classList.remove('dragging');
+            
+            // Remover clases drag-over de todas las columnas
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                col.classList.remove('drag-over');
+            });
+            
+            dragSource = null;
+        }
+
+        async function dropHandler(e, nuevoEstado) {
             e.preventDefault();
-            const id = e.dataTransfer.getData("text");
-            const column = e.currentTarget;
-            column.classList.remove('drag-over');
-
-            const pedido = db.find(x => x.id == id);
-            if(!pedido) return;
-
+            e.stopPropagation();
+            
+            // Remover clase drag-over
+            e.currentTarget.classList.remove('drag-over');
+            
+            const id = e.dataTransfer.getData("text/plain");
+            if (!id) return;
+            
+            const pedido = db.find(p => p.id == id);
+            if (!pedido) {
+                console.error('Pedido no encontrado:', id);
+                return;
+            }
+            
+            // Verificar si el estado ya es el mismo
+            if (pedido.estado === nuevoEstado) {
+                console.log('Mismo estado, no se actualiza');
+                return;
+            }
+            
+            console.log('Drop - ID:', id, 'Nuevo estado:', nuevoEstado, 'Viejo estado:', pedido.estado);
+            
             document.getElementById('kanbanBoard').style.opacity = '0.5';
 
             try {
-                console.log('Actualizando estado:', id, '->', nuevoEstado);
                 const response = await fetch(`/api/pedidos/${id}/estado`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
@@ -495,13 +555,24 @@
                 }
                 
                 showToast('ESTADO ACTUALIZADO', 'success');
-                await cargarDatos();
+                await cargarDatos(); // Recargar todos los datos
             } catch(err) {
                 console.error('Error en drag & drop:', err);
                 showToast('ERROR AL MOVER', 'error');
+                // Revertir visualmente si hay error
+                renderBoard();
             } finally {
                 document.getElementById('kanbanBoard').style.opacity = '1';
             }
+        }
+
+        // Funciones de drag & drop compatibles con version anterior
+        function start(e, id) {
+            dragStartHandler(e, id);
+        }
+
+        function drop(e, nuevoEstado) {
+            dropHandler(e, nuevoEstado);
         }
 
         function filtrar() {
