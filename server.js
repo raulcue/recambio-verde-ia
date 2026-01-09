@@ -39,19 +39,55 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-app.use(express.static(__dirname)); // Para servir archivos desde la raíz
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.use('/js', express.static(path.join(__dirname, 'js')));
+
+// DIAGNÓSTICO: Mostrar estructura de archivos al iniciar
+console.log('=== DIAGNÓSTICO DE ESTRUCTURA ===');
+console.log(`Directorio actual (__dirname): ${__dirname}`);
+console.log(`Directorio de trabajo: ${process.cwd()}`);
+
+// Listar todos los archivos y carpetas
+try {
+  console.log('\n📁 Contenido del directorio:');
+  const files = fs.readdirSync(__dirname);
+  files.forEach(file => {
+    const stats = fs.statSync(path.join(__dirname, file));
+    console.log(`  ${stats.isDirectory() ? '📂' : '📄'} ${file} ${stats.isDirectory() ? '(directorio)' : ''}`);
+  });
+} catch (error) {
+  console.error('Error listando archivos:', error.message);
+}
+
+// Verificar archivos HTML específicos
+const archivosHTML = ['landing.html', 'index.html', 'dashboard.html', 'server.js'];
+console.log('\n🔍 Verificación de archivos clave:');
+archivosHTML.forEach(file => {
+  const filePath = path.join(__dirname, file);
+  const existe = fs.existsSync(filePath);
+  console.log(`  ${file}: ${existe ? '✅ EXISTE' : '❌ NO EXISTE'} ${existe ? `(tamaño: ${fs.statSync(filePath).size} bytes)` : ''}`);
+});
+
+// Configurar middleware static basado en lo que encontremos
+// Primero intentar servir desde el directorio actual
+app.use(express.static(__dirname));
+
+// También intentar desde subdirectorios comunes
+if (fs.existsSync(path.join(__dirname, 'public'))) {
+  console.log('📂 Encontrado directorio /public, agregando middleware static');
+  app.use(express.static(path.join(__dirname, 'public')));
+}
+
+if (fs.existsSync(path.join(__dirname, 'src'))) {
+  console.log('📂 Encontrado directorio /src, agregando middleware static');
+  app.use(express.static(path.join(__dirname, 'src')));
+}
 
 // PostgreSQL Database - Connect to existing database (tables already created)
-// Base de datos PostgreSQL - Conectar a base de datos existente (tablas ya creadas)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Helper to execute queries with error handling
-// Ayudante para ejecutar queries con manejo de errores
 async function query(sql, params = []) {
   const client = await pool.connect();
   try {
@@ -66,19 +102,14 @@ async function query(sql, params = []) {
 }
 
 // Verify database connection (tables already exist)
-// Verificar conexión a base de datos (las tablas ya existen)
 async function verificarBaseDeDatos() {
   try {
-    // Verify tables exist
-    // Verificar que las tablas existen
     await query('SELECT 1 FROM usuarios LIMIT 1');
     await query('SELECT 1 FROM pedidos LIMIT 1');
     await query('SELECT 1 FROM desguaces LIMIT 1');
     
     console.log('✅ Connected to existing database / Conectado a base de datos existente');
     
-    // Check if admin user exists
-    // Verificar si existe el usuario admin
     const result = await query("SELECT id FROM usuarios WHERE email = 'admin@admin.com'");
     if (result.rows.length === 0) {
       const adminPassword = bcrypt.hashSync('admin123', 10);
@@ -90,10 +121,94 @@ async function verificarBaseDeDatos() {
     }
   } catch (error) {
     console.error('❌ Database connection error / Error de conexión a BD:', error.message);
-    // No salir del proceso en producción
     console.log('⚠️ Continuando sin verificación completa de BD');
   }
 }
+
+// ==================== FUNCIÓN HELPER PARA SERVIR ARCHIVOS ====================
+function servirArchivoSeguro(res, filename) {
+  console.log(`\n📤 Intentando servir: ${filename}`);
+  
+  // Posibles ubicaciones (ordenadas por probabilidad)
+  const ubicaciones = [
+    path.join(__dirname, filename),          // En la misma carpeta que server.js
+    path.join(__dirname, 'public', filename), // En subcarpeta public
+    path.join(__dirname, 'src', filename),    // En subcarpeta src
+    path.join(process.cwd(), filename),      // En directorio de trabajo
+    filename                                  // Ruta relativa
+  ];
+  
+  for (const ubicacion of ubicaciones) {
+    try {
+      if (fs.existsSync(ubicacion)) {
+        console.log(`✅ Encontrado en: ${ubicacion}`);
+        return res.sendFile(ubicacion);
+      }
+    } catch (error) {
+      // Continuar con la siguiente ubicación
+    }
+  }
+  
+  // Si no se encuentra en ninguna ubicación
+  console.error(`❌ Archivo no encontrado en ninguna ubicación: ${filename}`);
+  console.log('Ubicaciones probadas:');
+  ubicaciones.forEach((ubic, index) => {
+    console.log(`  ${index + 1}. ${ubic}`);
+  });
+  
+  return res.status(404).send(`
+    <html>
+      <body style="font-family: Arial, sans-serif; padding: 20px;">
+        <h1>Archivo no encontrado: ${filename}</h1>
+        <p>Directorio actual: ${__dirname}</p>
+        <p>Archivos disponibles:</p>
+        <ul>
+          ${fs.readdirSync(__dirname).map(f => `<li>${f}</li>`).join('')}
+        </ul>
+      </body>
+    </html>
+  `);
+}
+
+// ==================== RUTAS PARA ARCHIVOS HTML ====================
+
+// Servir landing.html como página principal
+app.get('/', (req, res) => {
+  servirArchivoSeguro(res, 'landing.html');
+});
+
+// Servir index.html (login) explícitamente
+app.get('/index.html', (req, res) => {
+  servirArchivoSeguro(res, 'index.html');
+});
+
+app.get('/dashboard.html', (req, res) => {
+  servirArchivoSeguro(res, 'dashboard.html');
+});
+
+app.get('/stats.html', (req, res) => {
+  servirArchivoSeguro(res, 'stats.html');
+});
+
+app.get('/landing.html', (req, res) => {
+  servirArchivoSeguro(res, 'landing.html');
+});
+
+app.get('/talleres.html', (req, res) => {
+  servirArchivoSeguro(res, 'talleres.html');
+});
+
+app.get('/pedidos-taller.html', (req, res) => {
+  servirArchivoSeguro(res, 'pedidos-taller.html');
+});
+
+app.get('/admin-logs.html', (req, res) => {
+  servirArchivoSeguro(res, 'admin-logs.html');
+});
+
+app.get('/desguaces.html', (req, res) => {
+  servirArchivoSeguro(res, 'desguaces.html');
+});
 
 // ==================== API ROUTES / RUTAS API ====================
 
@@ -148,13 +263,10 @@ app.post('/auth/login', async (req, res) => {
     
     const user = result.rows[0];
     
-    // Verify password (could be plain text or hashed)
     let match = false;
     if (user.password && user.password.startsWith('$2a$')) {
-      // Hashed password
       match = bcrypt.compareSync(password, user.password);
     } else {
-      // Plain text password (for compatibility)
       match = password === user.password;
     }
     
@@ -162,7 +274,6 @@ app.post('/auth/login', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Contraseña incorrecta' });
     }
     
-    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
     
     res.json({
@@ -195,13 +306,10 @@ app.post('/api/login', async (req, res) => {
     
     const user = result.rows[0];
     
-    // Verify password (could be plain text or hashed)
     let match = false;
     if (user.password && user.password.startsWith('$2a$')) {
-      // Hashed password
       match = bcrypt.compareSync(password, user.password);
     } else {
-      // Plain text password (for compatibility)
       match = password === user.password;
     }
     
@@ -209,7 +317,6 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Incorrect password' });
     }
     
-    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
   } catch (error) {
@@ -396,7 +503,6 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
   }
   
   try {
-    // If usuario_id comes, update both fields
     let sql, params;
     if (usuario_id) {
       sql = 'UPDATE pedidos SET estado = $1, usuario_id = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *';
@@ -412,7 +518,6 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
     
-    // Return updated order with user info
     const pedidoActualizado = await query(`
       SELECT 
         p.*,
@@ -442,7 +547,6 @@ app.post('/api/pedidos', async (req, res) => {
   }
   
   try {
-    // Generate unique order number
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 1000);
     const numero_pedido = `PED-${timestamp}-${random}`;
@@ -534,60 +638,17 @@ app.delete('/api/pedidos/:id', async (req, res) => {
   }
 });
 
-// ==================== RUTAS PARA ARCHIVOS HTML ====================
-
-// Servir landing.html como página principal
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'landing.html'));
-});
-
-// Servir index.html (login) explícitamente
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.get('/dashboard.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dashboard.html'));
-});
-
-app.get('/stats.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'stats.html'));
-});
-
-app.get('/landing.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'landing.html'));
-});
-
-app.get('/talleres.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'talleres.html'));
-});
-
-app.get('/pedidos-taller.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'pedidos-taller.html'));
-});
-
-app.get('/admin-logs.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin-logs.html'));
-});
-
-app.get('/desguaces.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'desguaces.html'));
-});
-
-// Servir otros archivos estáticos (como fallback)
+// Servir otros archivos estáticos (catch-all para archivos específicos)
 app.get('/:file', (req, res) => {
-  const filePath = path.join(__dirname, req.params.file);
+  const file = req.params.file;
   
-  // Verificar si el archivo existe y es un archivo HTML u otro archivo permitido
-  const allowedExtensions = ['.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'];
-  const ext = path.extname(req.params.file).toLowerCase();
-  
-  if (fs.existsSync(filePath) && allowedExtensions.includes(ext)) {
-    res.sendFile(filePath);
-  } else {
-    // Si no existe, enviar 404
-    res.status(404).send('Archivo no encontrado');
+  // Ignorar rutas API
+  if (file.startsWith('api/') || file === 'api') {
+    return res.status(404).json({ error: 'Ruta API no encontrada' });
   }
+  
+  // Intentar servir el archivo
+  servirArchivoSeguro(res, file);
 });
 
 // Error handling
@@ -605,12 +666,14 @@ async function startServer() {
     });
     
     app.listen(PORT, () => {
-      console.log(`🚀 Server started at http://localhost:${PORT}`);
-      console.log(`🔧 API Health: http://localhost:${PORT}/api/health`);
-      console.log(`📋 Marcas API: http://localhost:${PORT}/api/marcas`);
-      console.log(`👤 Login: http://localhost:${PORT}/index.html`);
-      console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
-      console.log(`🏠 Landing: http://localhost:${PORT}/landing.html`);
+      console.log(`\n🚀 ======= SERVIDOR INICIADO =======`);
+      console.log(`🔗 URL Principal: https://recambio-verde-iax.onrender.com`);
+      console.log(`🔧 API Health: /api/health`);
+      console.log(`📋 Marcas API: /api/marcas`);
+      console.log(`👤 Login: /index.html`);
+      console.log(`📊 Dashboard: /dashboard.html`);
+      console.log(`🏠 Landing: /landing.html`);
+      console.log(`====================================\n`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
