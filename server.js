@@ -33,9 +33,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
-app.use(express.static('.')); // Cambiado para servir archivos desde la raíz
+app.use(express.static(__dirname)); // Para servir archivos desde la raíz
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
 
 // PostgreSQL Database - Connect to existing database (tables already created)
 // Base de datos PostgreSQL - Conectar a base de datos existente (tablas ya creadas)
@@ -126,7 +132,54 @@ app.get('/api/marcas', async (req, res) => {
   }
 });
 
-// === USERS / USUARIOS ===
+// === LOGIN COMPATIBILIDAD /auth/login ===
+app.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Email y contraseña requeridos' });
+  }
+  
+  try {
+    const result = await query('SELECT * FROM usuarios WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Usuario no encontrado' });
+    }
+    
+    const user = result.rows[0];
+    
+    // Verify password (could be plain text or hashed)
+    let match = false;
+    if (user.password && user.password.startsWith('$2a$')) {
+      // Hashed password
+      match = bcrypt.compareSync(password, user.password);
+    } else {
+      // Plain text password (for compatibility)
+      match = password === user.password;
+    }
+    
+    if (!match) {
+      return res.status(401).json({ success: false, message: 'Contraseña incorrecta' });
+    }
+    
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    
+    res.json({
+      success: true,
+      user: {
+        ...userWithoutPassword,
+        nombre: user.nombre_taller || user.email.split('@')[0]
+      },
+      redirect: '/dashboard.html'
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// === LOGIN API /api/login ===
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   
@@ -481,9 +534,16 @@ app.delete('/api/pedidos/:id', async (req, res) => {
   }
 });
 
-// Servir archivos HTML desde la raíz
+// ==================== RUTAS PARA ARCHIVOS HTML ====================
+
+// Servir landing.html como página principal
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'landing.html'));
+});
+
+// Servir index.html (login) explícitamente
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/dashboard.html', (req, res) => {
@@ -494,13 +554,39 @@ app.get('/stats.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'stats.html'));
 });
 
-// Servir otros archivos estáticos
+app.get('/landing.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'landing.html'));
+});
+
+app.get('/talleres.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'talleres.html'));
+});
+
+app.get('/pedidos-taller.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'pedidos-taller.html'));
+});
+
+app.get('/admin-logs.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-logs.html'));
+});
+
+app.get('/desguaces.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'desguaces.html'));
+});
+
+// Servir otros archivos estáticos (como fallback)
 app.get('/:file', (req, res) => {
   const filePath = path.join(__dirname, req.params.file);
-  if (fs.existsSync(filePath)) {
+  
+  // Verificar si el archivo existe y es un archivo HTML u otro archivo permitido
+  const allowedExtensions = ['.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg'];
+  const ext = path.extname(req.params.file).toLowerCase();
+  
+  if (fs.existsSync(filePath) && allowedExtensions.includes(ext)) {
     res.sendFile(filePath);
   } else {
-    res.status(404).send('File not found');
+    // Si no existe, enviar 404
+    res.status(404).send('Archivo no encontrado');
   }
 });
 
@@ -520,10 +606,11 @@ async function startServer() {
     
     app.listen(PORT, () => {
       console.log(`🚀 Server started at http://localhost:${PORT}`);
-      console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
       console.log(`🔧 API Health: http://localhost:${PORT}/api/health`);
       console.log(`📋 Marcas API: http://localhost:${PORT}/api/marcas`);
-      console.log(`👤 Login API: http://localhost:${PORT}/api/login`);
+      console.log(`👤 Login: http://localhost:${PORT}/index.html`);
+      console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
+      console.log(`🏠 Landing: http://localhost:${PORT}/landing.html`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
