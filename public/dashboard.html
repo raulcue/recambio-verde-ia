@@ -464,11 +464,11 @@
             document.getElementById('kanbanBoard').style.opacity = '0.5';
 
             try {
-                await fetch('/api/pedidos/update-status', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ ...pedido, id: id, nuevoEstado: nuevoEstado, admin_user: 'Admin (Drag)' })
-                });
+                await fetch(`/api/pedidos/${id}/estado`, {
+				method: 'PUT',
+				headers: {'Content-Type': 'application/json'},
+				body: JSON.stringify({ estado: nuevoEstado })
+			});
                 showToast('ESTADO ACTUALIZADO', 'success');
                 await cargarDatos();
             } catch(err) {
