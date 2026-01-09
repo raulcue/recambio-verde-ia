@@ -35,7 +35,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('.')); // Cambiado para servir archivos desde la raíz
 
 // PostgreSQL Database - Connect to existing database (tables already created)
 // Base de datos PostgreSQL - Conectar a base de datos existente (tablas ya creadas)
@@ -84,65 +84,95 @@ async function verificarBaseDeDatos() {
     }
   } catch (error) {
     console.error('❌ Database connection error / Error de conexión a BD:', error.message);
-    process.exit(1);
+    // No salir del proceso en producción
+    console.log('⚠️ Continuando sin verificación completa de BD');
   }
 }
 
-// Verify on startup
-// Verificar al arrancar
-verificarBaseDeDatos();
-
 // ==================== API ROUTES / RUTAS API ====================
 
-// === USERS / USUARIOS - Adapted to your actual structure ===
-// === USUARIOS - Adaptado a tu estructura real ===
+// Health check route
+app.get('/api/health', async (req, res) => {
+  try {
+    await query('SELECT 1');
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      message: 'Server is running'
+    });
+  } catch (error) {
+    res.status(200).json({ 
+      status: 'warning', 
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error.message,
+      message: 'Server running but database issue'
+    });
+  }
+});
+
+// === MARCAS API ===
+app.get('/api/marcas', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM marcas_maestras ORDER BY nombre');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error obteniendo marcas:', error);
+    res.status(500).json({ 
+      error: error.message,
+      message: 'Error cargando marcas'
+    });
+  }
+});
+
+// === USERS / USUARIOS ===
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;  // CHANGE: email instead of username / CAMBIO: email en lugar de username
+  const { email, password } = req.body;
   
   if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required / Email y contraseña requeridos' });
+    return res.status(400).json({ error: 'Email and password required' });
   }
   
   try {
     const result = await query('SELECT * FROM usuarios WHERE email = $1', [email]);
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'User not found / Usuario no encontrado' });
+      return res.status(401).json({ error: 'User not found' });
     }
     
     const user = result.rows[0];
     
     // Verify password (could be plain text or hashed)
-    // Verificar contraseña (puede estar en texto plano o hasheada)
     let match = false;
     if (user.password && user.password.startsWith('$2a$')) {
-      // Hashed password / Contraseña hasheada
+      // Hashed password
       match = bcrypt.compareSync(password, user.password);
     } else {
-      // Plain text password (for compatibility) / Contraseña en texto plano (para compatibilidad)
+      // Plain text password (for compatibility)
       match = password === user.password;
     }
     
     if (!match) {
-      return res.status(401).json({ error: 'Incorrect password / Contraseña incorrecta' });
+      return res.status(401).json({ error: 'Incorrect password' });
     }
     
-    // Remove password from response / Eliminar password de la respuesta
+    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
   } catch (error) {
-    console.error('Login error / Error en login:', error);
-    res.status(500).json({ error: 'Internal server error / Error interno del servidor' });
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get all users (workshops) / Obtener todos los usuarios (talleres)
+// Get all users (workshops)
 app.get('/api/usuarios', async (req, res) => {
   const { rol } = req.query;
   let sql = `
     SELECT 
       id, email, rol, 
-      nombre_taller as nombre,  -- CHANGE: nombre_taller instead of nombre / CAMBIO: nombre_taller en lugar de nombre
-      telefono_whatsapp as telefono,  -- CHANGE: telefono_whatsapp / CAMBIO: telefono_whatsapp
+      nombre_taller as nombre,
+      telefono_whatsapp as telefono,
       provincia, direccion, created_at
     FROM usuarios 
     WHERE 1=1
@@ -160,12 +190,12 @@ app.get('/api/usuarios', async (req, res) => {
     const result = await query(sql, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error getting users / Error obteniendo usuarios:', error);
+    console.error('Error getting users:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get user by ID / Obtener usuario por ID
+// Get user by ID
 app.get('/api/usuarios/:id', async (req, res) => {
   try {
     const result = await query(`
@@ -177,17 +207,16 @@ app.get('/api/usuarios/:id', async (req, res) => {
     `, [req.params.id]);
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found / Usuario no encontrado' });
+      return res.status(404).json({ error: 'User not found' });
     }
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error getting user / Error obteniendo usuario:', error);
+    console.error('Error getting user:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === SCRAPYARDS / DESGUACES - Adapted to your actual structure ===
-// === DESGUACES - Adaptado a tu estructura real ===
+// === SCRAPYARDS / DESGUACES ===
 app.get('/api/desguaces', async (req, res) => {
   const { provincia } = req.query;
   let sql = `
@@ -195,7 +224,7 @@ app.get('/api/desguaces', async (req, res) => {
       id, nombre, provincia, direccion, cp,
       telefono_fijo, movil_1, movil_2,
       email, horario, es_workshop, 
-      fuente_origen, web,  -- CHANGE: include web / CAMBIO: incluir web
+      fuente_origen, web,
       fecha_registro as created_at
     FROM desguaces
     WHERE 1=1
@@ -213,7 +242,7 @@ app.get('/api/desguaces', async (req, res) => {
     const result = await query(sql, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error getting scrapyards / Error obteniendo desguaces:', error);
+    console.error('Error getting scrapyards:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -222,7 +251,7 @@ app.post('/api/desguaces', async (req, res) => {
   const desguace = req.body;
   
   if (!desguace.nombre) {
-    return res.status(400).json({ error: 'Name required / El nombre es requerido' });
+    return res.status(400).json({ error: 'Name required' });
   }
   
   try {
@@ -240,20 +269,17 @@ app.post('/api/desguaces', async (req, res) => {
       desguace.email, desguace.horario, desguace.es_workshop || false,
       desguace.fuente_origen || 'WEB', desguace.web
     ]);
-    res.status(201).json({ id: result.rows[0].id, message: 'Scrapyard created / Desguace creado' });
+    res.status(201).json({ id: result.rows[0].id, message: 'Scrapyard created' });
   } catch (error) {
-    console.error('Error creating scrapyard / Error creando desguace:', error);
+    console.error('Error creating scrapyard:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// === ORDERS / PEDIDOS - Version for Drag & Drop ===
-// === PEDIDOS - Versión para Drag & Drop ===
+// === ORDERS / PEDIDOS ===
 app.get('/api/pedidos', async (req, res) => {
   const { usuario_id, estado } = req.query;
   
-  // Query for drag & drop - uses your actual field names
-  // Consulta para drag & drop - usa tus nombres de campo reales
   let sql = `
     SELECT 
       p.id,
@@ -264,6 +290,7 @@ app.get('/api/pedidos', async (req, res) => {
       p.modelo_coche,
       p.estado,
       p.precio,
+      p.precio_coste,
       p.proveedor,
       p.bastidor,
       p.sub_estado_incidencia,
@@ -301,22 +328,22 @@ app.get('/api/pedidos', async (req, res) => {
     const result = await query(sql, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error getting orders / Error obteniendo pedidos:', error);
+    console.error('Error getting orders:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// CRITICAL endpoint for drag & drop / Endpoint CRÍTICO para drag & drop
+// CRITICAL endpoint for drag & drop
 app.put('/api/pedidos/:id/estado', async (req, res) => {
   const { estado, usuario_id } = req.body;
   const { id } = req.params;
   
   if (!estado) {
-    return res.status(400).json({ error: 'State required / El estado es requerido' });
+    return res.status(400).json({ error: 'State required' });
   }
   
   try {
-    // If usuario_id comes, update both fields / Si viene usuario_id, actualizamos ambos campos
+    // If usuario_id comes, update both fields
     let sql, params;
     if (usuario_id) {
       sql = 'UPDATE pedidos SET estado = $1, usuario_id = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *';
@@ -329,10 +356,10 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
     const result = await query(sql, params);
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found / Pedido no encontrado' });
+      return res.status(404).json({ error: 'Order not found' });
     }
     
-    // Return updated order with user info / Devolver pedido actualizado con info del usuario
+    // Return updated order with user info
     const pedidoActualizado = await query(`
       SELECT 
         p.*,
@@ -348,21 +375,21 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
       pedido: pedidoActualizado.rows[0]
     });
   } catch (error) {
-    console.error('Error updating state (drag & drop) / Error actualizando estado (drag & drop):', error);
+    console.error('Error updating state (drag & drop):', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Create new order / Crear nuevo pedido
+// Create new order
 app.post('/api/pedidos', async (req, res) => {
   const p = req.body;
   
   if (!p.pieza) {
-    return res.status(400).json({ error: 'Part required / La pieza es requerida' });
+    return res.status(400).json({ error: 'Part required' });
   }
   
   try {
-    // Generate unique order number / Generar número de pedido único
+    // Generate unique order number
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 1000);
     const numero_pedido = `PED-${timestamp}-${random}`;
@@ -379,25 +406,25 @@ app.post('/api/pedidos', async (req, res) => {
       RETURNING id, numero_pedido, pieza, estado, fecha_creacion
     `, [
       numero_pedido, p.pieza, p.matricula, p.marca_coche, p.modelo_coche, 
-      p.estado || 'solicitado', p.precio || 0, p.precio_coste || 0, 
+      p.estado || 'solicitud', p.precio || 0, p.precio_coste || 0, 
       p.proveedor, p.bastidor, p.sub_estado_incidencia, p.notas_tecnicas, 
       p.usuario_id, p.fecha_entrega_estimada, p.agente_id, p.detalles_extra,
-      p.iva_porcentaje || 21, p.notas_incidencia, p.prioridad || 'media', 
+      p.iva_porcentaje || 21, p.notas_incidencia, p.prioridad || 'normal', 
       p.valoracion_nps
     ]);
     
     res.status(201).json({ 
       id: result.rows[0].id, 
       numero_pedido: result.rows[0].numero_pedido,
-      message: 'Order created successfully / Pedido creado con éxito'
+      message: 'Order created successfully'
     });
   } catch (error) {
-    console.error('Error creating order / Error creando pedido:', error);
+    console.error('Error creating order:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update complete order / Actualizar pedido completo
+// Update complete order
 app.put('/api/pedidos/:id', async (req, res) => {
   const { id } = req.params;
   const p = req.body;
@@ -424,69 +451,85 @@ app.put('/api/pedidos/:id', async (req, res) => {
     ]);
     
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found / Pedido no encontrado' });
+      return res.status(404).json({ error: 'Order not found' });
     }
     res.json({ 
-      message: 'Order updated successfully / Pedido actualizado correctamente',
+      message: 'Order updated successfully',
       data: result.rows[0]
     });
   } catch (error) {
-    console.error('Error updating order / Error actualizando pedido:', error);
+    console.error('Error updating order:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Delete order / Eliminar pedido
+// Delete order
 app.delete('/api/pedidos/:id', async (req, res) => {
   try {
     const result = await query('DELETE FROM pedidos WHERE id = $1 RETURNING id, numero_pedido, pieza', [req.params.id]);
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found / Pedido no encontrado' });
+      return res.status(404).json({ error: 'Order not found' });
     }
     res.json({ 
-      message: 'Order deleted / Pedido eliminado', 
+      message: 'Order deleted', 
       id: result.rows[0].id,
       numero_pedido: result.rows[0].numero_pedido
     });
   } catch (error) {
-    console.error('Error deleting order / Error eliminando pedido:', error);
+    console.error('Error deleting order:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Health route / Ruta de salud
-app.get('/api/health', async (req, res) => {
-  try {
-    await query('SELECT 1');
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      database: 'connected'
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      status: 'error', 
-      timestamp: new Date().toISOString(),
-      error: error.message 
-    });
+// Servir archivos HTML desde la raíz
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'landing.html'));
+});
+
+app.get('/dashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+app.get('/stats.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'stats.html'));
+});
+
+// Servir otros archivos estáticos
+app.get('/:file', (req, res) => {
+  const filePath = path.join(__dirname, req.params.file);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send('File not found');
   }
 });
 
-// Frontend route - must be at the end / Ruta para el frontend - debe ir al final
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Error handling / Manejo de errores
+// Error handling
 app.use((err, req, res, next) => {
-  console.error('Global error / Error global:', err);
-  res.status(500).json({ error: 'Internal server error / Error interno del servidor' });
+  console.error('Global error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server / Iniciar servidor
-app.listen(PORT, () => {
-  console.log(`🚀 Server started at / Servidor iniciado en http://localhost:${PORT}`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
-  console.log(`🔧 API: http://localhost:${PORT}/api/`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
-});
+// Iniciar servidor DESPUÉS de configurar todas las rutas
+async function startServer() {
+  try {
+    // Verificar base de datos (pero no bloquear el inicio)
+    verificarBaseDeDatos().catch(err => {
+      console.log('⚠️ Database verification failed, but server will start:', err.message);
+    });
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Server started at http://localhost:${PORT}`);
+      console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard.html`);
+      console.log(`🔧 API Health: http://localhost:${PORT}/api/health`);
+      console.log(`📋 Marcas API: http://localhost:${PORT}/api/marcas`);
+      console.log(`👤 Login API: http://localhost:${PORT}/api/login`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+// Iniciar el servidor
+startServer();
