@@ -285,21 +285,20 @@
         let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
         
         const columns = [
-            { id: 'solicitado', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
-            { id: 'desguace', label: 'Localizado', color: 'border-amber-500', icon: 'fa-search-location' },
-            { id: 'listo', label: 'En Almacén', color: 'border-purple-600', icon: 'fa-box' },
-            { id: 'transito', label: 'Logística', color: 'border-cyan-500', icon: 'fa-truck' },
-            { id: 'entregado', label: 'Cerrado', color: 'border-emerald-500', icon: 'fa-check-circle' },
-            { id: 'incidencia', label: 'Incidencias', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
+            { id: 'solicitud', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
+            { id: 'proceso', label: 'En Proceso', color: 'border-amber-500', icon: 'fa-search-location' },
+            { id: 'finalizado', label: 'Finalizado', color: 'border-emerald-500', icon: 'fa-check-circle' },
+            { id: 'cancelado', label: 'Cancelado', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
         ];
 
         async function init() {
             try {
-                await Promise.all([cargarTalleres(), cargarDatos(), cargarMarcasMaestras()]);
+                await Promise.all([cargarTalleres(), cargarDatos()]);
                 showToast('CONECTADO A LA BASE DE DATOS', 'success');
                 document.getElementById('db-status').classList.replace('bg-red-500', 'bg-emerald-500');
             } catch (error) {
                 showToast('ERROR DE CONEXIÓN', 'error');
+                console.error('Error en init:', error);
             }
             
             const pEst = document.getElementById('p-estado');
@@ -329,7 +328,6 @@
                     admin_user: 'Admin Root'
                 };
                 try {
-                    // Si hay data.id, usamos PUT para actualizar; si no, POST para crear
                     const url = data.id ? `/api/pedidos/${data.id}` : '/api/pedidos';
                     const method = data.id ? 'PUT' : 'POST';
 
@@ -338,19 +336,22 @@
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
                             ...data,
-                            estado: data.nuevoEstado // Ajustamos el nombre al que espera el servidor
+                            estado: data.nuevoEstado
                         })
                     });
                     showToast('CAMBIOS GUARDADOS EN SERVIDOR', 'success');
                     cerrarModal(); 
                     await cargarDatos();
-                } catch(e) { showToast('ERROR AL GUARDAR', 'error'); }
+                } catch(e) { 
+                    showToast('ERROR AL GUARDAR', 'error');
+                    console.error('Error al guardar:', e);
+                }
             };
         }
 
         async function cargarTalleres() {
             try {
-                const res = await fetch('/api/talleres');
+                const res = await fetch('/api/usuarios?rol=taller');
                 const data = await res.json();
                 const fT = document.getElementById('filtroTaller');
                 const pT = document.getElementById('p-taller');
@@ -360,15 +361,21 @@
                     fT.add(new Option(t.nombre, t.id));
                     pT.add(new Option(t.nombre, t.id));
                 });
-            } catch(e) { console.error("Error cargando talleres"); }
+            } catch(e) { 
+                console.error("Error cargando talleres:", e);
+                showToast('ERROR CARGANDO TALLERES', 'error');
+            }
         }
 
         async function cargarMarcasMaestras() {
+            // Función comentada temporalmente hasta que tengas la ruta /api/marcas
             try {
-                const res = await fetch('/api/marcas');
-                const marcas = await res.json();
-                document.getElementById('marcas-list').innerHTML = marcas.map(m => `<option value="${m.nombre}">`).join('');
-            } catch(e) { console.error("Error marcas"); }
+                // const res = await fetch('/api/marcas');
+                // const marcas = await res.json();
+                // document.getElementById('marcas-list').innerHTML = marcas.map(m => `<option value="${m.nombre}">`).join('');
+            } catch(e) { 
+                // console.error("Error marcas", e);
+            }
         }
 
         async function cargarDatos() {
@@ -376,10 +383,14 @@
             let tId = document.getElementById('filtroTaller').value;
             board.style.opacity = '0.5';
             try {
-                const res = await fetch(`/api/pedidos?taller_id=${tId}`);
+                const res = await fetch(`/api/pedidos?usuario_id=${tId}`);
                 db = await res.json();
+                console.log('Datos cargados:', db.length, 'registros');
                 renderBoard();
-            } catch(e) { console.error("Error cargando datos"); } 
+            } catch(e) { 
+                console.error("Error cargando datos:", e); 
+                showToast('ERROR CARGANDO DATOS', 'error');
+            } 
             finally { board.style.opacity = '1'; }
         }
 
@@ -409,7 +420,8 @@
                         </div>
                         <div class="flex-1 space-y-4 pb-10">
                             ${items.map((p, index) => {
-                                const dias = Math.floor((new Date() - new Date(p.fecha_creacion)) / (1000 * 60 * 60 * 24));
+                                const fechaCreacion = p.fecha_creacion ? new Date(p.fecha_creacion) : new Date();
+                                const dias = Math.floor((new Date() - fechaCreacion) / (1000 * 60 * 60 * 24));
                                 let semColor = 'bg-emerald-500';
                                 if (dias >= ajustesSemaf.rojo) semColor = 'bg-red-600';
                                 else if (dias >= ajustesSemaf.naranja) semColor = 'bg-orange-500';
@@ -471,14 +483,21 @@
             document.getElementById('kanbanBoard').style.opacity = '0.5';
 
             try {
-                await fetch(`/api/pedidos/${id}/estado`, {
-				method: 'PUT',
-				headers: {'Content-Type': 'application/json'},
-				body: JSON.stringify({ estado: nuevoEstado })
-			});
+                console.log('Actualizando estado:', id, '->', nuevoEstado);
+                const response = await fetch(`/api/pedidos/${id}/estado`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ estado: nuevoEstado })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 showToast('ESTADO ACTUALIZADO', 'success');
                 await cargarDatos();
             } catch(err) {
+                console.error('Error en drag & drop:', err);
                 showToast('ERROR AL MOVER', 'error');
             } finally {
                 document.getElementById('kanbanBoard').style.opacity = '1';
@@ -488,7 +507,7 @@
         function filtrar() {
             const term = document.getElementById('buscador').value.toLowerCase();
             const filtrados = db.filter(p => 
-                p.pieza.toLowerCase().includes(term) || 
+                (p.pieza && p.pieza.toLowerCase().includes(term)) || 
                 (p.matricula && p.matricula.toLowerCase().includes(term)) ||
                 (p.marca_coche && p.marca_coche.toLowerCase().includes(term)) ||
                 (p.nombre_usuario && p.nombre_usuario.toLowerCase().includes(term))
@@ -557,7 +576,7 @@
             document.getElementById('p-marca').value = p.marca_coche || '';
             document.getElementById('p-modelo').value = p.modelo_coche || '';
             document.getElementById('p-taller').value = p.usuario_id || '';
-            document.getElementById('p-estado').value = p.estado || 'solicitado';
+            document.getElementById('p-estado').value = p.estado || 'solicitud';
             document.getElementById('p-precio').value = p.precio || 0;
             document.getElementById('p-coste').value = p.precio_coste || 0;
             document.getElementById('p-proveedor').value = p.proveedor || '';
@@ -586,7 +605,10 @@
                 document.getElementById('modal-confirmacion').classList.add('hidden');
                 cerrarModal();
                 cargarDatos();
-            } catch(e) { showToast('ERROR AL ELIMINAR', 'error'); }
+            } catch(e) { 
+                showToast('ERROR AL ELIMINAR', 'error');
+                console.error('Error eliminando:', e);
+            }
         }
 
         function showToast(msg, type = 'success') {
