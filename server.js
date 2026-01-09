@@ -1,29 +1,8 @@
 // ============================================================================
-// AUTO-CREATE package.json if it doesn't exist (for Render.com)
-// AUTO-CREAR package.json si no existe (para Render.com)
+// CONFIGURACIÓN BÁSICA
 // ============================================================================
 const fs = require('fs');
 const path = require('path');
-
-const packageJsonPath = path.join(__dirname, 'package.json');
-if (!fs.existsSync(packageJsonPath)) {
-  const packageJson = {
-    name: "gestor-desguaces",
-    version: "1.0.0",
-    main: "server.js",
-    scripts: { "start": "node server.js" },
-    dependencies: {
-      "express": "^4.18.2",
-      "pg": "^8.11.3",
-      "cors": "^2.8.5",
-      "bcryptjs": "^2.4.3"
-    }
-  };
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-  console.log("✅ package.json creado para Render / created for Render");
-}
-// ============================================================================
-
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
@@ -32,7 +11,9 @@ const bcrypt = require('bcryptjs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// ============================================================================
+// MIDDLEWARE Y CONFIGURACIÓN
+// ============================================================================
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -40,102 +21,108 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// DIAGNÓSTICO: Mostrar estructura de archivos al iniciar
+// ============================================================================
+// DIAGNÓSTICO DE ESTRUCTURA
+// ============================================================================
 console.log('=== DIAGNÓSTICO DE ESTRUCTURA ===');
-console.log(`Directorio actual (__dirname): ${__dirname}`);
+console.log(`Directorio actual: ${__dirname}`);
 console.log(`Directorio de trabajo: ${process.cwd()}`);
 
-// Listar todos los archivos y carpetas
-try {
-  console.log('\n📁 Contenido del directorio:');
-  const files = fs.readdirSync(__dirname);
-  files.forEach(file => {
-    const stats = fs.statSync(path.join(__dirname, file));
-    console.log(`  ${stats.isDirectory() ? '📂' : '📄'} ${file} ${stats.isDirectory() ? '(directorio)' : ''}`);
-  });
-} catch (error) {
-  console.error('Error listando archivos:', error.message);
-}
-
-// Verificar archivos HTML específicos
-const archivosHTML = ['landing.html', 'index.html', 'dashboard.html', 'server.js'];
-console.log('\n🔍 Verificación de archivos clave:');
-archivosHTML.forEach(file => {
-  const filePath = path.join(__dirname, file);
-  const existe = fs.existsSync(filePath);
-  console.log(`  ${file}: ${existe ? '✅ EXISTE' : '❌ NO EXISTE'} ${existe ? `(tamaño: ${fs.statSync(filePath).size} bytes)` : ''}`);
+// Listar archivos y directorios
+console.log('\n📁 Contenido del directorio:');
+const items = fs.readdirSync(__dirname);
+items.forEach(item => {
+  const itemPath = path.join(__dirname, item);
+  const isDir = fs.statSync(itemPath).isDirectory();
+  console.log(`  ${isDir ? '📂' : '📄'} ${item} ${isDir ? '(directorio)' : ''}`);
 });
 
-// Configurar middleware static basado en lo que encontremos
-// Primero intentar servir desde el directorio actual
-app.use(express.static(__dirname));
+// Verificar archivos clave
+console.log('\n🔍 Verificación de archivos HTML:');
+['landing.html', 'index.html', 'dashboard.html', 'stats.html'].forEach(file => {
+  const filePaths = [
+    path.join(__dirname, file),
+    path.join(__dirname, 'public', file),
+    path.join(__dirname, 'src', file)
+  ];
+  
+  let encontrado = false;
+  filePaths.forEach(filePath => {
+    if (fs.existsSync(filePath)) {
+      console.log(`  ✅ ${file} encontrado en: ${filePath}`);
+      encontrado = true;
+    }
+  });
+  
+  if (!encontrado) {
+    console.log(`  ❌ ${file} NO encontrado`);
+  }
+});
 
-// También intentar desde subdirectorios comunes
-if (fs.existsSync(path.join(__dirname, 'public'))) {
-  console.log('📂 Encontrado directorio /public, agregando middleware static');
-  app.use(express.static(path.join(__dirname, 'public')));
-}
+// Configurar middleware static en orden de prioridad
+const staticPaths = [
+  { path: path.join(__dirname, 'public'), label: 'public' },
+  { path: __dirname, label: 'raíz' },
+  { path: path.join(__dirname, 'src'), label: 'src' }
+];
 
-if (fs.existsSync(path.join(__dirname, 'src'))) {
-  console.log('📂 Encontrado directorio /src, agregando middleware static');
-  app.use(express.static(path.join(__dirname, 'src')));
-}
+staticPaths.forEach(({ path: staticPath, label }) => {
+  if (fs.existsSync(staticPath)) {
+    console.log(`📂 Configurando express.static para: ${label}`);
+    app.use(express.static(staticPath));
+  }
+});
 
-// PostgreSQL Database - Connect to existing database (tables already created)
+// ============================================================================
+// CONEXIÓN A BASE DE DATOS
+// ============================================================================
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-// Helper to execute queries with error handling
 async function query(sql, params = []) {
   const client = await pool.connect();
   try {
-    const result = await client.query(sql, params);
-    return result;
-  } catch (error) {
-    console.error('Query error / Error en query:', sql, params, error.message);
-    throw error;
+    return await client.query(sql, params);
   } finally {
     client.release();
   }
 }
 
-// Verify database connection (tables already exist)
 async function verificarBaseDeDatos() {
   try {
     await query('SELECT 1 FROM usuarios LIMIT 1');
-    await query('SELECT 1 FROM pedidos LIMIT 1');
-    await query('SELECT 1 FROM desguaces LIMIT 1');
+    console.log('✅ Conectado a base de datos existente');
     
-    console.log('✅ Connected to existing database / Conectado a base de datos existente');
-    
-    const result = await query("SELECT id FROM usuarios WHERE email = 'admin@admin.com'");
-    if (result.rows.length === 0) {
-      const adminPassword = bcrypt.hashSync('admin123', 10);
+    // Crear usuario admin si no existe
+    const adminCheck = await query("SELECT id FROM usuarios WHERE email = 'admin@admin.com'");
+    if (adminCheck.rows.length === 0) {
+      const hashedPassword = bcrypt.hashSync('admin123', 10);
       await query(`
         INSERT INTO usuarios (email, password, nombre_taller, rol, telefono)
         VALUES ($1, $2, $3, $4, $5)
-      `, ['admin@admin.com', adminPassword, 'Administrador', 'admin', '000000000']);
-      console.log('✅ Admin user created / Usuario admin creado');
+      `, ['admin@admin.com', hashedPassword, 'Administrador', 'admin', '000000000']);
+      console.log('✅ Usuario admin creado');
     }
   } catch (error) {
-    console.error('❌ Database connection error / Error de conexión a BD:', error.message);
-    console.log('⚠️ Continuando sin verificación completa de BD');
+    console.error('❌ Error de conexión a BD:', error.message);
   }
 }
 
-// ==================== FUNCIÓN HELPER PARA SERVIR ARCHIVOS ====================
-function servirArchivoSeguro(res, filename) {
-  console.log(`\n📤 Intentando servir: ${filename}`);
+// ============================================================================
+// FUNCIONES HELPER
+// ============================================================================
+function servirArchivo(res, filename) {
+  console.log(`\n🔎 Buscando: ${filename}`);
   
-  // Posibles ubicaciones (ordenadas por probabilidad)
+  // Orden de búsqueda
   const ubicaciones = [
-    path.join(__dirname, filename),          // En la misma carpeta que server.js
-    path.join(__dirname, 'public', filename), // En subcarpeta public
-    path.join(__dirname, 'src', filename),    // En subcarpeta src
-    path.join(process.cwd(), filename),      // En directorio de trabajo
-    filename                                  // Ruta relativa
+    path.join(__dirname, 'public', filename),
+    path.join(__dirname, filename),
+    path.join(__dirname, 'src', filename),
+    path.join(process.cwd(), filename),
+    filename
   ];
   
   for (const ubicacion of ubicaciones) {
@@ -145,74 +132,48 @@ function servirArchivoSeguro(res, filename) {
         return res.sendFile(ubicacion);
       }
     } catch (error) {
-      // Continuar con la siguiente ubicación
+      // Continuar con siguiente ubicación
     }
   }
   
-  // Si no se encuentra en ninguna ubicación
-  console.error(`❌ Archivo no encontrado en ninguna ubicación: ${filename}`);
-  console.log('Ubicaciones probadas:');
-  ubicaciones.forEach((ubic, index) => {
-    console.log(`  ${index + 1}. ${ubic}`);
-  });
-  
+  console.error(`❌ Archivo NO encontrado: ${filename}`);
   return res.status(404).send(`
     <html>
       <body style="font-family: Arial, sans-serif; padding: 20px;">
-        <h1>Archivo no encontrado: ${filename}</h1>
-        <p>Directorio actual: ${__dirname}</p>
-        <p>Archivos disponibles:</p>
-        <ul>
-          ${fs.readdirSync(__dirname).map(f => `<li>${f}</li>`).join('')}
-        </ul>
+        <h1>Error: Archivo ${filename} no encontrado</h1>
+        <p>Verifica que el archivo esté en tu repositorio.</p>
       </body>
     </html>
   `);
 }
 
-// ==================== RUTAS PARA ARCHIVOS HTML ====================
+// ============================================================================
+// RUTAS DE ARCHIVOS HTML
+// ============================================================================
+const rutasHTML = {
+  '/': 'landing.html',
+  '/index.html': 'index.html',
+  '/dashboard.html': 'dashboard.html',
+  '/stats.html': 'stats.html',
+  '/landing.html': 'landing.html',
+  '/talleres.html': 'talleres.html',
+  '/pedidos-taller.html': 'pedidos-taller.html',
+  '/admin-logs.html': 'admin-logs.html',
+  '/desguaces.html': 'desguaces.html'
+};
 
-// Servir landing.html como página principal
-app.get('/', (req, res) => {
-  servirArchivoSeguro(res, 'landing.html');
+Object.entries(rutasHTML).forEach(([ruta, archivo]) => {
+  app.get(ruta, (req, res) => {
+    console.log(`📭 GET ${ruta}`);
+    servirArchivo(res, archivo);
+  });
 });
 
-// Servir index.html (login) explícitamente
-app.get('/index.html', (req, res) => {
-  servirArchivoSeguro(res, 'index.html');
-});
+// ============================================================================
+// RUTAS API
+// ============================================================================
 
-app.get('/dashboard.html', (req, res) => {
-  servirArchivoSeguro(res, 'dashboard.html');
-});
-
-app.get('/stats.html', (req, res) => {
-  servirArchivoSeguro(res, 'stats.html');
-});
-
-app.get('/landing.html', (req, res) => {
-  servirArchivoSeguro(res, 'landing.html');
-});
-
-app.get('/talleres.html', (req, res) => {
-  servirArchivoSeguro(res, 'talleres.html');
-});
-
-app.get('/pedidos-taller.html', (req, res) => {
-  servirArchivoSeguro(res, 'pedidos-taller.html');
-});
-
-app.get('/admin-logs.html', (req, res) => {
-  servirArchivoSeguro(res, 'admin-logs.html');
-});
-
-app.get('/desguaces.html', (req, res) => {
-  servirArchivoSeguro(res, 'desguaces.html');
-});
-
-// ==================== API ROUTES / RUTAS API ====================
-
-// Health check route
+// Health check
 app.get('/api/health', async (req, res) => {
   try {
     await query('SELECT 1');
@@ -233,27 +194,19 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// === MARCAS API ===
+// Marcas
 app.get('/api/marcas', async (req, res) => {
   try {
     const result = await query('SELECT * FROM marcas_maestras ORDER BY nombre');
     res.json(result.rows);
   } catch (error) {
-    console.error('Error obteniendo marcas:', error);
-    res.status(500).json({ 
-      error: error.message,
-      message: 'Error cargando marcas'
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// === LOGIN COMPATIBILIDAD /auth/login ===
+// Login (compatibilidad)
 app.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
-  
-  if (!email || !password) {
-    return res.status(400).json({ success: false, message: 'Email y contraseña requeridos' });
-  }
   
   try {
     const result = await query('SELECT * FROM usuarios WHERE email = $1', [email]);
@@ -262,41 +215,28 @@ app.post('/auth/login', async (req, res) => {
     }
     
     const user = result.rows[0];
-    
-    let match = false;
-    if (user.password && user.password.startsWith('$2a$')) {
-      match = bcrypt.compareSync(password, user.password);
-    } else {
-      match = password === user.password;
-    }
+    let match = user.password && user.password.startsWith('$2a$') 
+      ? bcrypt.compareSync(password, user.password)
+      : password === user.password;
     
     if (!match) {
       return res.status(401).json({ success: false, message: 'Contraseña incorrecta' });
     }
     
     const { password: _, ...userWithoutPassword } = user;
-    
     res.json({
       success: true,
-      user: {
-        ...userWithoutPassword,
-        nombre: user.nombre_taller || user.email.split('@')[0]
-      },
+      user: { ...userWithoutPassword, nombre: user.nombre_taller || user.email.split('@')[0] },
       redirect: '/dashboard.html'
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    res.status(500).json({ success: false, message: 'Error interno' });
   }
 });
 
-// === LOGIN API /api/login ===
+// Login API
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
-  
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
   
   try {
     const result = await query('SELECT * FROM usuarios WHERE email = $1', [email]);
@@ -305,13 +245,9 @@ app.post('/api/login', async (req, res) => {
     }
     
     const user = result.rows[0];
-    
-    let match = false;
-    if (user.password && user.password.startsWith('$2a$')) {
-      match = bcrypt.compareSync(password, user.password);
-    } else {
-      match = password === user.password;
-    }
+    let match = user.password && user.password.startsWith('$2a$') 
+      ? bcrypt.compareSync(password, user.password)
+      : password === user.password;
     
     if (!match) {
       return res.status(401).json({ error: 'Incorrect password' });
@@ -320,366 +256,163 @@ app.post('/api/login', async (req, res) => {
     const { password: _, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
   } catch (error) {
-    console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get all users (workshops)
+// Usuarios
 app.get('/api/usuarios', async (req, res) => {
-  const { rol } = req.query;
-  let sql = `
-    SELECT 
-      id, email, rol, 
-      nombre_taller as nombre,
-      telefono_whatsapp as telefono,
-      provincia, direccion, created_at
-    FROM usuarios 
-    WHERE 1=1
-  `;
-  const params = [];
-  
-  if (rol) {
-    sql += ' AND rol = $1';
-    params.push(rol);
-  }
-  
-  sql += ' ORDER BY nombre_taller';
-  
   try {
+    const { rol } = req.query;
+    let sql = 'SELECT id, email, rol, nombre_taller as nombre FROM usuarios WHERE 1=1';
+    const params = [];
+    
+    if (rol) {
+      sql += ' AND rol = $1';
+      params.push(rol);
+    }
+    
+    sql += ' ORDER BY nombre_taller';
     const result = await query(sql, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error getting users:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get user by ID
-app.get('/api/usuarios/:id', async (req, res) => {
-  try {
-    const result = await query(`
-      SELECT 
-        id, email, rol, nombre_taller as nombre, 
-        telefono_whatsapp as telefono, provincia, direccion
-      FROM usuarios 
-      WHERE id = $1
-    `, [req.params.id]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error getting user:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// === SCRAPYARDS / DESGUACES ===
+// Desguaces
 app.get('/api/desguaces', async (req, res) => {
-  const { provincia } = req.query;
-  let sql = `
-    SELECT 
-      id, nombre, provincia, direccion, cp,
-      telefono_fijo, movil_1, movil_2,
-      email, horario, es_workshop, 
-      fuente_origen, web,
-      fecha_registro as created_at
-    FROM desguaces
-    WHERE 1=1
-  `;
-  const params = [];
-  
-  if (provincia) {
-    sql += ' AND provincia = $1';
-    params.push(provincia);
-  }
-  
-  sql += ' ORDER BY nombre';
-  
   try {
-    const result = await query(sql, params);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error getting scrapyards:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/desguaces', async (req, res) => {
-  const desguace = req.body;
-  
-  if (!desguace.nombre) {
-    return res.status(400).json({ error: 'Name required' });
-  }
-  
-  try {
-    const result = await query(`
-      INSERT INTO desguaces (
-        nombre, provincia, direccion, cp, telefono_fijo, 
-        movil_1, movil_2, email, horario, es_workshop, 
-        fuente_origen, web, fecha_registro
-      ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP)
-      RETURNING id
-    `, [
-      desguace.nombre, desguace.provincia, desguace.direccion, desguace.cp,
-      desguace.telefono_fijo, desguace.movil_1, desguace.movil_2,
-      desguace.email, desguace.horario, desguace.es_workshop || false,
-      desguace.fuente_origen || 'WEB', desguace.web
-    ]);
-    res.status(201).json({ id: result.rows[0].id, message: 'Scrapyard created' });
-  } catch (error) {
-    console.error('Error creating scrapyard:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// === ORDERS / PEDIDOS ===
-app.get('/api/pedidos', async (req, res) => {
-  const { usuario_id, estado } = req.query;
-  
-  let sql = `
-    SELECT 
-      p.id,
-      p.numero_pedido,
-      p.pieza,
-      p.matricula,
-      p.marca_coche,
-      p.modelo_coche,
-      p.estado,
-      p.precio,
-      p.precio_coste,
-      p.proveedor,
-      p.bastidor,
-      p.sub_estado_incidencia,
-      p.notas_tecnicas,
-      p.usuario_id,
-      p.fecha_creacion,
-      p.prioridad,
-      p.fecha_entrega_estimada,
-      p.detalles_extra,
-      u.nombre_taller as nombre_usuario,
-      u.email as email_usuario
-    FROM pedidos p
-    LEFT JOIN usuarios u ON p.usuario_id = u.id
-    WHERE 1=1
-  `;
-  const params = [];
-  
-  if (usuario_id && usuario_id !== 'todos' && usuario_id !== '0') {
-    sql += ` AND p.usuario_id = $1`;
-    params.push(usuario_id);
-  }
-  
-  if (estado && estado !== 'todos') {
-    if (params.length > 0) {
-      sql += ` AND p.estado = $${params.length + 1}`;
-    } else {
-      sql += ` AND p.estado = $1`;
-    }
-    params.push(estado);
-  }
-  
-  sql += ' ORDER BY p.fecha_creacion DESC';
-  
-  try {
-    const result = await query(sql, params);
-    res.json(result.rows);
-  } catch (error) {
-    console.error('Error getting orders:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// CRITICAL endpoint for drag & drop
-app.put('/api/pedidos/:id/estado', async (req, res) => {
-  const { estado, usuario_id } = req.body;
-  const { id } = req.params;
-  
-  if (!estado) {
-    return res.status(400).json({ error: 'State required' });
-  }
-  
-  try {
-    let sql, params;
-    if (usuario_id) {
-      sql = 'UPDATE pedidos SET estado = $1, usuario_id = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *';
-      params = [estado, usuario_id, id];
-    } else {
-      sql = 'UPDATE pedidos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
-      params = [estado, id];
+    const { provincia } = req.query;
+    let sql = 'SELECT * FROM desguaces WHERE 1=1';
+    const params = [];
+    
+    if (provincia) {
+      sql += ' AND provincia = $1';
+      params.push(provincia);
     }
     
+    sql += ' ORDER BY nombre';
     const result = await query(sql, params);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Pedidos
+app.get('/api/pedidos', async (req, res) => {
+  try {
+    const { usuario_id, estado } = req.query;
+    let sql = `
+      SELECT p.*, u.nombre_taller as nombre_usuario
+      FROM pedidos p
+      LEFT JOIN usuarios u ON p.usuario_id = u.id
+      WHERE 1=1
+    `;
+    const params = [];
+    
+    if (usuario_id && usuario_id !== 'todos' && usuario_id !== '0') {
+      sql += ' AND p.usuario_id = $1';
+      params.push(usuario_id);
+    }
+    
+    if (estado && estado !== 'todos') {
+      sql += params.length > 0 ? ` AND p.estado = $${params.length + 1}` : ' AND p.estado = $1';
+      params.push(estado);
+    }
+    
+    sql += ' ORDER BY p.fecha_creacion DESC';
+    const result = await query(sql, params);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Actualizar estado (drag & drop)
+app.put('/api/pedidos/:id/estado', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+    
+    const result = await query(
+      'UPDATE pedidos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
+      [estado, id]
+    );
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
     
-    const pedidoActualizado = await query(`
-      SELECT 
-        p.*,
-        u.nombre_taller as nombre_usuario,
-        u.email as email_usuario
-      FROM pedidos p
-      LEFT JOIN usuarios u ON p.usuario_id = u.id
-      WHERE p.id = $1
-    `, [id]);
-    
-    res.json({
-      success: true,
-      pedido: pedidoActualizado.rows[0]
-    });
+    res.json({ success: true, pedido: result.rows[0] });
   } catch (error) {
-    console.error('Error updating state (drag & drop):', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Create new order
+// Crear pedido
 app.post('/api/pedidos', async (req, res) => {
-  const p = req.body;
-  
-  if (!p.pieza) {
-    return res.status(400).json({ error: 'Part required' });
-  }
-  
   try {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    const numero_pedido = `PED-${timestamp}-${random}`;
+    const p = req.body;
+    const numero_pedido = `PED-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
     const result = await query(`
-      INSERT INTO pedidos (
-        numero_pedido, pieza, matricula, marca_coche, modelo_coche, estado, 
-        precio, precio_coste, proveedor, bastidor, 
-        sub_estado_incidencia, notas_tecnicas, usuario_id,
-        fecha_entrega_estimada, agente_id, detalles_extra, 
-        iva_porcentaje, notas_incidencia, prioridad, valoracion_nps
-      ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
-      RETURNING id, numero_pedido, pieza, estado, fecha_creacion
+      INSERT INTO pedidos (numero_pedido, pieza, marca_coche, modelo_coche, estado, precio, usuario_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id, numero_pedido
     `, [
-      numero_pedido, p.pieza, p.matricula, p.marca_coche, p.modelo_coche, 
-      p.estado || 'solicitud', p.precio || 0, p.precio_coste || 0, 
-      p.proveedor, p.bastidor, p.sub_estado_incidencia, p.notas_tecnicas, 
-      p.usuario_id, p.fecha_entrega_estimada, p.agente_id, p.detalles_extra,
-      p.iva_porcentaje || 21, p.notas_incidencia, p.prioridad || 'normal', 
-      p.valoracion_nps
+      numero_pedido, p.pieza, p.marca_coche, p.modelo_coche, 
+      p.estado || 'solicitud', p.precio || 0, p.usuario_id
     ]);
     
     res.status(201).json({ 
       id: result.rows[0].id, 
       numero_pedido: result.rows[0].numero_pedido,
-      message: 'Order created successfully'
+      message: 'Order created'
     });
   } catch (error) {
-    console.error('Error creating order:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update complete order
-app.put('/api/pedidos/:id', async (req, res) => {
-  const { id } = req.params;
-  const p = req.body;
-  
-  try {
-    const result = await query(`
-      UPDATE pedidos SET 
-        pieza = $1, matricula = $2, marca_coche = $3, modelo_coche = $4, 
-        estado = $5, precio = $6, precio_coste = $7, proveedor = $8, 
-        bastidor = $9, sub_estado_incidencia = $10, notas_tecnicas = $11, 
-        usuario_id = $12, fecha_entrega_estimada = $13,
-        agente_id = $14, detalles_extra = $15, iva_porcentaje = $16,
-        notas_incidencia = $17, prioridad = $18,
-        valoracion_nps = $19, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $20
-      RETURNING *
-    `, [
-      p.pieza, p.matricula, p.marca_coche, p.modelo_coche, 
-      p.estado, p.precio, p.precio_coste, p.proveedor, 
-      p.bastidor, p.sub_estado_incidencia, p.notas_tecnicas, 
-      p.usuario_id, p.fecha_entrega_estimada, p.agente_id, 
-      p.detalles_extra, p.iva_porcentaje, p.notas_incidencia, 
-      p.prioridad, p.valoracion_nps, id
-    ]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-    res.json({ 
-      message: 'Order updated successfully',
-      data: result.rows[0]
-    });
-  } catch (error) {
-    console.error('Error updating order:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Delete order
-app.delete('/api/pedidos/:id', async (req, res) => {
-  try {
-    const result = await query('DELETE FROM pedidos WHERE id = $1 RETURNING id, numero_pedido, pieza', [req.params.id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-    res.json({ 
-      message: 'Order deleted', 
-      id: result.rows[0].id,
-      numero_pedido: result.rows[0].numero_pedido
-    });
-  } catch (error) {
-    console.error('Error deleting order:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Servir otros archivos estáticos (catch-all para archivos específicos)
+// ============================================================================
+// RUTA CATCH-ALL PARA ARCHIVOS ESTÁTICOS
+// ============================================================================
 app.get('/:file', (req, res) => {
   const file = req.params.file;
-  
-  // Ignorar rutas API
-  if (file.startsWith('api/') || file === 'api') {
-    return res.status(404).json({ error: 'Ruta API no encontrada' });
+  if (!file.startsWith('api/')) {
+    servirArchivo(res, file);
+  } else {
+    res.status(404).json({ error: 'Ruta no encontrada' });
   }
-  
-  // Intentar servir el archivo
-  servirArchivoSeguro(res, file);
 });
 
-// Error handling
+// ============================================================================
+// MANEJO DE ERRORES
+// ============================================================================
 app.use((err, req, res, next) => {
-  console.error('Global error:', err);
+  console.error('Error:', err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Iniciar servidor DESPUÉS de configurar todas las rutas
+// ============================================================================
+// INICIAR SERVIDOR
+// ============================================================================
 async function startServer() {
-  try {
-    // Verificar base de datos (pero no bloquear el inicio)
-    verificarBaseDeDatos().catch(err => {
-      console.log('⚠️ Database verification failed, but server will start:', err.message);
-    });
-    
-    app.listen(PORT, () => {
-      console.log(`\n🚀 ======= SERVIDOR INICIADO =======`);
-      console.log(`🔗 URL Principal: https://recambio-verde-iax.onrender.com`);
-      console.log(`🔧 API Health: /api/health`);
-      console.log(`📋 Marcas API: /api/marcas`);
-      console.log(`👤 Login: /index.html`);
-      console.log(`📊 Dashboard: /dashboard.html`);
-      console.log(`🏠 Landing: /landing.html`);
-      console.log(`====================================\n`);
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
+  await verificarBaseDeDatos();
+  
+  app.listen(PORT, () => {
+    console.log(`
+🚀 ======= SERVIDOR INICIADO =======
+🔗 URL: https://recambio-verde-iax.onrender.com
+🔧 Health: /api/health
+📋 Marcas: /api/marcas
+👤 Login: /index.html
+📊 Dashboard: /dashboard.html
+====================================
+    `);
+  });
 }
 
-// Iniciar el servidor
-startServer();
+startServer().catch(console.error);
