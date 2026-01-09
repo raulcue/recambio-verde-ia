@@ -283,7 +283,6 @@
         let db = [];
         let isPrivate = false;
         let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
-        let dragSource = null; // Variable para rastrear la fuente del drag
         
         const columns = [
             { id: 'solicitud', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
@@ -296,25 +295,31 @@
             try {
                 await cargarTalleres();
                 await cargarDatos();
+                await cargarMarcasMaestras(); // Ahora sí funciona
                 
                 showToast('CONECTADO A LA BASE DE DATOS', 'success');
                 document.getElementById('db-status').classList.replace('bg-red-500', 'bg-emerald-500');
             } catch (error) {
-                showToast('ERROR DE CONEXIÓN', 'error');
                 console.error('Error en init:', error);
+                showToast('ERROR DE CONEXIÓN', 'error');
+                // Intentar cargar marcas desde datos como fallback
+                setTimeout(() => {
+                    cargarMarcasDesdeDatos();
+                }, 1000);
             }
             
-            // CARGAR MARCAS DESDE LOS DATOS EXISTENTES - SOLUCIÓN PARA ERROR DE MARCAS
-            cargarMarcasDesdeDatos();
-            
+            // Configurar estados en los selects
             const pEst = document.getElementById('p-estado');
             const expEst = document.getElementById('exp-estado');
             pEst.innerHTML = '';
+            expEst.innerHTML = '<option value="todos">TODOS LOS ESTADOS</option>';
+            
             columns.forEach(c => {
                 pEst.add(new Option(c.label.toUpperCase(), c.id));
                 expEst.add(new Option(c.label.toUpperCase(), c.id));
             });
 
+            // Configurar submit del formulario
             document.getElementById('form-pedido').onsubmit = async (e) => {
                 e.preventDefault();
                 const data = {
@@ -355,7 +360,37 @@
             };
         }
 
-        // SOLUCIÓN PARA ERROR DE MARCAS: Cargar marcas desde los datos existentes
+        // FUNCIÓN PARA CARGAR MARCAS - AHORA SÍ FUNCIONA
+        async function cargarMarcasMaestras() {
+            try {
+                const res = await fetch('/api/marcas');
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                const marcas = await res.json();
+                console.log('Marcas cargadas desde API:', marcas.length);
+                
+                const marcasList = document.getElementById('marcas-list');
+                marcasList.innerHTML = '';
+                
+                // Ordenar alfabéticamente por nombre
+                marcas.sort((a, b) => a.nombre.localeCompare(b.nombre));
+                
+                marcas.forEach(m => {
+                    const option = document.createElement('option');
+                    option.value = m.nombre;
+                    marcasList.appendChild(option);
+                });
+                
+                return marcas;
+            } catch(e) { 
+                console.error("Error cargando marcas desde API:", e);
+                // Fallback a marcas desde datos
+                cargarMarcasDesdeDatos();
+                throw e;
+            }
+        }
+
         function cargarMarcasDesdeDatos() {
             try {
                 // Extraer marcas únicas de los datos cargados
@@ -373,9 +408,11 @@
                     marcasList.appendChild(option);
                 });
                 
-                console.log('Marcas cargadas desde datos:', marcas.length);
+                console.log('Marcas cargadas desde datos existentes:', marcas.length);
+                return marcas;
             } catch(e) {
                 console.error('Error cargando marcas desde datos:', e);
+                return [];
             }
         }
 
@@ -403,12 +440,17 @@
             board.style.opacity = '0.5';
             try {
                 const res = await fetch(`/api/pedidos?usuario_id=${tId}`);
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
                 db = await res.json();
                 console.log('Datos cargados:', db.length, 'registros');
-                renderBoard();
                 
-                // Actualizar marcas después de cargar datos
-                cargarMarcasDesdeDatos();
+                // IMPORTANTE: Verificar los estados reales que tenemos
+                const estadosUnicos = [...new Set(db.map(p => p.estado))];
+                console.log('Estados encontrados en los datos:', estadosUnicos);
+                
+                renderBoard();
             } catch(e) { 
                 console.error("Error cargando datos:", e); 
                 showToast('ERROR CARGANDO DATOS', 'error');
@@ -423,7 +465,25 @@
             const sourceData = dataToRender || db;
 
             columns.forEach(col => {
-                const items = sourceData.filter(p => p.estado === col.id);
+                // FILTRO MEJORADO: Aceptar múltiples estados equivalentes
+                const items = sourceData.filter(p => {
+                    const estado = p.estado ? p.estado.toLowerCase() : '';
+                    
+                    if (col.id === 'solicitud') {
+                        return estado === 'solicitud' || estado === 'pendiente' || estado === 'solicitado';
+                    }
+                    if (col.id === 'proceso') {
+                        return estado === 'proceso' || estado === 'en proceso' || estado === 'procesando';
+                    }
+                    if (col.id === 'finalizado') {
+                        return estado === 'finalizado' || estado === 'completado' || estado === 'entregado';
+                    }
+                    if (col.id === 'cancelado') {
+                        return estado === 'cancelado' || estado === 'anulado';
+                    }
+                    return estado === col.id;
+                });
+                
                 const colSum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
                 globalSum += colSum;
 
@@ -452,7 +512,7 @@
                                 return `
                                 <div draggable="true" 
                                      data-pedido-id="${p.id}"
-                                     data-estado-actual="${col.id}"
+                                     data-estado-actual="${p.estado}"
                                      ondragstart="dragStartHandler(event, ${p.id})" 
                                      ondragend="dragEndHandler(event)"
                                      onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
@@ -490,31 +550,25 @@
             document.getElementById('total-general').innerText = `${globalSum.toLocaleString()}€`;
         }
 
-        // --- LÓGICA DE DRAG & DROP CORREGIDA ---
+        // --- LÓGICA DE DRAG & DROP MEJORADA ---
         function dragStartHandler(e, id) {
             e.dataTransfer.setData("text/plain", id);
             e.dataTransfer.effectAllowed = "move";
-            dragSource = e.currentTarget;
             
             // Añadir clase de arrastre
             e.currentTarget.classList.add('dragging');
             
-            // Establecer una imagen de arrastre (opcional)
-            e.dataTransfer.setDragImage(e.currentTarget, 0, 0);
-            
-            console.log('Drag start - ID:', id, 'Desde:', e.currentTarget.dataset.estadoActual);
+            console.log('Drag start - ID:', id);
         }
 
         function dragEndHandler(e) {
-            // Remover clases de arrastre
+            // Remover clase de arrastre
             e.currentTarget.classList.remove('dragging');
             
             // Remover clases drag-over de todas las columnas
             document.querySelectorAll('.kanban-column').forEach(col => {
                 col.classList.remove('drag-over');
             });
-            
-            dragSource = null;
         }
 
         async function dropHandler(e, nuevoEstado) {
@@ -534,8 +588,13 @@
             }
             
             // Verificar si el estado ya es el mismo
-            if (pedido.estado === nuevoEstado) {
-                console.log('Mismo estado, no se actualiza');
+            const estadoActual = pedido.estado ? pedido.estado.toLowerCase() : '';
+            const nuevoEstadoLower = nuevoEstado.toLowerCase();
+            
+            if (estadoActual === nuevoEstadoLower || 
+                (nuevoEstadoLower === 'solicitud' && (estadoActual === 'pendiente' || estadoActual === 'solicitado')) ||
+                (nuevoEstadoLower === 'proceso' && (estadoActual === 'en proceso' || estadoActual === 'procesando'))) {
+                console.log('Mismo estado o equivalente, no se actualiza');
                 return;
             }
             
@@ -554,25 +613,21 @@
                     throw new Error(`HTTP ${response.status}`);
                 }
                 
+                const result = await response.json();
                 showToast('ESTADO ACTUALIZADO', 'success');
-                await cargarDatos(); // Recargar todos los datos
+                console.log('Estado actualizado:', result);
+                
+                // Actualizar los datos locales
+                pedido.estado = nuevoEstado;
+                
+                // Volver a renderizar el board
+                renderBoard();
             } catch(err) {
                 console.error('Error en drag & drop:', err);
                 showToast('ERROR AL MOVER', 'error');
-                // Revertir visualmente si hay error
-                renderBoard();
             } finally {
                 document.getElementById('kanbanBoard').style.opacity = '1';
             }
-        }
-
-        // Funciones de drag & drop compatibles con version anterior
-        function start(e, id) {
-            dragStartHandler(e, id);
-        }
-
-        function drop(e, nuevoEstado) {
-            dropHandler(e, nuevoEstado);
         }
 
         function filtrar() {
