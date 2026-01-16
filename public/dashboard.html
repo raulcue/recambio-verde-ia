@@ -284,11 +284,14 @@
         let isPrivate = false;
         let ajustesSemaf = JSON.parse(localStorage.getItem('kanban_ajustes')) || { naranja: 2, rojo: 5 };
         
+        // MODIFICACIÓN QUIRÚRGICA: COLUMNAS SEGÚN FOTO E INSTRUCCIONES
         const columns = [
-            { id: 'solicitud', label: 'Solicitud', color: 'border-slate-300', icon: 'fa-paper-plane' },
-            { id: 'proceso', label: 'En Proceso', color: 'border-amber-500', icon: 'fa-search-location' },
-            { id: 'finalizado', label: 'Finalizado', color: 'border-emerald-500', icon: 'fa-check-circle' },
-            { id: 'cancelado', label: 'Cancelado', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
+            { id: 'solicitud', label: 'Solicitado', color: 'border-slate-300', icon: 'fa-paper-plane' },
+            { id: 'desguace', label: 'En Desguace', color: 'border-orange-400', icon: 'fa-warehouse' },
+            { id: 'listo', label: 'Listo / Verificado', color: 'border-purple-400', icon: 'fa-check-double' },
+            { id: 'transito', label: 'En Tránsito', color: 'border-emerald-400', icon: 'fa-truck' },
+            { id: 'finalizado', label: 'Entregado', color: 'border-blue-500', icon: 'fa-box-open' },
+            { id: 'incidencia', label: 'Incidencia', color: 'border-red-600', icon: 'fa-exclamation-triangle' }
         ];
 
         async function init() {
@@ -465,21 +468,27 @@
             const sourceData = dataToRender || db;
 
             columns.forEach(col => {
-                // FILTRO MEJORADO: Aceptar múltiples estados equivalentes
+                // FILTRO MEJORADO: Aceptar múltiples estados equivalentes según las nuevas columnas
                 const items = sourceData.filter(p => {
                     const estado = p.estado ? p.estado.toLowerCase() : '';
                     
                     if (col.id === 'solicitud') {
                         return estado === 'solicitud' || estado === 'pendiente' || estado === 'solicitado';
                     }
-                    if (col.id === 'proceso') {
-                        return estado === 'proceso' || estado === 'en proceso' || estado === 'procesando';
+                    if (col.id === 'desguace') {
+                        return estado === 'desguace' || estado === 'en desguace' || estado === 'proceso' || estado === 'en proceso';
+                    }
+                    if (col.id === 'listo') {
+                        return estado === 'listo' || estado === 'verificado' || estado === 'listo / verificado';
+                    }
+                    if (col.id === 'transito') {
+                        return estado === 'transito' || estado === 'en tránsito' || estado === 'en transito';
                     }
                     if (col.id === 'finalizado') {
-                        return estado === 'finalizado' || estado === 'completado' || estado === 'entregado';
+                        return estado === 'finalizado' || estado === 'entregado' || estado === 'completado';
                     }
-                    if (col.id === 'cancelado') {
-                        return estado === 'cancelado' || estado === 'anulado';
+                    if (col.id === 'incidencia') {
+                        return estado === 'incidencia' || estado === 'cancelado' || estado === 'anulado' || estado === 'error';
                     }
                     return estado === col.id;
                 });
@@ -591,9 +600,7 @@
             const estadoActual = pedido.estado ? pedido.estado.toLowerCase() : '';
             const nuevoEstadoLower = nuevoEstado.toLowerCase();
             
-            if (estadoActual === nuevoEstadoLower || 
-                (nuevoEstadoLower === 'solicitud' && (estadoActual === 'pendiente' || estadoActual === 'solicitado')) ||
-                (nuevoEstadoLower === 'proceso' && (estadoActual === 'en proceso' || estadoActual === 'procesando'))) {
+            if (estadoActual === nuevoEstadoLower) {
                 console.log('Mismo estado o equivalente, no se actualiza');
                 return;
             }

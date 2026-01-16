@@ -336,6 +336,7 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
     
+    // MODIFICACIÓN QUIRÚRGICA: Actualizar estado respetando los nuevos nombres
     const result = await query(
       'UPDATE pedidos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       [estado, id]
@@ -357,6 +358,7 @@ app.post('/api/pedidos', async (req, res) => {
     const p = req.body;
     const numero_pedido = `PED-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
+    // MODIFICACIÓN QUIRÚRGICA: El estado por defecto ahora es 'solicitud'
     const result = await query(`
       INSERT INTO pedidos (numero_pedido, pieza, marca_coche, modelo_coche, estado, precio, usuario_id)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
