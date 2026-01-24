@@ -191,6 +191,7 @@ const rutasHTML = {
   '/pedidos-taller.html': 'pedidos-taller.html',
   '/admin-logs.html': 'admin-logs.html',
   '/desguaces.html': 'desguaces.html'
+  '/profitpulse.html': 'profitpulse.html',
 };
 
 Object.entries(rutasHTML).forEach(([ruta, archivo]) => {
