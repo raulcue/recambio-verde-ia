@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Recambio Reciclado | Fidelización</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
+        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; overflow-x: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .logo-invert { transition: filter 0.3s ease; }
+        .dark .logo-invert { filter: brightness(0) invert(1); }
+
+        /* Toast */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .toast.success i { color: #4ade80; } 
+        .toast.error i { color: #f87171; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
+
+<!-- ================= HEADER ================= -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <div class="px-4 lg:px-6 h-20 flex items-center justify-between w-full">
+        <div class="flex items-center gap-3">
+            <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
+                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
+                    Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
+                </h1>
+            </a>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                <i class="fas fa-moon dark:hidden text-xs"></i>
+                <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ================= MAIN ================= -->
+<main class="flex-grow p-6 w-full max-w-screen-2xl mx-auto space-y-6 pb-24">
+
+    <!-- KPIs -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Contactos</p>
+            <h3 id="kpi-total" class="text-2xl font-black text-blue-600">0</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Consentidos GDPR</p>
+            <h3 id="kpi-gdpr" class="text-2xl font-black text-emerald-500">0</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Bajas</p>
+            <h3 id="kpi-baja" class="text-2xl font-black text-red-500">0</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Campañas</p>
+            <h3 id="kpi-camp" class="text-2xl font-black text-indigo-500">0</h3>
+        </div>
+    </section>
+
+    <!-- Acciones -->
+    <section class="flex justify-between items-center">
+        <h2 class="text-sm font-black uppercase tracking-widest">Base de Contactos</h2>
+        <div class="flex gap-2">
+            <button onclick="showToast('Nuevo contacto (pendiente lógica)')" class="bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-black uppercase">
+                <i class="fas fa-user-plus mr-1"></i> Nuevo contacto
+            </button>
+            <button onclick="showToast('Nueva campaña (pendiente lógica)')" class="bg-emerald-600 text-white px-4 py-2 rounded-full text-xs font-black uppercase">
+                <i class="fas fa-bullhorn mr-1"></i> Nueva campaña
+            </button>
+        </div>
+    </section>
+
+    <!-- Tabla -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl shadow border overflow-hidden">
+        <table class="w-full text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+                <tr>
+                    <th class="p-3 text-left">Nombre</th>
+                    <th class="p-3">Contacto</th>
+                    <th class="p-3">Canal</th>
+                    <th class="p-3">GDPR</th>
+                    <th class="p-3">Estado</th>
+                    <th class="p-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-contactos"></tbody>
+        </table>
+    </section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="fixed bottom-0 w-full py-3 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-4 flex flex-col md:flex-row justify-between items-center border-slate-100 dark:border-slate-800 gap-2">
+    <div>v2.2.0 | CREADOR: RAUL CUE</div>
+    <div class="hidden md:block">CONTACTO: RAULCUE@GMAIL.COM</div>
+    <div>COPYRIGHT 2026-2030</div>
+</footer>
+
+<div id="toast-container"></div>
+
+<script>
+    // Datos fake iniciales
+    let contactos = [
+        { id: 1, nombre: 'Juan Pérez', contacto: '+34600000001', canal: 'WhatsApp', gdpr: true, activo: true },
+        { id: 2, nombre: 'María López', contacto: 'maria@email.com', canal: 'Email', gdpr: true, activo: false },
+        { id: 3, nombre: 'Carlos Ruiz', contacto: '+34600000002', canal: 'WhatsApp', gdpr: false, activo: true }
+    ];
+
+    function render() {
+        const tbody = document.getElementById('tabla-contactos');
+        tbody.innerHTML = '';
+
+        contactos.forEach(c => {
+            tbody.innerHTML += `
+                <tr class="border-t text-center">
+                    <td class="p-3 text-left font-bold">${c.nombre}</td>
+                    <td class="p-3">${c.contacto}</td>
+                    <td class="p-3">${c.canal}</td>
+                    <td class="p-3">${c.gdpr ? '✅' : '❌'}</td>
+                    <td class="p-3">${c.activo ? 'Activo' : 'Baja'}</td>
+                    <td class="p-3">
+                        <button onclick="darBaja(${c.id})" class="text-red-500 hover:underline text-[10px]">Baja</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // KPIs
+        document.getElementById('kpi-total').innerText = contactos.length;
+        document.getElementById('kpi-gdpr').innerText = contactos.filter(c => c.gdpr).length;
+        document.getElementById('kpi-baja').innerText = contactos.filter(c => !c.activo).length;
+        document.getElementById('kpi-camp').innerText = 0;
+    }
+
+    function darBaja(id) {
+        const c = contactos.find(x => x.id === id);
+        if (!c) return;
+        c.activo = false;
+        showToast('Contacto dado de baja', 'success');
+        render();
+    }
+
+    function showToast(msg, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    render();
+</script>
+
+</body>
+</html>
