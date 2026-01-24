@@ -190,7 +190,7 @@ const rutasHTML = {
   '/talleres.html': 'talleres.html',
   '/pedidos-taller.html': 'pedidos-taller.html',
   '/admin-logs.html': 'admin-logs.html',
-  '/desguaces.html': 'desguaces.html'
+  '/desguaces.html': 'desguaces.html',
   '/profitpulse.html': 'profitpulse.html',
   '/stackcost.html': 'stackcost.html',
 };
