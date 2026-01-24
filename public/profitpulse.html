@@ -2,11 +2,20 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>StackCost · Platform Economics</title>
+  <title>ProfitPulse · Revenue Intelligence</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <!-- Tailwind + Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
@@ -14,49 +23,135 @@
   <!-- HEADER dinámico -->
   <div id="header-slot"></div>
 
-  <main class="flex-grow px-6 py-6 space-y-6">
+  <!-- CONTENIDO -->
+  <main class="flex-grow px-6 py-6 space-y-6 max-w-7xl mx-auto w-full">
 
+    <!-- TÍTULO -->
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold tracking-tight">
-        🧮 StackCost
-      </h1>
-      <span class="text-xs uppercase tracking-widest text-slate-400">
-        Platform Cost Intelligence
-      </span>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+          📈 ProfitPulse
+        </h1>
+        <p class="text-xs text-slate-400 uppercase tracking-widest">
+          Revenue Intelligence Engine
+        </p>
+      </div>
     </div>
 
-    <section class="bg-white dark:bg-slate-900 rounded-xl shadow p-5 space-y-4">
-      <h2 class="font-semibold text-lg">Distribución de Costes</h2>
+    <!-- MODELO DE MONETIZACIÓN -->
+    <section class="bg-white dark:bg-slate-900 rounded-xl shadow p-6 space-y-4">
+      <h2 class="font-semibold text-lg flex items-center gap-2">
+        <i class="fa-solid fa-coins text-blue-500"></i>
+        Modelo de Monetización
+      </h2>
 
-      <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-300">
-        <li>✔ 60% — Desarrollo y evolución de producto.</li>
-        <li>✔ 20% — Mantenimiento operativo y soporte.</li>
-        <li>✔ 20% — Infraestructura, hosting, suscripciones y extensiones.</li>
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Cada pedido registrado en la tabla
+        <code class="font-mono">pedidos</code> genera automáticamente una comisión
+        basada en el valor de coste de la pieza.
+      </p>
+
+      <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-300 list-disc pl-5">
+        <li>
+          Comisión base: <strong>1% del precio de coste</strong>.
+        </li>
+        <li>
+          Importe mínimo por pedido:
+          <strong>1,50 €</strong> cuando el precio sea cero, nulo o no informado.
+        </li>
+        <li>
+          Importe máximo por pedido:
+          <strong>3,50 €</strong>.
+        </li>
+        <li>
+          Moneda operativa: <strong>EUR</strong>.
+        </li>
+        <li>
+          Política de redondeo: <strong>siempre al alza</strong>.
+        </li>
       </ul>
 
-      <p class="text-sm">
-        Todos los importes se calculan automáticamente a partir de los pedidos registrados
-        en la base de datos (<code>pedidos</code>), utilizando las reglas de monetización
-        definidas en <code>server.js</code>.
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Todos los cálculos están alineados con la lógica de negocio definida
+        en <code class="font-mono">server.js</code> y referencian directamente
+        los registros de la tabla <code class="font-mono">pedidos</code>.
       </p>
     </section>
 
-    <section class="bg-white dark:bg-slate-900 rounded-xl shadow p-5 space-y-4">
-      <h2 class="font-semibold text-lg">Proyección Económica</h2>
+    <!-- DISTRIBUCIÓN DE COSTES -->
+    <section class="bg-white dark:bg-slate-900 rounded-xl shadow p-6 space-y-4">
+      <h2 class="font-semibold text-lg flex items-center gap-2">
+        <i class="fa-solid fa-layer-group text-indigo-500"></i>
+        Distribución Interna de Costes
+      </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-        <div class="p-3 rounded-lg border">
-          <div class="text-xs uppercase text-slate-400">Desarrollo anual</div>
+        <div class="p-4 rounded-lg border dark:border-slate-700">
+          <div class="text-xs uppercase text-slate-400">Desarrollo</div>
+          <div class="font-bold text-xl">60%</div>
+          <div class="text-xs text-slate-500">
+            Evolución del producto, nuevas funcionalidades, optimización.
+          </div>
+        </div>
+
+        <div class="p-4 rounded-lg border dark:border-slate-700">
+          <div class="text-xs uppercase text-slate-400">Mantenimiento</div>
+          <div class="font-bold text-xl">20%</div>
+          <div class="text-xs text-slate-500">
+            Soporte operativo, incidencias, estabilidad.
+          </div>
+        </div>
+
+        <div class="p-4 rounded-lg border dark:border-slate-700">
+          <div class="text-xs uppercase text-slate-400">Infraestructura</div>
+          <div class="font-bold text-xl">20%</div>
+          <div class="text-xs text-slate-500">
+            Hosting, suscripciones, APIs, extensiones.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROYECCIÓN ANUAL -->
+    <section class="bg-white dark:bg-slate-900 rounded-xl shadow p-6 space-y-4">
+      <h2 class="font-semibold text-lg flex items-center gap-2">
+        <i class="fa-solid fa-chart-line text-emerald-500"></i>
+        Proyección Económica Anual (Estimación)
+      </h2>
+
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Las proyecciones se calculan extrapolando el volumen actual de pedidos
+        registrados en la base de datos durante un período anual.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="p-4 rounded-lg border dark:border-slate-700">
+          <div class="text-xs uppercase text-slate-400">Ingresos totales</div>
+          <div class="font-bold text-xl">Proyección dinámica</div>
+        </div>
+
+        <div class="p-4 rounded-lg border dark:border-slate-700">
+          <div class="text-xs uppercase text-slate-400">Coste desarrollo</div>
           <div class="font-bold text-xl">≈ 60%</div>
         </div>
-        <div class="p-3 rounded-lg border">
-          <div class="text-xs uppercase text-slate-400">Mantenimiento anual</div>
-          <div class="font-bold text-xl">≈ 20%</div>
+
+        <div class="p-4 rounded-lg border dark:border-slate-700">
+          <div class="text-xs uppercase text-slate-400">Coste plataforma</div>
+          <div class="font-bold text-xl">≈ 40%</div>
         </div>
-        <div class="p-3 rounded-lg border">
-          <div class="text-xs uppercase text-slate-400">Infraestructura anual</div>
-          <div class="font-bold text-xl">≈ 20%</div>
-        </div>
+      </div>
+    </section>
+
+    <!-- PIE DE ESTADÍSTICAS -->
+    <section class="bg-slate-100 dark:bg-slate-900/60 rounded-xl p-4 text-xs text-slate-500 flex flex-wrap gap-6 justify-between">
+      <div>
+        📦 Pedidos procesados: <strong id="stat-pedidos">—</strong>
+      </div>
+      <div>
+        💶 Comisión media estimada: <strong>1,50 € – 3,50 €</strong>
+      </div>
+      <div>
+        🗃 Fuente de datos: tabla <code>pedidos</code>
       </div>
     </section>
 
@@ -79,7 +174,18 @@
       if (footer) document.getElementById('footer-slot').appendChild(footer.cloneNode(true));
     }
 
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/pedidos');
+        const pedidos = await res.json();
+        document.getElementById('stat-pedidos').innerText = pedidos.length;
+      } catch (e) {
+        document.getElementById('stat-pedidos').innerText = 'N/A';
+      }
+    }
+
     loadLayout();
+    loadStats();
   </script>
 
 </body>
