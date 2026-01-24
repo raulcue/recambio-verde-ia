@@ -1,277 +1,239 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kanban Recambio Reciclado | Fidelización</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Recambio Reciclado | Fidelización Mejorada</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { darkMode: 'class' }</script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; overflow-x: hidden; }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
+        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; overflow-x: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .logo-invert { transition: filter 0.3s ease; }
+        .dark .logo-invert { filter: brightness(0) invert(1); }
 
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        /* Toast */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .toast.success i { color: #4ade80; } 
+        .toast.error i { color: #f87171; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-.logo-invert { transition: filter 0.3s ease; }
-.dark .logo-invert { filter: brightness(0) invert(1); }
+        .modal-backdrop { position: fixed; inset:0; background: rgba(0,0,0,0.4); z-index: 50; display: flex; justify-content: center; align-items: center; }
+        .modal { background: white; dark:bg-slate-900; border-radius: 12px; max-width: 500px; width: 90%; padding: 1rem; position: relative; }
+        .modal-close { position: absolute; top: 10px; right: 10px; cursor: pointer; font-weight: bold; }
 
-#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
-.toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-.toast.success i { color: #4ade80; } 
-.toast.error i { color: #f87171; }
-@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-.modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:50; }
-.modal { background:white; padding:20px; border-radius:15px; width:90%; max-width:400px; }
-</style>
+        .clickable { cursor: pointer; }
+        .highlight { background-color: #fef08a; }
+    </style>
 </head>
-
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-<!-- ================= HEADER ================= -->
+<!-- HEADER -->
 <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-<div class="px-4 lg:px-6 h-20 flex items-center justify-between w-full">
-    <div class="flex items-center gap-3">
-        <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
-            <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-            <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
-                Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
-            </h1>
-        </a>
-    </div>
-
-    <div class="flex items-center gap-4">
-        <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
-            <i class="fas fa-moon dark:hidden text-xs"></i>
-            <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
-        </button>
-
+    <div class="px-4 lg:px-6 h-20 flex items-center justify-between w-full">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+            <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
+                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
+                    Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
+                </h1>
+            </a>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                <i class="fas fa-moon dark:hidden text-xs"></i>
+                <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+            </div>
         </div>
     </div>
-</div>
 </header>
 
-<!-- ================= MAIN ================= -->
+<!-- MAIN -->
 <main class="flex-grow p-6 w-full max-w-screen-2xl mx-auto space-y-6 pb-24">
 
-<!-- KPIs -->
-<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
-        <p class="text-[10px] font-black uppercase text-slate-400">Contactos</p>
-        <h3 id="kpi-total" class="text-2xl font-black text-blue-600">0</h3>
-    </div>
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
-        <p class="text-[10px] font-black uppercase text-slate-400">Consentidos GDPR</p>
-        <h3 id="kpi-gdpr" class="text-2xl font-black text-emerald-500">0</h3>
-    </div>
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
-        <p class="text-[10px] font-black uppercase text-slate-400">Bajas</p>
-        <h3 id="kpi-baja" class="text-2xl font-black text-red-500">0</h3>
-    </div>
-    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
-        <p class="text-[10px] font-black uppercase text-slate-400">Campañas</p>
-        <h3 id="kpi-camp" class="text-2xl font-black text-indigo-500">0</h3>
-    </div>
-</section>
+    <!-- KPIs -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Contactos</p>
+            <h3 id="kpi-total" class="text-2xl font-black text-blue-600">0</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Consentidos GDPR</p>
+            <h3 id="kpi-gdpr" class="text-2xl font-black text-emerald-500">0</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Bajas</p>
+            <h3 id="kpi-baja" class="text-2xl font-black text-red-500">0</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Campañas</p>
+            <h3 id="kpi-camp" class="text-2xl font-black text-indigo-500">0</h3>
+        </div>
+    </section>
 
-<!-- Acciones -->
-<section class="flex justify-between items-center">
-<h2 class="text-sm font-black uppercase tracking-widest">Base de Contactos</h2>
-<div class="flex gap-2">
-    <button onclick="openContactoModal()" class="bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-black uppercase">
-        <i class="fas fa-user-plus mr-1"></i> Nuevo contacto
-    </button>
-    <button onclick="openCampanaModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-full text-xs font-black uppercase">
-        <i class="fas fa-bullhorn mr-1"></i> Nueva campaña
-    </button>
-</div>
-</section>
+    <!-- Acciones -->
+    <section class="flex justify-between items-center">
+        <h2 class="text-sm font-black uppercase tracking-widest">Base de Contactos</h2>
+        <div class="flex gap-2">
+            <button onclick="openModal('contacto')" class="bg-blue-600 text-white px-4 py-2 rounded-full text-xs font-black uppercase">
+                <i class="fas fa-user-plus mr-1"></i> Nuevo contacto
+            </button>
+            <button onclick="openModal('campana')" class="bg-emerald-600 text-white px-4 py-2 rounded-full text-xs font-black uppercase">
+                <i class="fas fa-bullhorn mr-1"></i> Nueva campaña
+            </button>
+        </div>
+    </section>
 
-<!-- Tabla -->
-<section class="bg-white dark:bg-slate-900 rounded-2xl shadow border overflow-hidden">
-<table class="w-full text-xs">
-<thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
-<tr>
-<th class="p-3 text-left">Nombre</th>
-<th class="p-3">Contacto</th>
-<th class="p-3">Canal</th>
-<th class="p-3">GDPR</th>
-<th class="p-3">Estado</th>
-<th class="p-3">Acciones</th>
-</tr>
-</thead>
-<tbody id="tabla-contactos"></tbody>
-</table>
-</section>
+    <!-- Filtros y búsqueda -->
+    <section class="flex gap-2 mt-2">
+        <input type="text" id="search" placeholder="Buscar..." class="px-3 py-1 rounded border text-xs" oninput="render()">
+        <select id="filter-canal" class="px-3 py-1 rounded border text-xs" onchange="render()">
+            <option value="">Todos los canales</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="Email">Email</option>
+        </select>
+        <select id="filter-estado" class="px-3 py-1 rounded border text-xs" onchange="render()">
+            <option value="">Todos los estados</option>
+            <option value="activo">Activo</option>
+            <option value="baja">Baja</option>
+        </select>
+    </section>
+
+    <!-- Tabla -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl shadow border overflow-hidden mt-2">
+        <table class="w-full text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+                <tr>
+                    <th class="p-3 text-left">Nombre</th>
+                    <th class="p-3">Contacto</th>
+                    <th class="p-3">Canal</th>
+                    <th class="p-3">GDPR</th>
+                    <th class="p-3">Estado</th>
+                    <th class="p-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-contactos"></tbody>
+        </table>
+    </section>
 
 </main>
 
-<!-- ================= FOOTER ================= -->
+<!-- FOOTER -->
 <footer class="fixed bottom-0 w-full py-3 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-4 flex flex-col md:flex-row justify-between items-center border-slate-100 dark:border-slate-800 gap-2">
-<div>v2.3.0 | CREADOR: RAUL CUE</div>
-<div class="hidden md:block">CONTACTO: RAULCUE@GMAIL.COM</div>
-<div>COPYRIGHT 2026-2030</div>
+    <div>v2.3.0 | CREADOR: RAUL CUE</div>
+    <div class="hidden md:block">CONTACTO: RAULCUE@GMAIL.COM</div>
+    <div>COPYRIGHT 2026-2030</div>
 </footer>
 
 <div id="toast-container"></div>
 
-<!-- Modal Contacto -->
-<div id="modal-contacto" class="modal-bg hidden">
-<div class="modal">
-<h3 class="font-black text-sm uppercase mb-2">Nuevo Contacto</h3>
-<input type="text" id="contacto-nombre" placeholder="Nombre" class="w-full mb-2 p-2 border rounded">
-<input type="text" id="contacto-info" placeholder="Teléfono o Email" class="w-full mb-2 p-2 border rounded">
-<select id="contacto-canal" class="w-full mb-2 p-2 border rounded">
-<option value="WhatsApp">WhatsApp</option>
-<option value="Email">Email</option>
-</select>
-<label class="flex items-center gap-2 mb-2 text-[10px]">
-<input type="checkbox" id="contacto-gdpr"> GDPR Consentido
-</label>
-<div class="flex justify-end gap-2">
-<button onclick="closeContactoModal()" class="px-3 py-1 rounded bg-gray-200">Cancelar</button>
-<button onclick="guardarContacto()" class="px-3 py-1 rounded bg-blue-600 text-white">Guardar</button>
-</div>
-</div>
-</div>
-
-<!-- Modal Campaña -->
-<div id="modal-campana" class="modal-bg hidden">
-<div class="modal">
-<h3 class="font-black text-sm uppercase mb-2">Nueva Campaña</h3>
-<select id="campana-canal" class="w-full mb-2 p-2 border rounded">
-<option value="WhatsApp">WhatsApp</option>
-<option value="Email">Email</option>
-</select>
-<input type="text" id="campana-mensaje" placeholder="Mensaje" class="w-full mb-2 p-2 border rounded">
-<div class="flex justify-end gap-2">
-<button onclick="closeCampanaModal()" class="px-3 py-1 rounded bg-gray-200">Cancelar</button>
-<button onclick="enviarCampana()" class="px-3 py-1 rounded bg-emerald-600 text-white">Enviar</button>
-</div>
-</div>
+<!-- Modales -->
+<div id="modal" class="hidden modal-backdrop">
+    <div class="modal">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <div id="modal-content"></div>
+    </div>
 </div>
 
 <script>
-// Configuración WhatsApp y Email
-const whatsappConfig = { numero: '', plantilla: 'Hola {nombre}, te informamos sobre nuestra campaña…' };
-const emailConfig = { remitente: '', asuntoDefault: 'Nueva campaña de fidelización', plantilla: 'Hola {nombre}, tenemos novedades para ti' };
+// Configuración editable frontend
+let config = {
+    whatsappNumber: '+34',
+    emailFrom: 'tu-email@dominio.com'
+};
 
-// Datos iniciales
+// Contactos fake iniciales
 let contactos = [
     { id: 1, nombre: 'Juan Pérez', contacto: '+34600000001', canal: 'WhatsApp', gdpr: true, activo: true },
     { id: 2, nombre: 'María López', contacto: 'maria@email.com', canal: 'Email', gdpr: true, activo: false },
     { id: 3, nombre: 'Carlos Ruiz', contacto: '+34600000002', canal: 'WhatsApp', gdpr: false, activo: true }
 ];
 
-let nextId = 4;
+let campanas = [];
 
-// ---------------- Render ----------------
-function render() {
-    const tbody = document.getElementById('tabla-contactos');
-    tbody.innerHTML = '';
-    contactos.forEach(c => {
-        tbody.innerHTML += `
-        <tr class="border-t text-center hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer" onclick="editarContacto(${c.id})">
+function showToast(msg, type='success'){ const container = document.getElementById('toast-container'); const toast = document.createElement('div'); toast.className = `toast ${type}`; const icon = type==='success'?'fa-check-circle':'fa-exclamation-circle'; toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`; container.appendChild(toast); setTimeout(()=>{ toast.style.opacity='0'; setTimeout(()=>toast.remove(),300)},2500);}
+
+function render(){
+    const tbody = document.getElementById('tabla-contactos'); tbody.innerHTML='';
+    const search = document.getElementById('search').value.toLowerCase();
+    const canalFilter = document.getElementById('filter-canal').value;
+    const estadoFilter = document.getElementById('filter-estado').value;
+
+    contactos.filter(c=>{
+        let matchSearch = c.nombre.toLowerCase().includes(search) || c.contacto.toLowerCase().includes(search);
+        let matchCanal = canalFilter ? c.canal===canalFilter : true;
+        let matchEstado = estadoFilter ? ((estadoFilter==='activo')?c.activo:c.activo===false) : true;
+        return matchSearch && matchCanal && matchEstado;
+    }).forEach(c=>{
+        tbody.innerHTML+=`<tr class="border-t text-center clickable ${!c.activo?'bg-red-50 dark:bg-red-900':''}" onclick="openModal('editar',${c.id})">
             <td class="p-3 text-left font-bold">${c.nombre}</td>
             <td class="p-3">${c.contacto}</td>
             <td class="p-3">${c.canal}</td>
-            <td class="p-3">${c.gdpr ? '✅' : '❌'}</td>
-            <td class="p-3">${c.activo ? 'Activo' : 'Baja'}</td>
-            <td class="p-3">
-                <button onclick="toggleAltaBaja(event, ${c.id})" class="text-[10px] hover:underline">
-                    ${c.activo ? 'Dar Baja' : 'Dar Alta'}
-                </button>
-            </td>
+            <td class="p-3">${c.gdpr?'✅':'❌'}</td>
+            <td class="p-3">${c.activo?'Activo':'Baja'}</td>
+            <td class="p-3"><button onclick="toggleActivo(event,${c.id})" class="text-indigo-500 hover:underline text-[10px]">${c.activo?'Dar de baja':'Dar de alta'}</button></td>
         </tr>`;
     });
 
     document.getElementById('kpi-total').innerText = contactos.length;
-    document.getElementById('kpi-gdpr').innerText = contactos.filter(c => c.gdpr).length;
-    document.getElementById('kpi-baja').innerText = contactos.filter(c => !c.activo).length;
-    document.getElementById('kpi-camp').innerText = 0; // temporal
+    document.getElementById('kpi-gdpr').innerText = contactos.filter(c=>c.gdpr).length;
+    document.getElementById('kpi-baja').innerText = contactos.filter(c=>!c.activo).length;
+    document.getElementById('kpi-camp').innerText = campanas.length;
 }
 
-// ---------------- Contacto ----------------
-function openContactoModal() { document.getElementById('modal-contacto').classList.remove('hidden'); }
-function closeContactoModal() { document.getElementById('modal-contacto').classList.add('hidden'); }
-function guardarContacto() {
-    const nombre = document.getElementById('contacto-nombre').value.trim();
-    const info = document.getElementById('contacto-info').value.trim();
-    const canal = document.getElementById('contacto-canal').value;
-    const gdpr = document.getElementById('contacto-gdpr').checked;
+function toggleActivo(event,id){ event.stopPropagation(); const c = contactos.find(x=>x.id===id); if(!c) return; c.activo=!c.activo; showToast(c.activo?'Contacto dado de alta':'Contacto dado de baja','success'); render(); }
 
-    if(!nombre || !info){ showToast('Completa todos los campos', 'error'); return; }
+// MODALES
+function openModal(tipo,id=null){
+    const modal = document.getElementById('modal');
+    const content = document.getElementById('modal-content');
+    content.innerHTML='';
 
-    contactos.push({ id: nextId++, nombre, contacto: info, canal, gdpr, activo: true });
-    showToast('Contacto añadido', 'success');
-    closeContactoModal();
-    render();
-}
-function editarContacto(id){
-    const c = contactos.find(x=>x.id===id);
-    if(!c) return;
-    document.getElementById('contacto-nombre').value = c.nombre;
-    document.getElementById('contacto-info').value = c.contacto;
-    document.getElementById('contacto-canal').value = c.canal;
-    document.getElementById('contacto-gdpr').checked = c.gdpr;
-    openContactoModal();
-}
-
-// ---------------- Alta/Baja ----------------
-function toggleAltaBaja(event, id){
-    event.stopPropagation();
-    const c = contactos.find(x=>x.id===id);
-    if(!c) return;
-    c.activo = !c.activo;
-    showToast(c.activo ? 'Contacto dado de alta' : 'Contacto dado de baja', 'success');
-    render();
-}
-
-// ---------------- Campaña ----------------
-function openCampanaModal(){ document.getElementById('modal-campana').classList.remove('hidden'); }
-function closeCampanaModal(){ document.getElementById('modal-campana').classList.add('hidden'); }
-function enviarCampana(){
-    const canal = document.getElementById('campana-canal').value;
-    const mensaje = document.getElementById('campana-mensaje').value.trim();
-    if(!mensaje){ showToast('Escribe un mensaje', 'error'); return; }
-
-    const destinatarios = contactos.filter(c=>c.activo && c.canal===canal);
-    if(destinatarios.length===0){ showToast('No hay destinatarios activos', 'error'); return; }
-
-    // Simulación envío
-    if(canal==='WhatsApp'){
-        if(!whatsappConfig.numero){ showToast('Número de WhatsApp no configurado', 'error'); return; }
-        showToast(`Simulado: Enviando WhatsApp a ${destinatarios.length} contactos`, 'success');
-    } else {
-        if(!emailConfig.remitente){ showToast('Email no configurado', 'error'); return; }
-        showToast(`Simulado: Enviando Email a ${destinatarios.length} contactos`, 'success');
-    }
-
-    closeCampanaModal();
-}
-
-// ---------------- Toast ----------------
-function showToast(msg, type='success'){
-    const container = document.getElementById('toast-container');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    const icon = type==='success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-    toast.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
-    container.appendChild(toast);
-    setTimeout(()=>{
-        toast.style.opacity='0';
-        setTimeout(()=>toast.remove(),300);
-    },2500);
-}
-
-render();
-</script>
-</body>
-</html>
+    if(tipo==='contacto'){ content.innerHTML=`
+        <h3 class="font-black text-sm mb-2">Nuevo Contacto</h3>
+        <input type='text' id='modal-nombre' placeholder='Nombre' class='w-full border px-2 py-1 mb-2'/>
+        <input type='text' id='modal-contacto' placeholder='Teléfono o Email' class='w-full border px-2 py-1 mb-2'/>
+        <select id='modal-canal' class='w-full border px-2 py-1 mb-2'><option value='WhatsApp'>WhatsApp</option><option value='Email'>Email</option></select>
+        <label class='text-[10px]'><input type='checkbox' id='modal-gdpr' checked/> GDPR</label>
+        <button onclick='guardarContacto()' class='bg-blue-600 text-white px-4 py-2 rounded mt-2 text-xs font-black uppercase'>Guardar</button>
+    `;
+    } else if(tipo==='editar'){
+        const c = contactos.find(x=>x.id===id);
+        content.innerHTML=`
+            <h3 class="font-black text-sm mb-2">Editar Contacto</h3>
+            <input type='text' id='modal-nombre' value='${c.nombre}' class='w-full border px-2 py-1 mb-2'/>
+            <input type='text' id='modal-contacto' value='${c.contacto}' class='w-full border px-2 py-1 mb-2'/>
+            <select id='modal-canal' class='w-full border px-2 py-1 mb-2'>
+                <option value='WhatsApp' ${c.canal==='WhatsApp'?'selected':''}>WhatsApp</option>
+                <option value='Email' ${c.canal==='Email'?'selected':''}>Email</option>
+            </select>
+            <label class='text-[10px]'><input type='checkbox' id='modal-gdpr' ${c.gdpr?'checked':''}/> GDPR</label>
+            <button onclick='guardarContacto(${id})' class='bg-blue-600 text-white px-4 py-2 rounded mt-2 text-xs font-black uppercase'>Guardar Cambios</button>
+        `;
+    } else if(tipo==='campana'){
+        content.innerHTML=`
+            <h3 class="font-black text-sm mb-2">Nueva Campaña</h3>
+            <input type='text' id='modal-titulo' placeholder='Título' class='w-full border px-2 py-1 mb-2'/>
+            <textarea id='modal-mensaje' placeholder='Mensaje' class='w-full border px-2 py-1 mb-2'></textarea>
+            <div class='flex justify-between text-[10px]'><span id='contador'>0</span>/500</div>
+            <label class='text-[10px]'>Destinatarios:</label>
+            <select id='modal-destinatarios' multiple class='w-full border px-2 py-1 mb-2 h-24'>
+                ${contactos.map(c=>`<option value='${c.id}'>${c.nombre} (${c.canal})</option>`).join('')}
+            </select>
+            <button onclick='guardarCampana()' class='bg-emerald-600 text-white px-4 py-2 rounded mt-2 text-xs font-black uppercase'>Guardar Campaña</button>
+        `;
+        const txt = document.getElementById('modal-mensaje');
+        const contador = document.getElementById('contador');
+        txt.add
