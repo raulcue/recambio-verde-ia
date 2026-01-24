@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ProfitPulse Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background: #0f172a;
+      color: #e5e7eb;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .card h3 {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #1e293b;
+      text-align: left;
+    }
+
+    th {
+      color: #94a3b8;
+      font-weight: normal;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER (idéntico concepto dashboard) -->
+  <header class="topbar">
+    <h2>📊 ProfitPulse Dashboard</h2>
+  </header>
+
+  <div class="container">
+
+    <div class="stats-grid">
+      <div class="card">
+        <h3>Número de pedidos</h3>
+        <div class="value" id="totalPedidos">0</div>
+      </div>
+
+      <div class="card">
+        <h3>Comisión total generada (€)</h3>
+        <div class="value" id="totalComision">0.00 €</div>
+      </div>
+
+      <div class="card">
+        <h3>Proyección anual (€)</h3>
+        <div class="value" id="proyeccion">0.00 €</div>
+      </div>
+
+      <div class="card">
+        <h3>Ticket medio comisión (€)</h3>
+        <div class="value" id="media">0.00 €</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Distribución interna</h3>
+      <table>
+        <tr>
+          <th>Concepto</th>
+          <th>Importe (€)</th>
+        </tr>
+        <tr>
+          <td>Desarrollo (60%)</td>
+          <td id="devCost">0.00 €</td>
+        </tr>
+        <tr>
+          <td>Mantenimiento (20%)</td>
+          <td id="maintCost">0.00 €</td>
+        </tr>
+        <tr>
+          <td>Infraestructura (20%)</td>
+          <td id="infraCost">0.00 €</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Detalle por pedido</h3>
+      <table id="tablaPedidos">
+        <thead>
+          <tr>
+            <th>Pedido</th>
+            <th>Coste (€)</th>
+            <th>Comisión (€)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </div>
+
+<script>
+async function cargarDatos() {
+  const res = await fetch('/api/pedidos');
+  const pedidos = await res.json();
+
+  let totalComision = 0;
+  let totalPedidos = pedidos.length;
+
+  const tbody = document.querySelector('#tablaPedidos tbody');
+  tbody.innerHTML = '';
+
+  pedidos.forEach(p => {
+    const coste = Number(p.precio_coste || 0);
+
+    // Comisión: 1%, máximo 3.50€, redondeo al alza
+    let comision = Math.ceil((coste * 0.01) * 100) / 100;
+    if (comision > 3.5) comision = 3.5;
+
+    totalComision += comision;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${p.numero_pedido}</td>
+      <td>${coste.toFixed(2)} €</td>
+      <td>${comision.toFixed(2)} €</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const media = totalPedidos > 0 ? totalComision / totalPedidos : 0;
+
+  // Proyección anual simple (promedio diario x 365)
+  const proyeccion = (totalComision / Math.max(1, totalPedidos)) * 365;
+
+  document.getElementById('totalPedidos').innerText = totalPedidos;
+  document.getElementById('totalComision').innerText = totalComision.toFixed(2) + ' €';
+  document.getElementById('media').innerText = media.toFixed(2) + ' €';
+  document.getElementById('proyeccion').innerText = proyeccion.toFixed(2) + ' €';
+
+  document.getElementById('devCost').innerText   = (totalComision * 0.60).toFixed(2) + ' €';
+  document.getElementById('maintCost').innerText = (totalComision * 0.20).toFixed(2) + ' €';
+  document.getElementById('infraCost').innerText = (totalComision * 0.20).toFixed(2) + ' €';
+}
+
+cargarDatos();
+</script>
+
+</body>
+</html>
