@@ -203,7 +203,173 @@ Object.entries(rutasHTML).forEach(([ruta, archivo]) => {
 // ============================================================================
 // RUTAS API
 // ============================================================================
+// =======================
+// 🔔 INYECCIÓN QUIRÚRGICA #3
+// WHATSAPP AUTOMATION CORE
+// =======================
 
+// Memoria de notificaciones WhatsApp (simple en RAM)
+let whatsappNotifications = [];
+let whatsappCounter = 0;
+
+// Teléfono receptor oficial (sandbox / pruebas)
+const WHATSAPP_RECEIVER_NUMBER = '+971523241001';
+
+// Normalizar teléfonos para comparar
+function normalizePhone(phone) {
+  if (!phone) return '';
+  return phone.replace(/\s+/g, '').replace(/^\+/, '');
+}
+
+// Extraer información básica desde texto libre
+function parseWhatsappMessage(text = '') {
+  const data = {
+    pieza: null,
+    marca: null,
+    modelo: null,
+    matricula: null
+  };
+
+  const t = text.toLowerCase();
+
+  // Intentos simples de inferencia
+  if (t.includes('motor')) data.pieza = 'Motor';
+  if (t.includes('embrague')) data.pieza = 'Embrague';
+  if (t.includes('turbo')) data.pieza = 'Turbo';
+  if (t.includes('faro')) data.pieza = 'Faro';
+  if (t.includes('retrovisor')) data.pieza = 'Retrovisor';
+
+  const marcas = ['audi', 'bmw', 'vw', 'volkswagen', 'seat', 'renault', 'peugeot', 'citroen', 'toyota', 'nissan'];
+  marcas.forEach(m => {
+    if (t.includes(m)) data.marca = m.toUpperCase();
+  });
+
+  // Matrícula simple (heurística)
+  const matriculaMatch = text.match(/\b[0-9]{3,4}[A-Z]{3}\b/i);
+  if (matriculaMatch) data.matricula = matriculaMatch[0].toUpperCase();
+
+  return data;
+}
+
+// ============================================================================
+// 📩 WEBHOOK SIMULADO PARA RECIBIR WHATSAPP
+// ============================================================================
+app.post('/api/whatsapp/inbound', async (req, res) => {
+  try {
+    const {
+      from,       // número que envía (taller)
+      to,         // número receptor
+      message     // texto del mensaje
+    } = req.body;
+
+    console.log('📩 WhatsApp inbound:', req.body);
+
+    if (!from || !to || !message) {
+      return res.status(400).json({ error: 'Payload incompleto' });
+    }
+
+    // Verificar que llega al número correcto
+    if (normalizePhone(to) !== normalizePhone(WHATSAPP_RECEIVER_NUMBER)) {
+      console.log('⚠️ WhatsApp ignorado: número receptor incorrecto');
+      return res.json({ ignored: true });
+    }
+
+    // Buscar taller por teléfono
+    const phoneNormalized = normalizePhone(from);
+
+    const tallerResult = await query(`
+      SELECT id, nombre_taller, telefono_whatsapp
+      FROM usuarios
+      WHERE telefono_whatsapp IS NOT NULL
+    `);
+
+    const taller = tallerResult.rows.find(u =>
+      normalizePhone(u.telefono_whatsapp) === phoneNormalized
+    );
+
+    if (!taller) {
+      console.log('❌ Taller no encontrado para teléfono:', from);
+      return res.status(404).json({ error: 'Taller no reconocido' });
+    }
+
+    console.log('✅ Taller detectado:', taller.nombre_taller);
+
+    // Inferir datos desde el mensaje
+    const parsed = parseWhatsappMessage(message);
+
+    const numero_pedido = `WA-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // Crear pedido mínimo
+    const insertResult = await query(`
+      INSERT INTO pedidos (
+        numero_pedido,
+        pieza,
+        marca_coche,
+        modelo_coche,
+        matricula,
+        estado,
+        usuario_id,
+        precio,
+        canal,
+        fecha_creacion
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, CURRENT_TIMESTAMP)
+      RETURNING id, numero_pedido
+    `, [
+      numero_pedido,
+      parsed.pieza || message.substring(0, 80),
+      parsed.marca || '',
+      parsed.modelo || '',
+      parsed.matricula || null,
+      'solicitud',
+      taller.id,
+      0,
+      'whatsapp'
+    ]);
+
+    const pedidoCreado = insertResult.rows[0];
+
+    // Registrar notificación en memoria
+    whatsappCounter++;
+    whatsappNotifications.push({
+      id: pedidoCreado.id,
+      numero_pedido: pedidoCreado.numero_pedido,
+      taller: taller.nombre_taller,
+      mensaje: message,
+      timestamp: Date.now()
+    });
+
+    console.log('🟢 Pedido creado vía WhatsApp:', pedidoCreado);
+
+    res.json({
+      success: true,
+      pedido: pedidoCreado
+    });
+
+  } catch (error) {
+    console.error('🔥 Error WhatsApp inbound:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================================
+// 🔔 ENDPOINT PARA DASHBOARD - CONSULTAR NOTIFICACIONES
+// ============================================================================
+app.get('/api/whatsapp/notifications', (req, res) => {
+  res.json({
+    counter: whatsappCounter,
+    notifications: whatsappNotifications
+  });
+});
+
+// ============================================================================
+// 🔄 RESET NOTIFICACIONES DESDE DASHBOARD
+// ============================================================================
+app.post('/api/whatsapp/reset', (req, res) => {
+  whatsappCounter = 0;
+  whatsappNotifications = [];
+  res.json({ success: true });
+});
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
@@ -476,7 +642,7 @@ app.post('/api/whatsapp/pedido', async (req, res) => {
         precio,
         precio_coste,
         prioridad,
-        origen
+        canal
       ) VALUES ($1,$2,$3,'solicitud',$4,NOW(),0,0,$5,'whatsapp')
       RETURNING id
     `, [

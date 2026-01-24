@@ -91,6 +91,16 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- 🔔 NOTIFICACIONES WHATSAPP -->
+							<button id="bell-btn"
+									onclick="resetWhatsappNotifications()"
+									class="relative w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+								<i class="fas fa-bell text-xs"></i>
+								<span id="bell-count"
+									  class="hidden absolute -top-1 -right-1 bg-emerald-600 text-white text-[9px] font-black rounded-full px-1.5">
+									0
+								</span>
+							</button>
                         <button class="w-8 h-8 text-slate-400 hover:text-red-600 transition-colors">
                             <i class="fas fa-power-off text-sm"></i>
                         </button>
@@ -756,7 +766,87 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
+// ================================
+// 🔔 INYECCIÓN QUIRÚRGICA #2
+// NOTIFICACIONES WHATSAPP
+// ================================
 
+let whatsappCounter = parseInt(localStorage.getItem('whatsapp_counter') || '0');
+let lastWhatsappCheck = Date.now();
+
+// Inicializar contador visual al cargar
+function initWhatsappNotifications() {
+    const badge = document.getElementById('bell-count');
+    if (!badge) return;
+
+    if (whatsappCounter > 0) {
+        badge.innerText = whatsappCounter;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+
+    console.log('🔔 WhatsApp counter inicializado:', whatsappCounter);
+}
+
+// Polling cada 15 segundos para detectar nuevos pedidos WhatsApp
+async function pollWhatsappNotifications() {
+    try {
+        const res = await fetch(`/api/pedidos?canal=whatsapp`);
+        if (!res.ok) return;
+
+        const pedidos = await res.json();
+
+        // Contar pedidos creados después del último check
+        const nuevos = pedidos.filter(p => {
+            if (!p.fecha_creacion) return false;
+            return new Date(p.fecha_creacion).getTime() > lastWhatsappCheck;
+        });
+
+        if (nuevos.length > 0) {
+            whatsappCounter += nuevos.length;
+            localStorage.setItem('whatsapp_counter', whatsappCounter.toString());
+
+            const badge = document.getElementById('bell-count');
+            if (badge) {
+                badge.innerText = whatsappCounter;
+                badge.classList.remove('hidden');
+                badge.classList.add('animate-bounce');
+
+                setTimeout(() => {
+                    badge.classList.remove('animate-bounce');
+                }, 1000);
+            }
+
+            showToast(`NUEVO PEDIDO WHATSAPP (${nuevos.length})`, 'success');
+            console.log('📲 Nuevos pedidos WhatsApp detectados:', nuevos.length);
+        }
+
+        lastWhatsappCheck = Date.now();
+    } catch (err) {
+        console.warn('⚠️ Error polling WhatsApp:', err);
+    }
+}
+
+// Reset al pulsar la campana
+function resetWhatsappNotifications() {
+    whatsappCounter = 0;
+    localStorage.setItem('whatsapp_counter', '0');
+
+    const badge = document.getElementById('bell-count');
+    if (badge) {
+        badge.innerText = '0';
+        badge.classList.add('hidden');
+    }
+
+    showToast('NOTIFICACIONES WHATSAPP REINICIADAS', 'success');
+}
+
+// Arranque automático
+setTimeout(() => {
+    initWhatsappNotifications();
+    setInterval(pollWhatsappNotifications, 15000); // cada 15s
+}, 2000);
         window.onload = init;
     </script>
 </body>
