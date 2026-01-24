@@ -192,6 +192,7 @@ const rutasHTML = {
   '/admin-logs.html': 'admin-logs.html',
   '/desguaces.html': 'desguaces.html'
   '/profitpulse.html': 'profitpulse.html',
+  '/stackcost.html': 'stackcost.html',
 };
 
 Object.entries(rutasHTML).forEach(([ruta, archivo]) => {
