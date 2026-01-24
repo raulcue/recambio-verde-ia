@@ -8,8 +8,27 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 
+// =======================
+// INYECCIÓN QUIRÚRGICA #1
+// =======================
+console.log('🟢 Booting server.js...');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT ENV:', process.env.PORT);
+console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// =======================
+// INYECCIÓN QUIRÚRGICA #2
+// =======================
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 UNHANDLED REJECTION:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('🔥 UNCAUGHT EXCEPTION:', error);
+});
 
 // ============================================================================
 // MIDDLEWARE Y CONFIGURACIÓN
@@ -78,7 +97,19 @@ staticPaths.forEach(({ path: staticPath, label }) => {
 // ============================================================================
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // =======================
+  // INYECCIÓN QUIRÚRGICA #5
+  // =======================
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000
+});
+
+// =======================
+// INYECCIÓN QUIRÚRGICA #5 (continuación)
+// =======================
+pool.on('error', (err) => {
+  console.error('🔥 PG Pool error:', err);
 });
 
 async function query(sql, params = []) {
@@ -402,9 +433,25 @@ app.use((err, req, res, next) => {
 // INICIAR SERVIDOR
 // ============================================================================
 async function startServer() {
-  await verificarBaseDeDatos();
+  // =======================
+  // INYECCIÓN QUIRÚRGICA #4
+  // =======================
+  console.log('🚦 Iniciando startServer()...');
   
-  app.listen(PORT, () => {
+  try {
+    console.log('🔌 Verificando base de datos...');
+    await verificarBaseDeDatos();
+    console.log('✅ Verificación de base de datos finalizada');
+  } catch (err) {
+    console.error('❌ Error durante verificarBaseDeDatos:', err);
+  }
+  
+  console.log('🌍 Intentando levantar servidor HTTP...');
+  
+  // =======================
+  // INYECCIÓN QUIRÚRGICA #3
+  // =======================
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`
 🚀 ======= SERVIDOR INICIADO =======
 🔗 URL: https://recambio-verde-iax.onrender.com
