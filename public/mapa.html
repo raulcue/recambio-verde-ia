@@ -1,175 +1,271 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Demanda | Recambio Reciclado</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa Demanda | Kanban Recambio Reciclado</title>
 
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { darkMode: 'class' }</script>
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Leaflet y Leaflet Heat -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
-    <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; overflow-x: hidden; }
-
-        .dark .logo-invert { filter: brightness(0) invert(1); }
-
-        /* Map */
-        #map { height: 500px; border-radius: 1rem; }
-
-        /* Toast */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
-        .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-        .toast.success i { color: #4ade80; } 
-        .toast.error i { color: #f87171; }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    </style>
+<style>
+body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; overflow-x: hidden; }
+#map { height: 500px; width: 100%; border-radius: 1rem; }
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.toast.success i { color: #4ade80; } 
+.toast.error i { color: #f87171; }
+</style>
 </head>
+
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
 <!-- ================= HEADER ================= -->
 <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-    <div class="px-4 lg:px-6 h-20 flex items-center justify-between w-full">
-        <div class="flex items-center gap-3">
-            <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
-                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
-                    Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
-                </h1>
-            </a>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
-                <i class="fas fa-moon dark:hidden text-xs"></i>
-                <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
-            </button>
-
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
-            </div>
-        </div>
+  <div class="px-4 lg:px-6 h-20 flex items-center justify-between w-full">
+    <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
+      <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+      <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
+        Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
+      </h1>
+    </a>
+    <div class="flex items-center gap-4">
+      <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+        <i class="fas fa-moon dark:hidden text-xs"></i>
+        <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+      </button>
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+      </div>
     </div>
+  </div>
 </header>
 
 <!-- ================= MAIN ================= -->
 <main class="flex-grow p-6 w-full max-w-screen-2xl mx-auto space-y-6 pb-24">
 
-    <!-- KPIs -->
-    <section class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
-            <p class="text-[10px] font-black uppercase text-slate-400">Solicitado</p>
-            <h3 id="kpi-solicitado" class="text-2xl font-black text-blue-600">0</h3>
-        </div>
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
-            <p class="text-[10px] font-black uppercase text-slate-400">Entregado</p>
-            <h3 id="kpi-entregado" class="text-2xl font-black text-emerald-500">0</h3>
-        </div>
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
-            <p class="text-[10px] font-black uppercase text-slate-400">Incidencias</p>
-            <h3 id="kpi-incidencia" class="text-2xl font-black text-red-500">0</h3>
-        </div>
-    </section>
+  <!-- KPIs -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+      <p class="text-[10px] font-black uppercase text-slate-400">Piezas Solicitadas</p>
+      <h3 id="kpi-solicitado" class="text-2xl font-black text-blue-600">0</h3>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+      <p class="text-[10px] font-black uppercase text-slate-400">Piezas Entregadas</p>
+      <h3 id="kpi-entregado" class="text-2xl font-black text-emerald-500">0</h3>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+      <p class="text-[10px] font-black uppercase text-slate-400">Incidencias</p>
+      <h3 id="kpi-incidencia" class="text-2xl font-black text-red-500">0</h3>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+      <p class="text-[10px] font-black uppercase text-slate-400">Total Talleres</p>
+      <h3 id="kpi-talleres" class="text-2xl font-black text-indigo-500">0</h3>
+    </div>
+  </section>
 
-    <!-- Mapa -->
-    <section>
-        <h2 class="text-sm font-black uppercase tracking-widest mb-2">Mapa de Entregas (España)</h2>
-        <div id="map"></div>
-    </section>
+  <!-- Filtros -->
+  <section class="flex justify-start items-center gap-2">
+    <label class="text-xs font-black uppercase">Mostrar:</label>
+    <select id="filtro-estado" class="text-xs p-2 border rounded">
+      <option value="todos">Todos</option>
+      <option value="solicitado">Solicitado</option>
+      <option value="entregado">Entregado</option>
+      <option value="incidencia">Incidencia</option>
+    </select>
+  </section>
 
-    <!-- Tabla Talleres -->
-    <section class="bg-white dark:bg-slate-900 rounded-2xl shadow border overflow-hidden mt-6">
-        <h2 class="text-sm font-black uppercase tracking-widest p-4 border-b border-slate-200 dark:border-slate-800">Resumen Talleres</h2>
-        <table class="w-full text-xs">
-            <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
-                <tr>
-                    <th class="p-3 text-left">Taller</th>
-                    <th class="p-3">Solicitado</th>
-                    <th class="p-3">Entregado</th>
-                    <th class="p-3">Incidencias</th>
-                </tr>
-            </thead>
-            <tbody id="tabla-talleres"></tbody>
-        </table>
-    </section>
+  <!-- Mapa -->
+  <section>
+    <div id="map"></div>
+  </section>
 
+  <!-- Tabla de Talleres -->
+  <section class="bg-white dark:bg-slate-900 rounded-2xl shadow border overflow-x-auto mt-6">
+    <table class="w-full text-xs">
+      <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+        <tr>
+          <th class="p-3 text-left">Taller</th>
+          <th class="p-3">Solicitado</th>
+          <th class="p-3">Entregado</th>
+          <th class="p-3">Incidencias</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-talleres"></tbody>
+    </table>
+  </section>
 </main>
 
 <!-- ================= FOOTER ================= -->
 <footer class="fixed bottom-0 w-full py-3 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-4 flex flex-col md:flex-row justify-between items-center border-slate-100 dark:border-slate-800 gap-2">
-    <div>v1.0 | CREADOR: RAUL CUE</div>
-    <div class="hidden md:block">CONTACTO: RAULCUE@GMAIL.COM</div>
-    <div>COPYRIGHT 2026-2030</div>
+  <div>v1.0.0 | Kanban Recambio Reciclado</div>
+  <div class="hidden md:block">CONTACTO: RAULCUE@GMAIL.COM</div>
+  <div>COPYRIGHT 2026-2030</div>
 </footer>
 
-<div id="toast-container"></div>
-
 <script>
-    async function fetchData() {
-        const talleres = await fetch('/api/usuarios').then(r => r.json());
-        const pedidos = await fetch('/api/pedidos').then(r => r.json());
+// ==========================
+// Datos de ejemplo / fetch
+// ==========================
+let talleres = []; // Lista de talleres con { id, nombre_taller, direccion, lat, lng }
+let pedidos = [];  // Lista de pedidos con { usuario_id, estado, piezas }
 
-        // Agrupar pedidos por taller
-        const statsTalleres = talleres.map(t => {
-            const pedidosT = pedidos.filter(p => p.usuario_id === t.id);
-            return {
-                ...t,
-                solicitado: pedidosT.filter(p => p.estado === 'solicitado').length,
-                entregado: pedidosT.filter(p => p.estado === 'entregado').length,
-                incidencia: pedidosT.filter(p => p.estado === 'incidencia').length
-            };
-        });
+async function cargarDatos() {
+  try {
+    // Traer talleres
+    const resT = await fetch('/api/usuarios?rol=taller');
+    talleres = await resT.json();
 
-        // KPIs
-        document.getElementById('kpi-solicitado').innerText = statsTalleres.reduce((a,b)=>a+b.solicitado,0);
-        document.getElementById('kpi-entregado').innerText = statsTalleres.reduce((a,b)=>a+b.entregado,0);
-        document.getElementById('kpi-incidencia').innerText = statsTalleres.reduce((a,b)=>a+b.incidencia,0);
+    // Traer pedidos
+    const resP = await fetch('/api/pedidos');
+    pedidos = await resP.json();
 
-        // Tabla
-        const tbody = document.getElementById('tabla-talleres');
-        tbody.innerHTML = '';
-        statsTalleres.forEach(t => {
-            tbody.innerHTML += `
-                <tr class="border-t text-center">
-                    <td class="p-3 text-left font-bold">${t.nombre_taller}</td>
-                    <td class="p-3">${t.solicitado}</td>
-                    <td class="p-3">${t.entregado}</td>
-                    <td class="p-3">${t.incidencia}</td>
-                </tr>
-            `;
-        });
-
-        // Mapa Leaflet
-        const map = L.map('map').setView([40.4168, -3.7038], 6); // centro España
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        statsTalleres.forEach(t => {
-            if (t.lat && t.lng) {
-                L.circleMarker([t.lat, t.lng], {
-                    radius: 5 + t.entregado / 5, // tamaño según entregadas
-                    color: 'green',
-                    fillColor: 'green',
-                    fillOpacity: 0.6
-                }).addTo(map).bindPopup(`<b>${t.nombre_taller}</b><br>Entregadas: ${t.entregado}`);
-            }
-        });
+    // Si no tenemos lat/lng, geocodificar (OpenStreetMap Nominatim)
+    for (let t of talleres) {
+      if (!t.lat || !t.lng) {
+        const geo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(t.nombre + ', ' + t.direccion + ', España')}`);
+        const geoData = await geo.json();
+        if (geoData.length) {
+          t.lat = parseFloat(geoData[0].lat);
+          t.lng = parseFloat(geoData[0].lon);
+        } else {
+          t.lat = 40.4168; // Madrid fallback
+          t.lng = -3.7038;
+        }
+      }
     }
 
-    fetchData();
+    renderMapa();
+    renderTabla();
+    renderKPIs();
+
+  } catch(e) {
+    console.error(e);
+    alert('Error cargando datos del mapa');
+  }
+}
+
+// ==========================
+// Render Mapa
+// ==========================
+let map;
+function renderMapa() {
+  if (!map) {
+    map = L.map('map').setView([40.4168, -3.7038], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+  }
+
+  const heatData = [];
+  talleres.forEach(t => {
+    const entregadas = pedidos.filter(p => p.usuario_id === t.id && p.estado === 'entregado').length;
+    if (t.lat && t.lng && entregadas > 0) heatData.push([t.lat, t.lng, entregadas]);
+    // Marcador individual
+    const marker = L.circleMarker([t.lat, t.lng], { radius: 5, color: '#22c55e' }).addTo(map);
+    marker.bindPopup(`<b>${t.nombre_taller}</b><br>Entregadas: ${entregadas}`);
+  });
+
+  L.heatLayer(heatData, { radius: 25, blur: 15 }).addTo(map);
+}
+
+// ==========================
+// Render Tabla
+// ==========================
+function renderTabla() {
+  const tbody = document.getElementById('tabla-talleres');
+  tbody.innerHTML = '';
+
+  talleres.forEach(t => {
+    const solicitado = pedidos.filter(p => p.usuario_id === t.id && p.estado === 'solicitado').length;
+    const entregado = pedidos.filter(p => p.usuario_id === t.id && p.estado === 'entregado').length;
+    const incidencia = pedidos.filter(p => p.usuario_id === t.id && p.estado === 'incidencia').length;
+
+    tbody.innerHTML += `
+      <tr class="border-t text-center hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+        <td class="p-3 text-left font-bold">${t.nombre_taller}</td>
+        <td class="p-3">${solicitado}</td>
+        <td class="p-3">${entregado}</td>
+        <td class="p-3">${incidencia}</td>
+      </tr>
+    `;
+  });
+}
+
+// ==========================
+// Render KPIs
+// ==========================
+function renderKPIs() {
+  const totalSolicitado = pedidos.filter(p => p.estado === 'solicitado').length;
+  const totalEntregado = pedidos.filter(p => p.estado === 'entregado').length;
+  const totalIncidencia = pedidos.filter(p => p.estado === 'incidencia').length;
+
+  document.getElementById('kpi-solicitado').innerText = totalSolicitado;
+  document.getElementById('kpi-entregado').innerText = totalEntregado;
+  document.getElementById('kpi-incidencia').innerText = totalIncidencia;
+  document.getElementById('kpi-talleres').innerText = talleres.length;
+}
+
+// ==========================
+// Filtro
+// ==========================
+document.getElementById('filtro-estado').addEventListener('change', (e) => {
+  const estado = e.target.value;
+  if (estado === 'todos') {
+    renderMapa();
+    renderTabla();
+  } else {
+    renderMapaFiltrado(estado);
+    renderTablaFiltrado(estado);
+  }
+});
+
+function renderMapaFiltrado(estado) {
+  map.eachLayer((layer) => { if (layer instanceof L.CircleMarker || layer instanceof L.HeatLayer) map.removeLayer(layer); });
+  const heatData = [];
+  talleres.forEach(t => {
+    const count = pedidos.filter(p => p.usuario_id === t.id && p.estado === estado).length;
+    if (t.lat && t.lng && count > 0) heatData.push([t.lat, t.lng, count]);
+    const marker = L.circleMarker([t.lat, t.lng], { radius: 5, color: estado === 'entregado' ? '#22c55e' : estado === 'incidencia' ? '#f87171' : '#3b82f6' }).addTo(map);
+    marker.bindPopup(`<b>${t.nombre_taller}</b><br>${estado.charAt(0).toUpperCase()+estado.slice(1)}: ${count}`);
+  });
+  L.heatLayer(heatData, { radius: 25, blur: 15 }).addTo(map);
+}
+
+function renderTablaFiltrado(estado) {
+  const tbody = document.getElementById('tabla-talleres');
+  tbody.innerHTML = '';
+  talleres.forEach(t => {
+    const solicitado = pedidos.filter(p => p.usuario_id === t.id && p.estado === 'solicitado').length;
+    const entregado = pedidos.filter(p => p.usuario_id === t.id && p.estado === 'entregado').length;
+    const incidencia = pedidos.filter(p => p.usuario_id === t.id && p.estado === 'incidencia').length;
+    let show = estado === 'solicitado' ? solicitado : estado === 'entregado' ? entregado : incidencia;
+    if (show > 0) {
+      tbody.innerHTML += `
+        <tr class="border-t text-center hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
+          <td class="p-3 text-left font-bold">${t.nombre_taller}</td>
+          <td class="p-3">${solicitado}</td>
+          <td class="p-3">${entregado}</td>
+          <td class="p-3">${incidencia}</td>
+        </tr>
+      `;
+    }
+  });
+}
+
+cargarDatos();
 </script>
+
 </body>
 </html>
