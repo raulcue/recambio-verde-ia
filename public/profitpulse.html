@@ -1,182 +1,86 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>ProfitPulse Dashboard</title>
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    body {
-      background: #0f172a;
-      color: #e5e7eb;
-      font-family: Arial, sans-serif;
-    }
+  <meta charset="UTF-8" />
+  <title>StackCost · Platform Economics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    .container {
-      padding: 20px;
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .card {
-      background: #020617;
-      border: 1px solid #1e293b;
-      border-radius: 8px;
-      padding: 15px;
-    }
-
-    .card h3 {
-      font-size: 14px;
-      color: #94a3b8;
-      margin-bottom: 8px;
-    }
-
-    .value {
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #1e293b;
-      text-align: left;
-    }
-
-    th {
-      color: #94a3b8;
-      font-weight: normal;
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
 
-  <!-- HEADER (idéntico concepto dashboard) -->
-  <header class="topbar">
-    <h2>📊 ProfitPulse Dashboard</h2>
-  </header>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-  <div class="container">
+  <!-- HEADER dinámico -->
+  <div id="header-slot"></div>
 
-    <div class="stats-grid">
-      <div class="card">
-        <h3>Número de pedidos</h3>
-        <div class="value" id="totalPedidos">0</div>
-      </div>
+  <main class="flex-grow px-6 py-6 space-y-6">
 
-      <div class="card">
-        <h3>Comisión total generada (€)</h3>
-        <div class="value" id="totalComision">0.00 €</div>
-      </div>
-
-      <div class="card">
-        <h3>Proyección anual (€)</h3>
-        <div class="value" id="proyeccion">0.00 €</div>
-      </div>
-
-      <div class="card">
-        <h3>Ticket medio comisión (€)</h3>
-        <div class="value" id="media">0.00 €</div>
-      </div>
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold tracking-tight">
+        🧮 StackCost
+      </h1>
+      <span class="text-xs uppercase tracking-widest text-slate-400">
+        Platform Cost Intelligence
+      </span>
     </div>
 
-    <div class="card">
-      <h3>Distribución interna</h3>
-      <table>
-        <tr>
-          <th>Concepto</th>
-          <th>Importe (€)</th>
-        </tr>
-        <tr>
-          <td>Desarrollo (60%)</td>
-          <td id="devCost">0.00 €</td>
-        </tr>
-        <tr>
-          <td>Mantenimiento (20%)</td>
-          <td id="maintCost">0.00 €</td>
-        </tr>
-        <tr>
-          <td>Infraestructura (20%)</td>
-          <td id="infraCost">0.00 €</td>
-        </tr>
-      </table>
-    </div>
+    <section class="bg-white dark:bg-slate-900 rounded-xl shadow p-5 space-y-4">
+      <h2 class="font-semibold text-lg">Distribución de Costes</h2>
 
-    <div class="card">
-      <h3>Detalle por pedido</h3>
-      <table id="tablaPedidos">
-        <thead>
-          <tr>
-            <th>Pedido</th>
-            <th>Coste (€)</th>
-            <th>Comisión (€)</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      <ul class="text-sm space-y-2 text-slate-600 dark:text-slate-300">
+        <li>✔ 60% — Desarrollo y evolución de producto.</li>
+        <li>✔ 20% — Mantenimiento operativo y soporte.</li>
+        <li>✔ 20% — Infraestructura, hosting, suscripciones y extensiones.</li>
+      </ul>
 
-  </div>
+      <p class="text-sm">
+        Todos los importes se calculan automáticamente a partir de los pedidos registrados
+        en la base de datos (<code>pedidos</code>), utilizando las reglas de monetización
+        definidas en <code>server.js</code>.
+      </p>
+    </section>
 
-<script>
-async function cargarDatos() {
-  const res = await fetch('/api/pedidos');
-  const pedidos = await res.json();
+    <section class="bg-white dark:bg-slate-900 rounded-xl shadow p-5 space-y-4">
+      <h2 class="font-semibold text-lg">Proyección Económica</h2>
 
-  let totalComision = 0;
-  let totalPedidos = pedidos.length;
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="p-3 rounded-lg border">
+          <div class="text-xs uppercase text-slate-400">Desarrollo anual</div>
+          <div class="font-bold text-xl">≈ 60%</div>
+        </div>
+        <div class="p-3 rounded-lg border">
+          <div class="text-xs uppercase text-slate-400">Mantenimiento anual</div>
+          <div class="font-bold text-xl">≈ 20%</div>
+        </div>
+        <div class="p-3 rounded-lg border">
+          <div class="text-xs uppercase text-slate-400">Infraestructura anual</div>
+          <div class="font-bold text-xl">≈ 20%</div>
+        </div>
+      </div>
+    </section>
 
-  const tbody = document.querySelector('#tablaPedidos tbody');
-  tbody.innerHTML = '';
+  </main>
 
-  pedidos.forEach(p => {
-    const coste = Number(p.precio_coste || 0);
+  <!-- FOOTER dinámico -->
+  <div id="footer-slot"></div>
 
-    // Comisión: 1%, máximo 3.50€, redondeo al alza
-    let comision = Math.ceil((coste * 0.01) * 100) / 100;
-    if (comision > 3.5) comision = 3.5;
+  <!-- ================= SCRIPTS ================= -->
+  <script>
+    async function loadLayout() {
+      const html = await fetch('/dashboard.html').then(r => r.text());
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
 
-    totalComision += comision;
+      const header = temp.querySelector('header');
+      const footer = temp.querySelector('footer');
 
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${p.numero_pedido}</td>
-      <td>${coste.toFixed(2)} €</td>
-      <td>${comision.toFixed(2)} €</td>
-    `;
-    tbody.appendChild(tr);
-  });
+      if (header) document.getElementById('header-slot').appendChild(header.cloneNode(true));
+      if (footer) document.getElementById('footer-slot').appendChild(footer.cloneNode(true));
+    }
 
-  const media = totalPedidos > 0 ? totalComision / totalPedidos : 0;
-
-  // Proyección anual simple (promedio diario x 365)
-  const proyeccion = (totalComision / Math.max(1, totalPedidos)) * 365;
-
-  document.getElementById('totalPedidos').innerText = totalPedidos;
-  document.getElementById('totalComision').innerText = totalComision.toFixed(2) + ' €';
-  document.getElementById('media').innerText = media.toFixed(2) + ' €';
-  document.getElementById('proyeccion').innerText = proyeccion.toFixed(2) + ' €';
-
-  document.getElementById('devCost').innerText   = (totalComision * 0.60).toFixed(2) + ' €';
-  document.getElementById('maintCost').innerText = (totalComision * 0.20).toFixed(2) + ' €';
-  document.getElementById('infraCost').innerText = (totalComision * 0.20).toFixed(2) + ' €';
-}
-
-cargarDatos();
-</script>
+    loadLayout();
+  </script>
 
 </body>
 </html>
