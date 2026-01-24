@@ -2,537 +2,174 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestor de Desguaces - Recambio Reciclado</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Demanda | Recambio Reciclado</title>
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
-        .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 700; }
-        
-        /* Estilos Tabla Excel */
-        .table-container { overflow-x: auto; border-radius: 1rem; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        th { position: sticky; top: 0; background: #f8fafc; z-index: 10; cursor: pointer; user-select: none; }
-        .dark th { background: #0f172a; }
-        td, th { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
-        .dark td, .dark th { border-bottom: 1px solid #1e293b; }
-        tr:hover { background-color: #f1f5f9; }
-        .dark tr:hover { background-color: #1e293b; }
-        .sortable:hover { background-color: #e2e8f0; }
-        .dark .sortable:hover { background-color: #1e293b; }
-        .sort-asc::after { content: " ↑"; font-weight: bold; color: #2563eb; }
-        .sort-desc::after { content: " ↓"; font-weight: bold; color: #2563eb; }
+        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; overflow-x: hidden; }
+
+        .dark .logo-invert { filter: brightness(0) invert(1); }
+
+        /* Map */
+        #map { height: 500px; border-radius: 1rem; }
+
+        /* Toast */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; }
+        .toast { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; margin-top: 10px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideIn 0.3s ease-out; display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .toast.success i { color: #4ade80; } 
+        .toast.error i { color: #f87171; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen custom-scrollbar">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-    <div class="bg-orange-600 text-white text-center py-2 text-[10px] font-black uppercase tracking-widest shadow-lg sticky top-0 z-50">
-        <i class="fas fa-exclamation-triangle mr-2"></i> 
-        RECORDATORIO LOGS: SyntaxError JSON, Integridad de rutas, Registro altas/bajas
-    </div>
-
-    <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-4 sticky top-[24px] z-40">
-        <div class="max-w-[1600px] mx-auto flex flex-wrap gap-4 items-center justify-between">
-            
-            <div class="flex items-center gap-4">
-                <button onclick="window.location.href='landing.html'" class="hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <div>
-                    <h1 class="text-xl font-black tracking-tighter uppercase italic leading-none">Gestor <span class="text-blue-600">Desguaces</span></h1>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Base de Datos & Workshops</p>
-                </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-                <div class="relative min-w-[200px]">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="buscador" placeholder="BUSCAR..." class="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-
-                <select id="filtro-provincia" onchange="filtrar()" class="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-[10px] font-black uppercase outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="todas">TODAS LAS PROVINCIAS</option>
-                </select>
-
-                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
-
-                <button onclick="cambiarVista('tabla')" id="btn-vista-tabla" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg">
-                    <i class="fas fa-table mr-2"></i> EXCEL
-                </button>
-                <button onclick="cambiarVista('tarjetas')" id="btn-vista-tarjetas" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
-                    <i class="fas fa-th-large mr-2"></i> TARJETAS
-                </button>
-
-                <button onclick="exportarExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg shadow-green-500/20">
-                    <i class="fas fa-file-export mr-2"></i> EXPORTAR
-                </button>
-
-                <button onclick="togglePrivacy()" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all">
-                    <i class="fas fa-eye-slash"></i>
-                </button>
-
-                <button onclick="abrirModalNuevo()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg active:scale-95">
-                    <i class="fas fa-plus mr-2"></i> NUEVO
-                </button>
-
-                <div id="user-initials" class="w-9 h-9 rounded-full flex items-center justify-center font-black text-[10px] shadow-lg border-2 border-white dark:border-slate-800">--</div>
-            </div>
-        </div>
-    </header>
-
-    <main class="p-6 max-w-[1600px] mx-auto">
-        
-        <div id="vista-tabla" class="table-container bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800">
-            <table id="tabla-excel">
-                <thead>
-                    <tr class="uppercase text-[9px] font-black tracking-widest text-slate-500">
-                        <th onclick="ordenarTabla('id')" class="sortable">ID</th>
-                        <th onclick="ordenarTabla('nombre')" class="sortable">Nombre</th>
-                        <th onclick="ordenarTabla('provincia')" class="sortable">Provincia</th>
-                        <th onclick="ordenarTabla('telefonos')" class="sortable">Teléfono/s</th>
-                        <th onclick="ordenarTabla('email')" class="sortable">Email</th>
-                        <th onclick="ordenarTabla('direccion')" class="sortable">Dirección</th>
-                        <th onclick="ordenarTabla('horario')" class="sortable">Horario</th>
-                        <th onclick="ordenarTabla('origen')" class="sortable">Origen</th>
-                        <th onclick="ordenarTabla('tipo')" class="sortable">Tipo</th>
-                    </tr>
-                </thead>
-                <tbody id="body-tabla" class="font-bold">
-                    </tbody>
-            </table>
+<!-- ================= HEADER ================= -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <div class="px-4 lg:px-6 h-20 flex items-center justify-between w-full">
+        <div class="flex items-center gap-3">
+            <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
+                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
+                    Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
+                </h1>
+            </a>
         </div>
 
-        <div id="vista-tarjetas" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div class="flex items-center gap-4">
+            <button onclick="document.documentElement.classList.toggle('dark')" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                <i class="fas fa-moon dark:hidden text-xs"></i>
+                <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+            </button>
+
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
             </div>
-    </main>
-
-    <div id="modal" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center hidden p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden">
-            <div class="flex bg-slate-50 dark:bg-slate-800/50">
-                <button id="btnTabInfo" onclick="cambiarTab('info')" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest tab-active">Datos Generales</button>
-                <button id="btnTabTecnico" onclick="cambiarTab('tec')" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest">Contacto y Extras</button>
-            </div>
-
-            <form id="formDesguace" class="p-8">
-                <div id="tabInfo" class="space-y-4 text-xs font-bold">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
-                            <label class="text-[9px] text-slate-400 uppercase">Nombre</label>
-                            <input type="text" id="d-nombre" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-slate-400 uppercase">Provincia</label>
-                            <select id="d-provincia" required class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                                <option value="">Seleccione provincia</option>
-                                <option value="Albacete">Albacete</option>
-                                <option value="Alicante/Alacant">Alicante/Alacant</option>
-                                <option value="Almería">Almería</option>
-                                <option value="Áraba">Áraba</option>
-                                <option value="Asturias">Asturias</option>
-                                <option value="Ávila">Ávila</option>
-                                <option value="Badajoz">Badajoz</option>
-                                <option value="Balears (Illes)">Balears (Illes)</option>
-                                <option value="Barcelona">Barcelona</option>
-                                <option value="Bizkaia">Bizkaia</option>
-                                <option value="Burgos">Burgos</option>
-                                <option value="Cáceres">Cáceres</option>
-                                <option value="Cádiz">Cádiz</option>
-                                <option value="Cantabria">Cantabria</option>
-                                <option value="Castellón/Castelló">Castellón/Castelló</option>
-                                <option value="Ciudad Real">Ciudad Real</option>
-                                <option value="Córdoba">Córdoba</option>
-                                <option value="Coruña (A)">Coruña (A)</option>
-                                <option value="Cuenca">Cuenca</option>
-                                <option value="Gipuzkoa">Gipuzkoa</option>
-                                <option value="Girona">Girona</option>
-                                <option value="Granada">Granada</option>
-                                <option value="Guadalajara">Guadalajara</option>
-                                <option value="Huelva">Huelva</option>
-                                <option value="Huesca">Huesca</option>
-                                <option value="Jaén">Jaén</option>
-                                <option value="León">León</option>
-                                <option value="Lleida">Lleida</option>
-                                <option value="Lugo">Lugo</option>
-                                <option value="Madrid">Madrid</option>
-                                <option value="Málaga">Málaga</option>
-                                <option value="Murcia">Murcia</option>
-                                <option value="Navarra">Navarra</option>
-                                <option value="Ourense">Ourense</option>
-                                <option value="Palencia">Palencia</option>
-                                <option value="Palmas (Las)">Palmas (Las)</option>
-                                <option value="Pontevedra">Pontevedra</option>
-                                <option value="Rioja (La)">Rioja (La)</option>
-                                <option value="Salamanca">Salamanca</option>
-                                <option value="Santa Cruz de Tenerife">Santa Cruz de Tenerife</option>
-                                <option value="Segovia">Segovia</option>
-                                <option value="Sevilla">Sevilla</option>
-                                <option value="Soria">Soria</option>
-                                <option value="Tarragona">Tarragona</option>
-                                <option value="Teruel">Teruel</option>
-                                <option value="Toledo">Toledo</option>
-                                <option value="Valencia/València">Valencia/València</option>
-                                <option value="Valladolid">Valladolid</option>
-                                <option value="Zamora">Zamora</option>
-                                <option value="Zaragoza">Zaragoza</option>
-                                <option value="Ceuta">Ceuta</option>
-                                <option value="Melilla">Melilla</option>
-                                <option value="OTROS">OTROS</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-slate-400 uppercase">C.P.</label>
-                            <input type="text" id="d-cp" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                        </div>
-                        <div class="col-span-2">
-                            <label class="text-[9px] text-slate-400 uppercase">Dirección</label>
-                            <input type="text" id="d-direccion" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="tabTecnico" class="hidden space-y-4 text-xs font-bold">
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label class="text-[9px] text-slate-400 uppercase">Fijo</label>
-                            <input type="text" id="d-fijo" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-slate-400 uppercase">Móvil 1</label>
-                            <input type="text" id="d-movil1" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                        </div>
-                        <div>
-                            <label class="text-[9px] text-slate-400 uppercase">Móvil 2</label>
-                            <input type="text" id="d-movil2" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                        </div>
-                        <div class="col-span-3">
-                            <label class="text-[9px] text-slate-400 uppercase">Email</label>
-                            <input type="email" id="d-email" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                        </div>
-                        <div class="col-span-3">
-                            <label class="text-[9px] text-slate-400 uppercase">Horario</label>
-                            <input type="text" id="d-horario" class="w-full p-3 bg-slate-100 dark:bg-slate-800 rounded-xl outline-none">
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-                        <input type="checkbox" id="d-workshop" class="w-5 h-5 rounded text-blue-600">
-                        <span class="text-[10px] font-black uppercase text-blue-600">Es Workshop (Taller)</span>
-                    </div>
-                </div>
-
-                <div class="mt-8 flex gap-4">
-                    <button type="button" onclick="cerrarModal()" class="flex-1 py-4 font-black uppercase text-[10px] text-slate-400">Cancelar</button>
-                    <button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] shadow-lg">Guardar</button>
-                </div>
-            </form>
         </div>
     </div>
+</header>
 
-    <div id="toast-container" class="fixed bottom-6 right-6 z-[100] flex flex-col gap-2"></div>
+<!-- ================= MAIN ================= -->
+<main class="flex-grow p-6 w-full max-w-screen-2xl mx-auto space-y-6 pb-24">
 
-    <script>
-        let desguaces = [];
-        let vistaActual = 'tabla';
-        let user = JSON.parse(localStorage.getItem('user') || '{}');
-        let ordenActual = { campo: null, direccion: 'asc' };
-        let datosFiltrados = [];
+    <!-- KPIs -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Solicitado</p>
+            <h3 id="kpi-solicitado" class="text-2xl font-black text-blue-600">0</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Entregado</p>
+            <h3 id="kpi-entregado" class="text-2xl font-black text-emerald-500">0</h3>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow border">
+            <p class="text-[10px] font-black uppercase text-slate-400">Incidencias</p>
+            <h3 id="kpi-incidencia" class="text-2xl font-black text-red-500">0</h3>
+        </div>
+    </section>
 
-        // Lista de provincias para el filtro (las mismas que en el modal)
-        const provinciasEspana = [
-            "Albacete", "Alicante/Alacant", "Almería", "Áraba", "Asturias", "Ávila", "Badajoz",
-            "Balears (Illes)", "Barcelona", "Bizkaia", "Burgos", "Cáceres", "Cádiz", "Cantabria",
-            "Castellón/Castelló", "Ciudad Real", "Córdoba", "Coruña (A)", "Cuenca", "Gipuzkoa",
-            "Girona", "Granada", "Guadalajara", "Huelva", "Huesca", "Jaén", "León", "Lleida",
-            "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Ourense", "Palencia", "Palmas (Las)",
-            "Pontevedra", "Rioja (La)", "Salamanca", "Santa Cruz de Tenerife", "Segovia", "Sevilla",
-            "Soria", "Tarragona", "Teruel", "Toledo", "Valencia/València", "Valladolid", "Zamora",
-            "Zaragoza", "Ceuta", "Melilla", "OTROS"
-        ];
+    <!-- Mapa -->
+    <section>
+        <h2 class="text-sm font-black uppercase tracking-widest mb-2">Mapa de Entregas (España)</h2>
+        <div id="map"></div>
+    </section>
 
-        async function init() {
-            if (!user.id) { window.location.href = 'index.html'; return; }
-            
-            const av = document.getElementById('user-initials');
-            av.innerText = user.iniciales || '--';
-            av.className += ` ${user.rol === 'admin' ? 'bg-red-700' : 'bg-blue-700'} text-white`;
+    <!-- Tabla Talleres -->
+    <section class="bg-white dark:bg-slate-900 rounded-2xl shadow border overflow-hidden mt-6">
+        <h2 class="text-sm font-black uppercase tracking-widest p-4 border-b border-slate-200 dark:border-slate-800">Resumen Talleres</h2>
+        <table class="w-full text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-[10px] uppercase">
+                <tr>
+                    <th class="p-3 text-left">Taller</th>
+                    <th class="p-3">Solicitado</th>
+                    <th class="p-3">Entregado</th>
+                    <th class="p-3">Incidencias</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-talleres"></tbody>
+        </table>
+    </section>
 
-            if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
-            
-            await cargarDatos();
-        }
+</main>
 
-        async function cargarDatos() {
-            try {
-                const res = await fetch('/api/desguaces');
-                desguaces = await res.json();
-                generarFiltroProvincias();
-                // Inicializar datosFiltrados con todos los datos
-                datosFiltrados = [...desguaces];
-                filtrar();
-            } catch (e) { showToast('Error cargando datos', 'error'); }
-        }
+<!-- ================= FOOTER ================= -->
+<footer class="fixed bottom-0 w-full py-3 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-4 flex flex-col md:flex-row justify-between items-center border-slate-100 dark:border-slate-800 gap-2">
+    <div>v1.0 | CREADOR: RAUL CUE</div>
+    <div class="hidden md:block">CONTACTO: RAULCUE@GMAIL.COM</div>
+    <div>COPYRIGHT 2026-2030</div>
+</footer>
 
-        function generarFiltroProvincias() {
-            const select = document.getElementById('filtro-provincia');
-            // Añadir todas las provincias de España al filtro
-            provinciasEspana.forEach(p => {
-                select.add(new Option(p.toUpperCase(), p));
-            });
-        }
+<div id="toast-container"></div>
 
-        function filtrar() {
-            const busq = document.getElementById('buscador').value.toLowerCase();
-            const prov = document.getElementById('filtro-provincia').value;
+<script>
+    async function fetchData() {
+        const talleres = await fetch('/api/usuarios').then(r => r.json());
+        const pedidos = await fetch('/api/pedidos').then(r => r.json());
 
-            datosFiltrados = desguaces.filter(d => {
-                const coincideBusq = d.nombre.toLowerCase().includes(busq) || 
-                                   d.email?.toLowerCase().includes(busq) ||
-                                   d.direccion?.toLowerCase().includes(busq);
-                const coincideProv = prov === 'todas' || d.provincia === prov;
-                return coincideBusq && coincideProv;
-            });
-
-            // Siempre renderizar después de filtrar
-            if (ordenActual.campo) {
-                aplicarOrden(datosFiltrados, ordenActual.campo, ordenActual.direccion);
-            } else {
-                renderTabla(datosFiltrados);
-                renderTarjetas(datosFiltrados);
-            }
-        }
-
-        function ordenarTabla(campo) {
-            // Cambiar dirección si es el mismo campo
-            if (ordenActual.campo === campo) {
-                ordenActual.direccion = ordenActual.direccion === 'asc' ? 'desc' : 'asc';
-            } else {
-                ordenActual.campo = campo;
-                ordenActual.direccion = 'asc';
-            }
-            
-            // Remover clases de ordenación anteriores
-            document.querySelectorAll('th').forEach(th => {
-                th.classList.remove('sort-asc', 'sort-desc');
-            });
-            
-            // Añadir clase al th actual
-            const thActual = document.querySelector(`th[onclick="ordenarTabla('${campo}')"]`);
-            if (thActual) {
-                thActual.classList.add(ordenActual.direccion === 'asc' ? 'sort-asc' : 'sort-desc');
-            }
-            
-            aplicarOrden(datosFiltrados, campo, ordenActual.direccion);
-        }
-
-        function aplicarOrden(lista, campo, direccion) {
-            const listaOrdenada = [...lista].sort((a, b) => {
-                let valorA, valorB;
-                
-                switch(campo) {
-                    case 'id':
-                        valorA = a.id || 0;
-                        valorB = b.id || 0;
-                        break;
-                    case 'nombre':
-                        valorA = a.nombre?.toLowerCase() || '';
-                        valorB = b.nombre?.toLowerCase() || '';
-                        break;
-                    case 'provincia':
-                        valorA = a.provincia?.toLowerCase() || '';
-                        valorB = b.provincia?.toLowerCase() || '';
-                        break;
-                    case 'telefonos':
-                        const telA = [a.telefono_fijo, a.movil_1, a.movil_2].filter(Boolean).join(' ');
-                        const telB = [b.telefono_fijo, b.movil_1, b.movil_2].filter(Boolean).join(' ');
-                        valorA = telA.toLowerCase();
-                        valorB = telB.toLowerCase();
-                        break;
-                    case 'email':
-                        valorA = a.email?.toLowerCase() || '';
-                        valorB = b.email?.toLowerCase() || '';
-                        break;
-                    case 'direccion':
-                        valorA = a.direccion?.toLowerCase() || '';
-                        valorB = b.direccion?.toLowerCase() || '';
-                        break;
-                    case 'horario':
-                        valorA = a.horario?.toLowerCase() || '';
-                        valorB = b.horario?.toLowerCase() || '';
-                        break;
-                    case 'origen':
-                        valorA = a.fuente_origen?.toLowerCase() || '';
-                        valorB = b.fuente_origen?.toLowerCase() || '';
-                        break;
-                    case 'tipo':
-                        valorA = a.es_workshop ? '⭐' : '';
-                        valorB = b.es_workshop ? '⭐' : '';
-                        break;
-                    default:
-                        return 0;
-                }
-                
-                if (valorA < valorB) return direccion === 'asc' ? -1 : 1;
-                if (valorA > valorB) return direccion === 'asc' ? 1 : -1;
-                return 0;
-            });
-            
-            renderTabla(listaOrdenada);
-            renderTarjetas(listaOrdenada);
-        }
-
-        function renderTabla(lista) {
-            const body = document.getElementById('body-tabla');
-            body.innerHTML = '';
-            lista.forEach(d => {
-                const telefonos = [d.telefono_fijo, d.movil_1, d.movil_2].filter(Boolean).join(' / ');
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="text-slate-400">#${d.id}</td>
-                    <td class="${d.es_workshop ? 'text-blue-600' : ''}">${d.nombre}</td>
-                    <td>${d.provincia || '-'}</td>
-                    <td class="blur-data">${telefonos || '-'}</td>
-                    <td class="blur-data">${d.email || '-'}</td>
-                    <td class="text-[10px] text-slate-500">${d.direccion || '-'}</td>
-                    <td class="text-[10px] italic">${d.horario || '-'}</td>
-                    <td><span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-[8px]">${d.fuente_origen || 'WEB'}</span></td>
-                    <td>${d.es_workshop ? '⭐' : ''}</td>
-                `;
-                body.appendChild(tr);
-            });
-        }
-
-        function renderTarjetas(lista) {
-            const cont = document.getElementById('vista-tarjetas');
-            cont.innerHTML = '';
-            lista.forEach(d => {
-                // Capturar todos los números (Norma: mostrar todos si hay más de uno)
-                const nums = [d.telefono_fijo, d.movil_1, d.movil_2].filter(Boolean);
-                const telHtml = nums.map(n => `<div><i class="fas fa-phone mr-2 opacity-50"></i>${n}</div>`).join('');
-
-                const card = document.createElement('div');
-                card.className = `bg-white dark:bg-slate-900 p-5 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-sm relative group hover:border-blue-500 transition-all`;
-                card.innerHTML = `
-                    ${d.es_workshop ? '<div class="absolute top-0 right-0 bg-blue-600 text-white text-[8px] font-black px-3 py-1 rounded-bl-xl tracking-tighter italic">WORKSHOP</div>' : ''}
-                    <div class="blur-data">
-                        <h3 class="font-black text-slate-800 dark:text-slate-100 uppercase text-xs mb-1 group-hover:text-blue-600">${d.nombre}</h3>
-                        <p class="text-[9px] text-blue-500 font-bold uppercase mb-4 tracking-widest">${d.provincia}</p>
-                        <div class="space-y-1 text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-4">
-                            ${telHtml || 'Sin teléfonos'}
-                        </div>
-                        <div class="pt-3 border-t dark:border-slate-800 text-[10px]">
-                            <p class="truncate"><i class="fas fa-envelope mr-2 opacity-50"></i>${d.email || '-'}</p>
-                            <p class="mt-1 text-slate-400 leading-tight">${d.direccion || '-'}</p>
-                        </div>
-                    </div>
-                `;
-                cont.appendChild(card);
-            });
-        }
-
-        function cambiarVista(v) {
-            vistaActual = v;
-            const vt = document.getElementById('vista-tabla');
-            const vc = document.getElementById('vista-tarjetas');
-            const bt = document.getElementById('btn-vista-tabla');
-            const bc = document.getElementById('btn-vista-tarjetas');
-
-            if(v === 'tabla') {
-                vt.classList.remove('hidden'); vc.classList.add('hidden');
-                bt.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase shadow-lg';
-                bc.className = 'bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-[10px] font-black uppercase';
-            } else {
-                vc.classList.remove('hidden'); vt.classList.add('hidden');
-                bc.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase shadow-lg';
-                bt.className = 'bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-[10px] font-black uppercase';
-            }
-        }
-
-        function exportarExcel() {
-            const wb = XLSX.utils.table_to_book(document.getElementById('tabla-excel'));
-            XLSX.writeFile(wb, `desguaces_${new Date().toLocaleDateString()}.xlsx`);
-        }
-
-        // NORMA: "Antes de crear nada, comprueba la BBDD"
-        document.getElementById('formDesguace').onsubmit = async (e) => {
-            e.preventDefault();
-            const payload = {
-                nombre: document.getElementById('d-nombre').value,
-                provincia: document.getElementById('d-provincia').value,
-                direccion: document.getElementById('d-direccion').value,
-                cp: document.getElementById('d-cp').value,
-                telefono_fijo: document.getElementById('d-fijo').value,
-                movil_1: document.getElementById('d-movil1').value,
-                movil_2: document.getElementById('d-movil2').value,
-                email: document.getElementById('d-email').value,
-                horario: document.getElementById('d-horario').value,
-                es_workshop: document.getElementById('d-workshop').checked,
-                admin_user: user.nombre
+        // Agrupar pedidos por taller
+        const statsTalleres = talleres.map(t => {
+            const pedidosT = pedidos.filter(p => p.usuario_id === t.id);
+            return {
+                ...t,
+                solicitado: pedidosT.filter(p => p.estado === 'solicitado').length,
+                entregado: pedidosT.filter(p => p.estado === 'entregado').length,
+                incidencia: pedidosT.filter(p => p.estado === 'incidencia').length
             };
+        });
 
-            const dup = desguaces.find(x => x.nombre.toLowerCase() === payload.nombre.toLowerCase() && x.provincia.toLowerCase() === payload.provincia.toLowerCase());
-            if (dup) return showToast('YA EXISTE ESTE DESGUACE EN LA PROVINCIA', 'error');
+        // KPIs
+        document.getElementById('kpi-solicitado').innerText = statsTalleres.reduce((a,b)=>a+b.solicitado,0);
+        document.getElementById('kpi-entregado').innerText = statsTalleres.reduce((a,b)=>a+b.entregado,0);
+        document.getElementById('kpi-incidencia').innerText = statsTalleres.reduce((a,b)=>a+b.incidencia,0);
 
-            try {
-                const res = await fetch('/api/desguaces', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    showToast('REGISTRO GUARDADO', 'success');
-                    cerrarModal();
-                    await cargarDatos();
-                }
-            } catch (e) { showToast('Error al guardar', 'error'); }
-        };
+        // Tabla
+        const tbody = document.getElementById('tabla-talleres');
+        tbody.innerHTML = '';
+        statsTalleres.forEach(t => {
+            tbody.innerHTML += `
+                <tr class="border-t text-center">
+                    <td class="p-3 text-left font-bold">${t.nombre_taller}</td>
+                    <td class="p-3">${t.solicitado}</td>
+                    <td class="p-3">${t.entregado}</td>
+                    <td class="p-3">${t.incidencia}</td>
+                </tr>
+            `;
+        });
 
-        function abrirModalNuevo() { 
-            document.getElementById('formDesguace').reset(); 
-            cambiarTab('info'); 
-            document.getElementById('modal').classList.remove('hidden'); 
-        }
-        
-        function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
-        
-        function cambiarTab(t) {
-            const bI = document.getElementById('btnTabInfo'), bT = document.getElementById('btnTabTecnico');
-            const tI = document.getElementById('tabInfo'), tT = document.getElementById('tabTecnico');
-            if (t === 'info') { 
-                bI.classList.add('tab-active'); 
-                bT.classList.remove('tab-active'); 
-                tI.classList.remove('hidden'); 
-                tT.classList.add('hidden'); 
-            } else { 
-                bT.classList.add('tab-active'); 
-                bI.classList.remove('tab-active'); 
-                tT.classList.remove('hidden'); 
-                tI.classList.add('hidden'); 
+        // Mapa Leaflet
+        const map = L.map('map').setView([40.4168, -3.7038], 6); // centro España
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        statsTalleres.forEach(t => {
+            if (t.lat && t.lng) {
+                L.circleMarker([t.lat, t.lng], {
+                    radius: 5 + t.entregado / 5, // tamaño según entregadas
+                    color: 'green',
+                    fillColor: 'green',
+                    fillOpacity: 0.6
+                }).addTo(map).bindPopup(`<b>${t.nombre_taller}</b><br>Entregadas: ${t.entregado}`);
             }
-        }
+        });
+    }
 
-        function togglePrivacy() { document.body.classList.toggle('privacy-active'); }
-        document.getElementById('buscador').addEventListener('keyup', filtrar);
-
-        function showToast(m, t) {
-            const c = document.getElementById('toast-container');
-            const div = document.createElement('div');
-            div.className = `p-4 rounded-xl text-white font-black text-[10px] shadow-2xl transition-all ${t==='success'?'bg-green-600':'bg-red-600'}`;
-            div.innerHTML = m.toUpperCase();
-            c.appendChild(div);
-            setTimeout(() => { div.style.opacity='0'; setTimeout(()=>div.remove(),300); }, 3000);
-        }
-
-        init();
-    </script>
+    fetchData();
+</script>
 </body>
 </html>
