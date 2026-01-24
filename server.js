@@ -627,31 +627,47 @@ app.post('/api/whatsapp/pedido', async (req, res) => {
       .replace(matricula || '', '')
       .trim();
 
-    if (!pieza || pieza.length < 3) {
-      return res.json({ question: '¿Qué pieza necesitas?' });
-    }
+if (!pieza || pieza.length < 3) {
+  return res.json({ question: '¿Qué pieza necesitas?' });
+}
 
-    const insert = await query(`
-      INSERT INTO pedidos (
-        pieza,
-        matricula,
-        usuario_id,
-        estado,
-        detalles_extra,
-        fecha_creacion,
-        precio,
-        precio_coste,
-        prioridad,
-        canal
-      ) VALUES ($1,$2,$3,'solicitud',$4,NOW(),0,0,$5,'whatsapp')
-      RETURNING id
-    `, [
-      pieza,
-      matricula,
-      taller.id,
-      message,
-      prioridad
-    ]);
+const numero_pedido = `WA-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+const insert = await query(`
+  INSERT INTO pedidos (
+    numero_pedido,
+    pieza,
+    matricula,
+    usuario_id,
+    estado,
+    detalles_extra,
+    fecha_creacion,
+    precio,
+    precio_coste,
+    prioridad,
+    canal
+  ) VALUES (
+    $1,  -- numero_pedido
+    $2,  -- pieza
+    $3,  -- matricula
+    $4,  -- usuario_id
+    'solicitud',
+    $5,  -- detalles_extra (mensaje original)
+    NOW(),
+    0,
+    0,
+    $6,  -- prioridad
+    'whatsapp'
+  )
+  RETURNING id
+`, [
+  numero_pedido,
+  pieza,
+  matricula,
+  taller.id,
+  message,
+  prioridad
+]);
 
     console.log('✅ Pedido WhatsApp creado:', insert.rows[0].id);
 
