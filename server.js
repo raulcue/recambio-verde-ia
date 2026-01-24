@@ -670,7 +670,15 @@ const insert = await query(`
 ]);
 
     console.log('✅ Pedido WhatsApp creado:', insert.rows[0].id);
-
+// 🔔 Registrar notificación para dashboard
+whatsappCounter++;
+whatsappNotifications.push({
+  id: insert.rows[0].id,
+  numero_pedido: numero_pedido || null,
+  taller: taller.nombre_taller,
+  mensaje: message,
+  timestamp: Date.now()
+});
     res.json({
       success: true,
       pedido_id: insert.rows[0].id,
