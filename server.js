@@ -409,6 +409,98 @@ app.post('/api/pedidos', async (req, res) => {
   }
 });
 
+// =======================
+// INYECCIÓN QUIRÚRGICA #6
+// ENDPOINT WHATSAPP
+// =======================
+app.post('/api/whatsapp/pedido', async (req, res) => {
+  try {
+    const { from, message } = req.body;
+    console.log('📩 WhatsApp recibido:', from, message);
+
+    if (!from || !message) {
+      return res.status(400).json({ error: 'Payload inválido' });
+    }
+
+    const tel = from.replace(/\D/g, '');
+
+    const tallerResult = await query(`
+      SELECT id, nombre_taller
+      FROM usuarios
+      WHERE rol = 'taller'
+      AND (
+        REPLACE(telefono_whatsapp,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_2,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_3,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_4,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_5,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_6,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_7,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_8,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_9,'+','') = $1 OR
+        REPLACE(telefono_whatsapp_10,'+','') = $1
+      )
+      LIMIT 1
+    `, [tel]);
+
+    if (tallerResult.rows.length === 0) {
+      return res.status(403).json({ error: 'Número no autorizado' });
+    }
+
+    const taller = tallerResult.rows[0];
+    const text = message.toLowerCase();
+
+    const matriculaMatch = text.match(/\b([0-9]{4}[a-z]{3})\b/i);
+    const matricula = matriculaMatch ? matriculaMatch[1].toUpperCase() : null;
+
+    let prioridad = 'normal';
+    if (text.includes('urgente')) prioridad = 'alta';
+
+    let pieza = text
+      .replace(/necesito|quiero|busco|pieza|para|del|de|una|un/gi, '')
+      .replace(matricula || '', '')
+      .trim();
+
+    if (!pieza || pieza.length < 3) {
+      return res.json({ question: '¿Qué pieza necesitas?' });
+    }
+
+    const insert = await query(`
+      INSERT INTO pedidos (
+        pieza,
+        matricula,
+        usuario_id,
+        estado,
+        detalles_extra,
+        fecha_creacion,
+        precio,
+        precio_coste,
+        prioridad,
+        origen
+      ) VALUES ($1,$2,$3,'solicitud',$4,NOW(),0,0,$5,'whatsapp')
+      RETURNING id
+    `, [
+      pieza,
+      matricula,
+      taller.id,
+      message,
+      prioridad
+    ]);
+
+    console.log('✅ Pedido WhatsApp creado:', insert.rows[0].id);
+
+    res.json({
+      success: true,
+      pedido_id: insert.rows[0].id,
+      taller: taller.nombre_taller
+    });
+
+  } catch (error) {
+    console.error('🔥 Error WhatsApp:', error);
+    res.status(500).json({ error: 'Error procesando WhatsApp' });
+  }
+});
+
 // ============================================================================
 // RUTA CATCH-ALL PARA ARCHIVOS ESTÁTICOS
 // ============================================================================
