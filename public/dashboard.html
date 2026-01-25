@@ -93,7 +93,7 @@
                         </div>
                         <!-- 🔔 NOTIFICACIONES WHATSAPP -->
 							<button id="bell-btn"
-									onclick="resetWhatsappNotifications()"
+									onclick="openWhatsappPanel()"
 									class="relative w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
 								<i class="fas fa-bell text-xs"></i>
 								<span id="bell-count"
@@ -101,6 +101,33 @@
 									0
 								</span>
 							</button>
+							
+							
+						<!-- 🔔 Panel de notificaciones WhatsApp -->
+						<div id="whatsapp-panel"
+							 class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50">
+
+							<div class="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+								<span class="font-semibold text-sm">Notificaciones WhatsApp</span>
+								<button onclick="closeWhatsappPanel()"
+										class="text-xs text-slate-400 hover:text-slate-600">
+									Cerrar
+								</button>
+							</div>
+
+							<div id="whatsapp-panel-body" class="max-h-80 overflow-y-auto custom-scrollbar p-3 space-y-2 text-sm">
+								<div class="text-slate-400 text-center">
+									Sin notificaciones
+								</div>
+							</div>
+
+							<div class="p-2 border-t border-slate-200 dark:border-slate-700 text-center">
+								<button onclick="resetWhatsappNotifications()"
+										class="text-xs text-red-500 hover:text-red-600">
+									Limpiar notificaciones
+								</button>
+							</div>
+						</div>
                         <button class="w-8 h-8 text-slate-400 hover:text-red-600 transition-colors">
                             <i class="fas fa-power-off text-sm"></i>
                         </button>
