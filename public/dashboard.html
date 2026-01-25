@@ -479,8 +479,9 @@
             let tId = document.getElementById('filtroTaller').value;
             board.style.opacity = '0.5';
             try {
-                const res = await fetch(`/api/pedidos?usuario_id=${tId}`);
-                if (!res.ok) {
+				const res = await fetch(`/api/whatsapp/notifications`, {
+					cache: 'no-store'
+				});                if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 db = await res.json();
@@ -919,9 +920,13 @@ function openPedidoFromNotification(pedidoId) {
 // 👉 Reset manual (solo si quieres usarlo en un botón específico)
 async function resetWhatsappNotifications() {
     try {
-        await fetch('/api/whatsapp/reset', { method: 'POST' });
+        await fetch('/api/whatsapp/reset', { 
+            method: 'POST',
+            cache: 'no-store'
+        });
     } catch (_) {}
 
+    // Reset local
     whatsappCounter = 0;
     localStorage.setItem('whatsapp_counter', '0');
 
@@ -931,17 +936,17 @@ async function resetWhatsappNotifications() {
         badge.classList.add('hidden');
     }
 
+    // Limpiar panel visual
+    const body = document.getElementById('whatsapp-panel-body');
+    if (body) {
+        body.innerHTML = `<div class="text-slate-400 text-center">Sin notificaciones</div>`;
+    }
+
     showToast('NOTIFICACIONES WHATSAPP REINICIADAS', 'success');
+
+    // 🔥 Forzar sincronización inmediata con backend
+    setTimeout(pollWhatsappNotifications, 500);
 }
-
-// Arranque automático
-setTimeout(() => {
-    initWhatsappNotifications();
-    setInterval(pollWhatsappNotifications, 15000); // cada 15s
-}, 2000);
-
-// Mantener tu init original
-window.onload = init;
 
     </script>
 </body>
