@@ -104,4 +104,4 @@ export const VEHICLES = [
   }
 ];
 
-export default VEHICLES;
+module.exports = VEHICLES;
