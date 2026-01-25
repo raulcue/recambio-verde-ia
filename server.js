@@ -9,7 +9,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 
 // 🧠 WhatsApp Intelligent Parser
-import { parseWhatsappMessage } from './services/whatsappParser.js';
+const { parseWhatsappMessage } = require('./services/whatsappParser.js');
 
 // =======================
 // INYECCIÓN QUIRÚRGICA #1

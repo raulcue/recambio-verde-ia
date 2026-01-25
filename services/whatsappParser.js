@@ -1,11 +1,12 @@
 // /services/whatsappParser.js
 
-import VEHICLES from "../data/vehicles.dataset.js";
-import {
+const VEHICLES = require("../data/vehicles.dataset.js");
+
+const {
   normalizeText,
   detectPlate,
   detectVIN
-} from "../data/patterns.dataset.js";
+} = require("../data/patterns.dataset.js");
 
 /**
  * Normaliza una palabra para comparaciones flexibles
@@ -86,7 +87,7 @@ function extractPieceText(original, plate, vin, brand, model) {
 /**
  * 🎯 FUNCIÓN PRINCIPAL
  */
-export function parseWhatsappMessage(message = "") {
+function parseWhatsappMessage(message = "") {
   const normalized = normalizeText(message);
 
   const plate = detectPlate(message);
@@ -107,6 +108,6 @@ export function parseWhatsappMessage(message = "") {
   };
 }
 
-export default {
+module.exports = {
   parseWhatsappMessage
 };

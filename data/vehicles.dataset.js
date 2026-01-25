@@ -1,7 +1,7 @@
 // vehicles.dataset.js
 // Top 50 brands, top 20 models each (approx dataset)
 
-export const VEHICLES = [
+const VEHICLES = [
   {
     brand: "Toyota",
     aliases: ["toyota","toyta","toyo"],
