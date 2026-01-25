@@ -8,6 +8,9 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 
+// 🧠 WhatsApp Intelligent Parser
+const { parseWhatsappMessage } = require('./services/whatsappParser');
+
 // =======================
 // INYECCIÓN QUIRÚRGICA #1
 // =======================
@@ -223,35 +226,7 @@ function normalizePhone(phone) {
   return phone.replace(/\s+/g, '').replace(/^\+/, '');
 }
 
-// Extraer información básica desde texto libre
-function parseWhatsappMessage(text = '') {
-  const data = {
-    pieza: null,
-    marca: null,
-    modelo: null,
-    matricula: null
-  };
 
-  const t = text.toLowerCase();
-
-  // Intentos simples de inferencia
-  if (t.includes('motor')) data.pieza = 'Motor';
-  if (t.includes('embrague')) data.pieza = 'Embrague';
-  if (t.includes('turbo')) data.pieza = 'Turbo';
-  if (t.includes('faro')) data.pieza = 'Faro';
-  if (t.includes('retrovisor')) data.pieza = 'Retrovisor';
-
-  const marcas = ['audi', 'bmw', 'vw', 'volkswagen', 'seat', 'renault', 'peugeot', 'citroen', 'toyota', 'nissan'];
-  marcas.forEach(m => {
-    if (t.includes(m)) data.marca = m.toUpperCase();
-  });
-
-  // Matrícula simple (heurística)
-  const matriculaMatch = text.match(/\b[0-9]{3,4}[A-Z]{3}\b/i);
-  if (matriculaMatch) data.matricula = matriculaMatch[0].toUpperCase();
-
-  return data;
-}
 
 // ============================================================================
 // 📩 WEBHOOK SIMULADO PARA RECIBIR WHATSAPP
