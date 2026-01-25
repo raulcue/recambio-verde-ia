@@ -358,9 +358,15 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
 // 🔔 ENDPOINT PARA DASHBOARD - CONSULTAR NOTIFICACIONES
 // ============================================================================
 app.get('/api/whatsapp/notifications', (req, res) => {
+  // 🚫 Desactivar cache para evitar 304
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+
   res.json({
     counter: whatsappCounter,
-    notifications: whatsappNotifications
+    notifications: whatsappNotifications,
+    serverTime: Date.now() // fuerza cambio de payload
   });
 });
 
