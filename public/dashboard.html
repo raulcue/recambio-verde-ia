@@ -479,9 +479,9 @@
             let tId = document.getElementById('filtroTaller').value;
             board.style.opacity = '0.5';
             try {
-				const res = await fetch(`/api/whatsapp/notifications`, {
-					cache: 'no-store'
-				});                if (!res.ok) {
+				const res = await fetch(`/api/pedidos`, {
+				cache: 'no-store'
+				});               if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 db = await res.json();
