@@ -793,29 +793,6 @@
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-// ================================
-// 🔔 INYECCIÓN QUIRÚRGICA #2
-// NOTIFICACIONES WHATSAPP
-// ================================
-
-let whatsappCounter = parseInt(localStorage.getItem('whatsapp_counter') || '0');
-let lastWhatsappCheck = Date.now();
-
-// Inicializar contador visual al cargar
-function initWhatsappNotifications() {
-    const badge = document.getElementById('bell-count');
-    if (!badge) return;
-
-    if (whatsappCounter > 0) {
-        badge.innerText = whatsappCounter;
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
-    }
-
-    console.log('🔔 WhatsApp counter inicializado:', whatsappCounter);
-}
-
 // ===============================
 // 🔔 WHATSAPP NOTIFICATIONS ENGINE
 // ===============================
