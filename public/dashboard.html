@@ -947,7 +947,15 @@ async function resetWhatsappNotifications() {
     // 🔥 Forzar sincronización inmediata con backend
     setTimeout(pollWhatsappNotifications, 500);
 }
-
+// ===============================
+// 🚀 BOOTSTRAP DASHBOARD
+// ===============================
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Dashboard iniciado');
+    init();
+    initWhatsappNotifications();
+    setInterval(pollWhatsappNotifications, 15000);
+});
     </script>
 </body>
 </html>
