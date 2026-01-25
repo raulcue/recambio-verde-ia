@@ -293,16 +293,16 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, CURRENT_TIMESTAMP)
       RETURNING id, numero_pedido
     `, [
-      numero_pedido,
-      parsed.pieza || message.substring(0, 80),
-      parsed.marca || '',
-      parsed.modelo || '',
-      parsed.matricula || null,
-      'solicitud',
-      taller.id,
-      0,
-      'whatsapp'
-    ]);
+  numero_pedido,
+  parsed.extractedPiece || message.substring(0, 80),
+  parsed.brand || '',
+  parsed.model || '',
+  parsed.plate || null,
+  'solicitud',
+  taller.id,
+  0,
+  'whatsapp'
+]);
 
     const pedidoCreado = insertResult.rows[0];
 
