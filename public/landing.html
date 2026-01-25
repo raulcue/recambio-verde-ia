@@ -376,22 +376,25 @@
             localStorage.setItem('darkMode', isDark);
         }
 
-        function aplicarRestricciones(rol) {
-            const disableLink = (id) => {
-                const el = document.getElementById(id);
-                if (el) el.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
-            };
-            if (rol === 'admin') return;
-            if (rol === 'taller') {
-                // El taller solo ve Pedidos (Módulo 04).
-                ['btn-c1', 'btn-c2', 'btn-c3', 'btn-c5', 'btn-c6'].forEach(disableLink);
-                // El taller no ve Desguaces
-                disableLink('btn-desguaces');
-            } else if (rol === 'agente') {
-                // El agente no ve Logs (Módulo 05).
-                disableLink('btn-c5');
-            }
-        }
+		function aplicarRestricciones(rol) {
+			const disableLink = (id) => {
+				const el = document.getElementById(id);
+				if (el) el.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
+			};
+
+			if (rol === 'admin') return;
+
+			if (rol === 'taller') {
+				// El taller solo ve Pedidos (Módulo 04).
+				['btn-c1', 'btn-c2', 'btn-c3', 'btn-c5', 'btn-c6', 'btn-c7', 'btn-c8'].forEach(disableLink);
+				// El taller no ve Desguaces
+				disableLink('btn-desguaces');
+
+			} else if (rol === 'agente') {
+				// El agente no ve Logs, ProfitPulse ni StackCost.
+				['btn-c5', 'btn-c7', 'btn-c8'].forEach(disableLink);
+			}
+		}
 
         function cerrarSesion() { localStorage.clear(); window.location.href = 'index.html'; }
         document.addEventListener('DOMContentLoaded', initSession);
