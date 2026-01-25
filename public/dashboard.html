@@ -105,7 +105,9 @@
 							
 						<!-- 🔔 Panel de notificaciones WhatsApp -->
 						<div id="whatsapp-panel"
-							 class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50">
+ class="hidden absolute right-2 md:right-0 mt-2 w-[90vw] md:w-80 max-w-sm
+        bg-white dark:bg-slate-900 rounded-xl shadow-xl border
+        border-slate-200 dark:border-slate-700 z-50">
 
 							<div class="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
 								<span class="font-semibold text-sm">Notificaciones WhatsApp</span>
@@ -771,7 +773,11 @@
         async function confirmarEliminacionDefinitiva() {
             const id = document.getElementById('p-id').value;
             try {
-                await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/pedidos/${id}`, { method: 'DELETE' });
+
+if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+}
                 showToast('REGISTRO ELIMINADO', 'success');
                 document.getElementById('modal-confirmacion').classList.add('hidden');
                 cerrarModal();
@@ -801,15 +807,30 @@
 let whatsappCounter = parseInt(localStorage.getItem('whatsapp_counter') || '0');
 
 // Inicializar badge al cargar
-function initWhatsappNotifications() {
-    const badge = document.getElementById('bell-count');
-    if (!badge) return;
+async function initWhatsappNotifications() {
+    try {
+        const res = await fetch('/api/whatsapp/notifications', { cache: 'no-store' });
+        if (!res.ok) return;
 
-    if (whatsappCounter > 0) {
-        badge.innerText = whatsappCounter;
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
+        const data = await res.json();
+        whatsappCounter = data.counter || 0;
+
+        localStorage.setItem('whatsapp_counter', whatsappCounter.toString());
+
+        const badge = document.getElementById('bell-count');
+        if (!badge) return;
+
+        if (whatsappCounter > 0) {
+            badge.innerText = whatsappCounter;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+
+        console.log('🔔 WhatsApp counter sincronizado:', whatsappCounter);
+
+    } catch (err) {
+        console.warn('⚠️ No se pudo sincronizar contador WhatsApp:', err);
     }
 }
 
@@ -954,7 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Dashboard iniciado');
     init();
     initWhatsappNotifications();
-    setInterval(pollWhatsappNotifications, 15000);
+    setInterval(pollWhatsappNotifications, 5000);
 });
     </script>
 </body>
