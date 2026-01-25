@@ -2,20 +2,27 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<title>ProfitPulse · Revenue Intelligence</title>
+<title>ProfitPulse · Financial Intelligence</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { darkMode: 'class' }</script>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
-tailwind.config = { darkMode: 'class' }
-</script>
-
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
 body { font-family: 'Inter', sans-serif; }
-canvas { max-height: 300px; }
+canvas { max-height: 320px; }
+.glass-card {
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: 2rem;
+  transition: all .25s ease;
+}
+.dark .glass-card { background: #0f172a; border-color: #1e293b; }
+.glass-card:hover { transform: translateY(-4px); box-shadow: 0 15px 25px rgba(0,0,0,.05); }
 .suspicious { background: rgba(250,204,21,0.15); }
 </style>
 </head>
@@ -24,67 +31,77 @@ canvas { max-height: 300px; }
 
 <div id="header-slot"></div>
 
-<main class="flex-grow px-6 py-6 space-y-6 max-w-7xl mx-auto w-full">
+<main class="flex-grow px-6 py-8 space-y-8 max-w-7xl mx-auto w-full">
 
-<!-- HEADER -->
+<!-- TITLE -->
 <div class="flex justify-between items-center">
   <div>
-    <h1 class="text-2xl font-bold">📈 ProfitPulse</h1>
-    <p class="text-xs text-slate-400 uppercase">Revenue Intelligence Engine</p>
+    <h1 class="text-2xl font-black uppercase tracking-tight">
+      Financial Intelligence <span class="text-blue-600 italic">Recambio Reciclado</span>
+    </h1>
+    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+      ProfitPulse Analytics Engine
+    </p>
   </div>
 
-  <div class="flex items-center gap-2 text-sm">
-    <span id="db-dot" class="w-3 h-3 rounded-full bg-slate-400"></span>
+  <div class="flex items-center gap-2 text-xs font-bold">
+    <span id="db-dot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
     <span id="db-status">Desconectado</span>
   </div>
 </div>
 
-<!-- CONFIGURACIÓN -->
-<section class="bg-white dark:bg-slate-900 rounded-xl p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+<!-- CONFIG -->
+<section class="glass-card p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
   <div>
-    <label class="text-xs text-slate-400">%</label>
-    <input id="cfgPercent" type="number" value="1" step="0.1" class="w-full p-2 rounded border dark:border-slate-700"/>
+    <label class="text-[10px] font-bold uppercase text-slate-400">% Comisión</label>
+    <input id="cfgPercent" type="number" value="1" step="0.1"
+      class="w-full mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none"/>
   </div>
 
   <div>
-    <label class="text-xs text-slate-400">Mínimo (€)</label>
-    <input id="cfgMin" type="number" value="1.5" step="0.1" class="w-full p-2 rounded border dark:border-slate-700"/>
+    <label class="text-[10px] font-bold uppercase text-slate-400">Mínimo (€)</label>
+    <input id="cfgMin" type="number" value="1.5" step="0.1"
+      class="w-full mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none"/>
   </div>
 
-  <div class="flex items-end">
-    <div class="text-xs text-slate-500">
-      Cambios aplican instantáneamente
-    </div>
+  <div class="flex items-end text-[10px] text-slate-400 font-bold uppercase">
+    Cambios aplicados en tiempo real
   </div>
 </section>
 
 <!-- KPIS -->
-<section id="kpis" class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm"></section>
+<section id="kpis" class="grid grid-cols-2 md:grid-cols-6 gap-5"></section>
 
-<!-- GRÁFICOS -->
+<!-- CHARTS -->
 <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div class="bg-white dark:bg-slate-900 p-4 rounded-xl">
-    <h3 class="font-semibold mb-2">📊 Comisión mensual</h3>
-    <canvas id="chart-month"></canvas>
+  <div class="glass-card p-6">
+    <h3 class="font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+      <i class="fas fa-chart-bar text-blue-600"></i> Comisión mensual
+    </h3>
+    <canvas id="chartMonth"></canvas>
   </div>
 
-  <div class="bg-white dark:bg-slate-900 p-4 rounded-xl">
-    <h3 class="font-semibold mb-2">📈 Comisión anual</h3>
-    <canvas id="chart-year"></canvas>
+  <div class="glass-card p-6">
+    <h3 class="font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+      <i class="fas fa-chart-line text-emerald-600"></i> Comisión anual
+    </h3>
+    <canvas id="chartYear"></canvas>
   </div>
 
-  <div class="bg-white dark:bg-slate-900 p-4 rounded-xl md:col-span-2">
-    <h3 class="font-semibold mb-2">🔮 Forecast + escenarios</h3>
-    <canvas id="chart-forecast"></canvas>
+  <div class="glass-card p-6 md:col-span-2">
+    <h3 class="font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+      <i class="fas fa-bullseye text-purple-600"></i> Forecast
+    </h3>
+    <canvas id="chartForecast"></canvas>
   </div>
 </section>
 
-<!-- TABLA -->
-<section class="bg-white dark:bg-slate-900 rounded-xl shadow p-4 overflow-x-auto">
-<table class="min-w-full text-sm">
+<!-- TABLE -->
+<section class="glass-card p-6 overflow-x-auto">
+<table class="min-w-full text-xs">
 <thead class="border-b dark:border-slate-700">
-<tr>
-<th>ID</th>
+<tr class="uppercase text-slate-400">
+<th class="py-3 text-left">ID</th>
 <th>Fecha</th>
 <th>Taller</th>
 <th>Precio</th>
@@ -96,10 +113,14 @@ canvas { max-height: 300px; }
 <tbody id="table-body"></tbody>
 </table>
 
-<div class="flex justify-between items-center mt-3">
-  <button onclick="prevPage()">⬅️</button>
+<div class="flex justify-between items-center mt-4 text-xs font-bold">
+  <button onclick="prevPage()" class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+    <i class="fas fa-arrow-left"></i>
+  </button>
   <div id="page-info"></div>
-  <button onclick="nextPage()">➡️</button>
+  <button onclick="nextPage()" class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+    <i class="fas fa-arrow-right"></i>
+  </button>
 </div>
 </section>
 
@@ -113,70 +134,64 @@ let charts={};
 let currentPage=1;
 const pageSize=10;
 
-let CFG = {
-  percent: 1,
-  min: 1.5
-};
+let CFG={ percent:1, min:1.5 };
 
+// ---------------- LAYOUT ----------------
 async function loadLayout(){
   const html = await fetch('/dashboard.html').then(r=>r.text());
   const tmp=document.createElement('div');
   tmp.innerHTML=html;
-  tmp.querySelector('header') && header-slot.append(tmp.querySelector('header'));
-  tmp.querySelector('footer') && footer-slot.append(tmp.querySelector('footer'));
+  const header = tmp.querySelector('header');
+  const footer = tmp.querySelector('footer');
+  if(header) document.getElementById('header-slot').append(header);
+  if(footer) document.getElementById('footer-slot').append(footer);
 }
 
+// ---------------- CALC ----------------
 function calcular(precio,coste){
   const ggr = precio - coste;
-  let com = (!isFinite(ggr) || ggr<=0)
-    ? CFG.min
-    : ggr * (CFG.percent/100);
-
+  let com = (!isFinite(ggr) || ggr<=0) ? CFG.min : ggr * (CFG.percent/100);
   com = Math.min(com,3.5);
-  com = Math.ceil(com*100)/100;
-
-  return { ggr, com };
+  return { ggr, com: Math.round(com*100)/100 };
 }
 
 function enrich(data){
   return data.map(p=>{
     const precio = Number(p.precio);
     const coste  = Number(p.precio_coste);
-    const fecha  = new Date(p.fecha || Date.now());
-
+    const fecha  = new Date(p.fecha_creacion || Date.now());
     const invalid = !isFinite(precio) || !isFinite(coste);
     const {ggr,com} = calcular(precio||0,coste||0);
-
     return {...p, precio, coste, fecha, ggr, com, invalid};
   });
 }
 
+// ---------------- KPIS ----------------
 function renderKPIs(data){
   const sum = k => data.reduce((a,b)=>a+(b[k]||0),0);
   const avg = k => data.length?sum(k)/data.length:0;
-
-  const suspicious = data.filter(d=>d.invalid).length;
 
   const kpis=[
     ['Pedidos',data.length],
     ['Comisión Total',sum('com').toFixed(2)+'€'],
     ['GGR Total',sum('ggr').toFixed(2)+'€'],
     ['Comisión Media',avg('com').toFixed(2)+'€'],
-    ['Pedidos sospechosos',suspicious],
-    ['% en mínimo', (data.filter(d=>d.ggr<=0).length/data.length*100||0).toFixed(1)+'%']
+    ['Pedidos sospechosos',data.filter(d=>d.invalid).length],
+    ['% en mínimo',(data.filter(d=>d.ggr<=0).length/data.length*100||0).toFixed(1)+'%']
   ];
 
   const el=document.getElementById('kpis');
   el.innerHTML='';
   kpis.forEach(k=>{
     el.innerHTML+=`
-      <div class="p-4 rounded-xl border dark:border-slate-700 bg-white dark:bg-slate-900">
-        <div class="text-xs text-slate-400">${k[0]}</div>
-        <div class="font-bold text-xl">${k[1]}</div>
+      <div class="glass-card p-5">
+        <div class="text-[10px] font-bold uppercase text-slate-400">${k[0]}</div>
+        <div class="font-black text-2xl mt-1">${k[1]}</div>
       </div>`;
   });
 }
 
+// ---------------- TABLE ----------------
 function paginate(data){
   const start=(currentPage-1)*pageSize;
   return data.slice(start,start+pageSize);
@@ -188,15 +203,14 @@ function renderTable(){
 
   paginate(FILTERED).forEach(p=>{
     tbody.innerHTML+=`
-      <tr class="border-b dark:border-slate-800 ${p.invalid?'suspicious':''}"
-          title="${p.invalid?'Dato incompleto: posible manipulación o error':''}">
+      <tr class="border-b dark:border-slate-800 ${p.invalid?'suspicious':''}">
         <td>${p.id||'-'}</td>
         <td>${p.fecha.toISOString().slice(0,10)}</td>
-        <td>${p.taller||'—'}</td>
+        <td>${p.nombre_usuario||'—'}</td>
         <td>${isFinite(p.precio)?p.precio.toFixed(2):'—'}</td>
         <td>${isFinite(p.coste)?p.coste.toFixed(2):'—'}</td>
         <td>${p.ggr.toFixed(2)}</td>
-        <td class="font-semibold">${p.com.toFixed(2)}</td>
+        <td class="font-black">${p.com.toFixed(2)}</td>
       </tr>`;
   });
 
@@ -204,6 +218,10 @@ function renderTable(){
     `Página ${currentPage} / ${Math.ceil(FILTERED.length/pageSize)||1}`;
 }
 
+function prevPage(){ if(currentPage>1){currentPage--;renderTable();}}
+function nextPage(){ if(currentPage<Math.ceil(FILTERED.length/pageSize)){currentPage++;renderTable();}}
+
+// ---------------- CHARTS ----------------
 function groupBy(data,fn){
   return data.reduce((a,b)=>{
     const k=fn(b);
@@ -220,51 +238,46 @@ function renderCharts(data){
   charts.year?.destroy();
   charts.forecast?.destroy();
 
-  charts.month=new Chart(chart-month,{
+  charts.month=new Chart(document.getElementById('chartMonth'),{
     type:'bar',
-    data:{labels:Object.keys(byMonth),datasets:[{label:'€',data:Object.values(byMonth)}]}
+    data:{labels:Object.keys(byMonth),datasets:[{data:Object.values(byMonth)}]}
   });
 
-  charts.year=new Chart(chart-year,{
+  charts.year=new Chart(document.getElementById('chartYear'),{
     type:'bar',
-    data:{labels:Object.keys(byYear),datasets:[{label:'€',data:Object.values(byYear)}]}
+    data:{labels:Object.keys(byYear),datasets:[{data:Object.values(byYear)}]}
   });
 
   const base = Object.values(byMonth).reduce((a,b)=>a+b,0)/(Object.keys(byMonth).length||1);
-  charts.forecast=new Chart(chart-forecast,{
+  charts.forecast=new Chart(document.getElementById('chartForecast'),{
     type:'line',
     data:{
-      labels:['Base','Best','Worst'],
-      datasets:[{
-        label:'Estimación €',
-        data:[base,base*1.1,base*0.9]
-      }]
+      labels:['Base','Optimista','Pesimista'],
+      datasets:[{data:[base,base*1.1,base*0.9]}]
     }
   });
 }
 
+// ---------------- LOAD ----------------
 function refresh(){
   renderKPIs(FILTERED);
   renderCharts(FILTERED);
   renderTable();
 }
 
-function prevPage(){ if(currentPage>1){currentPage--;renderTable();}}
-function nextPage(){ if(currentPage<Math.ceil(FILTERED.length/pageSize)){currentPage++;renderTable();}}
-
 async function loadData(){
   try{
-    const res=await fetch('/api/pedidos');
+    const res=await fetch('/api/pedidos',{cache:'no-store'});
     RAW=enrich(await res.json());
     FILTERED=[...RAW];
 
-    db-dot.className='w-3 h-3 rounded-full bg-emerald-500';
-    db-status.innerText='Conectado';
+    document.getElementById('db-dot').className='w-2.5 h-2.5 rounded-full bg-emerald-500';
+    document.getElementById('db-status').innerText='Conectado';
 
     refresh();
   }catch(e){
-    db-dot.className='w-3 h-3 rounded-full bg-red-500';
-    db-status.innerText='Error conexión';
+    document.getElementById('db-dot').className='w-2.5 h-2.5 rounded-full bg-red-500';
+    document.getElementById('db-status').innerText='Error conexión';
   }
 }
 
