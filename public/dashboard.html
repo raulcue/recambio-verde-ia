@@ -860,6 +860,50 @@ async function openWhatsappPanel() {
 function closeWhatsappPanel() {
     document.getElementById('whatsapp-panel').classList.add('hidden');
 }
+async function loadWhatsappNotifications() {
+    try {
+        const res = await fetch('/api/whatsapp/notifications');
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const list = data.notifications || [];
+
+        const body = document.getElementById('whatsapp-panel-body');
+        body.innerHTML = '';
+
+        if (list.length === 0) {
+            body.innerHTML = `<div class="text-slate-400 text-center">Sin notificaciones</div>`;
+            return;
+        }
+
+        list.forEach(n => {
+            const fecha = new Date(n.created_at).toLocaleString();
+
+            const row = document.createElement('div');
+            row.className = 'border rounded-lg p-2 flex flex-col gap-1 hover:bg-slate-50 dark:hover:bg-slate-800';
+
+            row.innerHTML = `
+                <div class="flex justify-between text-[11px] font-bold">
+                    <span>#${n.pedido_id}</span>
+                    <span class="text-slate-400">${fecha}</span>
+                </div>
+                <div class="text-xs text-slate-600 dark:text-slate-300">
+                    ${n.message}
+                </div>
+                <button 
+                    class="mt-1 text-xs text-emerald-600 hover:underline text-left"
+                    onclick="openPedidoFromNotification(${n.pedido_id})">
+                    Abrir pedido →
+                </button>
+            `;
+
+            body.appendChild(row);
+        });
+
+    } catch (err) {
+        console.warn('Error cargando notificaciones:', err);
+    }
+}
 
 // 👉 Reset manual (solo si quieres usarlo en un botón específico)
 async function resetWhatsappNotifications() {
