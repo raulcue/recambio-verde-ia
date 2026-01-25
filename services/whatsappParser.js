@@ -1,115 +1,100 @@
-// /services/whatsappParser.js
-
-import VEHICLES from "../data/vehicles.dataset.js";
-import {
-    normalizeText,
-    detectPlate,
-    detectVIN
-} from "../data/patterns.dataset.js";
+const VEHICLES = require("../data/vehicles.dataset.js");
+const {
+  normalizeText,
+  detectPlate,
+  detectVIN
+} = require("../data/patterns.dataset.js");
 
 /**
  * Normaliza una palabra para comparaciones flexibles
  */
 function normalizeToken(str = "") {
-    return normalizeText(str)
-        .replace(/\s+/g, "")
-        .toUpperCase();
+  return normalizeText(str)
+    .replace(/\s+/g, "")
+    .toUpperCase();
 }
 
 /**
  * Detecta marca usando aliases y tolerancia básica
  */
 function detectBrand(cleanText) {
-    const text = normalizeToken(cleanText);
+  const text = normalizeToken(cleanText);
 
-    for (const brand of VEHICLES) {
-        const brandName = normalizeToken(brand.brand);
+  for (const brand of VEHICLES) {
+    const brandName = normalizeToken(brand.brand);
 
-        // Match directo marca
-        if (text.includes(brandName)) {
-            return brand.brand;
-        }
+    // Match directo marca
+    if (text.includes(brandName)) return brand.brand;
 
-        // Match por alias
-        for (const alias of brand.aliases || []) {
-            const a = normalizeToken(alias);
-            if (text.includes(a)) {
-                return brand.brand;
-            }
-        }
+    // Match por alias
+    for (const alias of brand.aliases || []) {
+      const a = normalizeToken(alias);
+      if (text.includes(a)) return brand.brand;
     }
+  }
 
-    return null;
+  return null;
 }
 
 /**
  * Detecta modelo dentro de la marca encontrada
  */
 function detectModel(cleanText, detectedBrand) {
-    if (!detectedBrand) return null;
+  if (!detectedBrand) return null;
 
-    const text = normalizeToken(cleanText);
-    const brand = VEHICLES.find(b => b.brand === detectedBrand);
-    if (!brand) return null;
+  const text = normalizeToken(cleanText);
+  const brand = VEHICLES.find(b => b.brand === detectedBrand);
+  if (!brand) return null;
 
-    for (const model of brand.models || []) {
-        const m = normalizeToken(model);
-        if (text.includes(m)) {
-            return model;
-        }
+  for (const model of brand.models || []) {
+    const m = normalizeToken(model);
 
-        // tolerancia básica: primeras 5 letras
-        if (m.length >= 5 && text.includes(m.slice(0, 5))) {
-            return model;
-        }
-    }
+    if (text.includes(m)) return model;
 
-    return null;
+    // tolerancia básica: primeras 5 letras
+    if (m.length >= 5 && text.includes(m.slice(0, 5))) return model;
+  }
+
+  return null;
 }
 
 /**
  * Limpia el texto eliminando datos detectados
  */
 function extractPieceText(original, plate, vin, brand, model) {
-    let txt = original;
+  let txt = original;
 
-    if (plate) txt = txt.replace(new RegExp(plate, "ig"), "");
-    if (vin) txt = txt.replace(new RegExp(vin, "ig"), "");
-    if (brand) txt = txt.replace(new RegExp(brand, "ig"), "");
-    if (model) txt = txt.replace(new RegExp(model, "ig"), "");
+  if (plate) txt = txt.replace(new RegExp(plate, "ig"), "");
+  if (vin) txt = txt.replace(new RegExp(vin, "ig"), "");
+  if (brand) txt = txt.replace(new RegExp(brand, "ig"), "");
+  if (model) txt = txt.replace(new RegExp(model, "ig"), "");
 
-    return txt
-        .replace(/\s+/g, " ")
-        .trim();
+  return txt.replace(/\s+/g, " ").trim();
 }
 
 /**
  * 🎯 FUNCIÓN PRINCIPAL
  */
-export function parseWhatsappMessage(message = "") {
-    const normalized = normalizeText(message);
+function parseWhatsappMessage(message = "") {
+  const normalized = normalizeText(message);
 
-    const plate = detectPlate(message);
-    const vin = detectVIN(message);
-    const brand = detectBrand(normalized);
-    const model = detectModel(normalized, brand);
+  const plate = detectPlate(message);
+  const vin = detectVIN(message);
+  const brand = detectBrand(normalized);
+  const model = detectModel(normalized, brand);
+  const extractedPiece = extractPieceText(message, plate, vin, brand, model);
 
-    const piece = extractPieceText(message, plate, vin, brand, model);
-
-    return {
-        original: message,
-        normalized,
-
-        plate,      // matrícula normalizada o null
-        vin,        // bastidor o null
-
-        brand,      // marca normalizada
-        model,      // modelo normalizado
-
-        extractedPiece: piece || message
-    };
+  return {
+    original: message,
+    normalized,
+    plate,
+    vin,
+    brand,
+    model,
+    extractedPiece: extractedPiece || message
+  };
 }
 
-export default {
-    parseWhatsappMessage
+module.exports = {
+  parseWhatsappMessage
 };
