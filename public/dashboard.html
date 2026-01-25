@@ -816,47 +816,72 @@ function initWhatsappNotifications() {
     console.log('🔔 WhatsApp counter inicializado:', whatsappCounter);
 }
 
-// Polling cada 15 segundos para detectar nuevos pedidos WhatsApp
+// ===============================
+// 🔔 WHATSAPP NOTIFICATIONS ENGINE
+// ===============================
+
+let whatsappCounter = parseInt(localStorage.getItem('whatsapp_counter') || '0');
+
+// Inicializar badge al cargar
+function initWhatsappNotifications() {
+    const badge = document.getElementById('bell-count');
+    if (!badge) return;
+
+    if (whatsappCounter > 0) {
+        badge.innerText = whatsappCounter;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+// Polling cada 15 segundos contra backend real
 async function pollWhatsappNotifications() {
     try {
-        const res = await fetch(`/api/pedidos?canal=whatsapp`);
+        const res = await fetch(`/api/whatsapp/notifications`);
         if (!res.ok) return;
 
-        const pedidos = await res.json();
+        const data = await res.json();
+        const total = data.counter || 0;
 
-        // Contar pedidos creados después del último check
-        const nuevos = pedidos.filter(p => {
-            if (!p.fecha_creacion) return false;
-            return new Date(p.fecha_creacion).getTime() > lastWhatsappCheck;
-        });
+        const badge = document.getElementById('bell-count');
+        if (!badge) return;
 
-        if (nuevos.length > 0) {
-            whatsappCounter += nuevos.length;
+        if (total > whatsappCounter) {
+            const diff = total - whatsappCounter;
+            whatsappCounter = total;
+
             localStorage.setItem('whatsapp_counter', whatsappCounter.toString());
 
-            const badge = document.getElementById('bell-count');
-            if (badge) {
-                badge.innerText = whatsappCounter;
-                badge.classList.remove('hidden');
-                badge.classList.add('animate-bounce');
+            badge.innerText = whatsappCounter;
+            badge.classList.remove('hidden');
+            badge.classList.add('animate-bounce');
 
-                setTimeout(() => {
-                    badge.classList.remove('animate-bounce');
-                }, 1000);
-            }
+            setTimeout(() => {
+                badge.classList.remove('animate-bounce');
+            }, 1000);
 
-            showToast(`NUEVO PEDIDO WHATSAPP (${nuevos.length})`, 'success');
-            console.log('📲 Nuevos pedidos WhatsApp detectados:', nuevos.length);
+            showToast(`NUEVO PEDIDO WHATSAPP (${diff})`, 'success');
+            console.log('📲 Nuevas notificaciones WhatsApp:', diff);
         }
 
-        lastWhatsappCheck = Date.now();
     } catch (err) {
         console.warn('⚠️ Error polling WhatsApp:', err);
     }
 }
 
-// Reset al pulsar la campana
-function resetWhatsappNotifications() {
+// 👉 Al hacer click en la campana SOLO abre panel (no resetea)
+function openWhatsappPanel() {
+    console.log('🔔 Panel WhatsApp abierto');
+    // Aquí luego podremos abrir modal / sidebar si quieres
+}
+
+// 👉 Reset manual (solo si quieres usarlo en un botón específico)
+async function resetWhatsappNotifications() {
+    try {
+        await fetch('/api/whatsapp/reset', { method: 'POST' });
+    } catch (_) {}
+
     whatsappCounter = 0;
     localStorage.setItem('whatsapp_counter', '0');
 
@@ -874,7 +899,10 @@ setTimeout(() => {
     initWhatsappNotifications();
     setInterval(pollWhatsappNotifications, 15000); // cada 15s
 }, 2000);
-        window.onload = init;
+
+// Mantener tu init original
+window.onload = init;
+
     </script>
 </body>
 </html>
