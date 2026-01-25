@@ -353,7 +353,36 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// ============================================================================
+// 🧪 WHATSAPP PARSER TEST ENDPOINT
+// ============================================================================
+app.get('/api/whatsapp/test', (req, res) => {
+  try {
+    const text = req.query.text || '';
+    if (!text) {
+      return res.status(400).json({
+        error: 'Debes pasar ?text= en la query'
+      });
+    }
 
+    const parsed = parseWhatsappMessage(text);
+
+    console.log('🧪 TEST PARSER INPUT:', text);
+    console.log('🧪 TEST PARSER OUTPUT:', parsed);
+
+    res.json({
+      success: true,
+      input: text,
+      parsed
+    });
+
+  } catch (err) {
+    console.error('🔥 Error en test parser:', err);
+    res.status(500).json({
+      error: err.message
+    });
+  }
+});
 // ============================================================================
 // 🔔 ENDPOINT PARA DASHBOARD - CONSULTAR NOTIFICACIONES
 // ============================================================================
