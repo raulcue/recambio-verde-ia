@@ -846,7 +846,6 @@ async function pollWhatsappNotifications() {
         console.warn('⚠️ Error polling WhatsApp:', err);
     }
 }
-
 // 👉 Al hacer click en la campana SOLO abre panel (no resetea)
 async function openWhatsappPanel() {
     const panel = document.getElementById('whatsapp-panel');
@@ -860,6 +859,7 @@ async function openWhatsappPanel() {
 function closeWhatsappPanel() {
     document.getElementById('whatsapp-panel').classList.add('hidden');
 }
+
 async function loadWhatsappNotifications() {
     try {
         const res = await fetch('/api/whatsapp/notifications');
@@ -877,22 +877,23 @@ async function loadWhatsappNotifications() {
         }
 
         list.forEach(n => {
-            const fecha = new Date(n.created_at).toLocaleString();
+            // ✅ Campo correcto desde backend
+            const fecha = new Date(n.timestamp).toLocaleString();
 
             const row = document.createElement('div');
             row.className = 'border rounded-lg p-2 flex flex-col gap-1 hover:bg-slate-50 dark:hover:bg-slate-800';
 
             row.innerHTML = `
                 <div class="flex justify-between text-[11px] font-bold">
-                    <span>#${n.pedido_id}</span>
+                    <span>#${n.numero_pedido || n.pedido_id}</span>
                     <span class="text-slate-400">${fecha}</span>
                 </div>
                 <div class="text-xs text-slate-600 dark:text-slate-300">
-                    ${n.message}
+                    ${n.mensaje}
                 </div>
                 <button 
                     class="mt-1 text-xs text-emerald-600 hover:underline text-left"
-                    onclick="openPedidoFromNotification(${n.pedido_id})">
+                    onclick="openPedidoFromNotification(${n.id || n.pedido_id})">
                     Abrir pedido →
                 </button>
             `;
@@ -903,6 +904,16 @@ async function loadWhatsappNotifications() {
     } catch (err) {
         console.warn('Error cargando notificaciones:', err);
     }
+}
+
+function openPedidoFromNotification(pedidoId) {
+    const pedido = db.find(p => p.id == pedidoId);
+    if (!pedido) {
+        showToast('Pedido no encontrado en memoria', 'error');
+        return;
+    }
+
+    abrirEditar(pedido);
 }
 
 // 👉 Reset manual (solo si quieres usarlo en un botón específico)
