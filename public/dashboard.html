@@ -848,9 +848,17 @@ async function pollWhatsappNotifications() {
 }
 
 // 👉 Al hacer click en la campana SOLO abre panel (no resetea)
-function openWhatsappPanel() {
-    console.log('🔔 Panel WhatsApp abierto');
-    // Aquí luego podremos abrir modal / sidebar si quieres
+async function openWhatsappPanel() {
+    const panel = document.getElementById('whatsapp-panel');
+    panel.classList.toggle('hidden');
+
+    if (!panel.classList.contains('hidden')) {
+        await loadWhatsappNotifications();
+    }
+}
+
+function closeWhatsappPanel() {
+    document.getElementById('whatsapp-panel').classList.add('hidden');
 }
 
 // 👉 Reset manual (solo si quieres usarlo en un botón específico)
