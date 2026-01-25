@@ -1,79 +1,248 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>StackCost Analyzer</title>
+<meta charset="UTF-8" />
+<title>StackCost Ultra · Cost Intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
+
 <style>
-body {
-  background:#020617;
-  color:#e5e7eb;
-  font-family: Arial, sans-serif;
-}
-.container {
-  padding:20px;
-}
-.card {
-  background:#020617;
-  border:1px solid #1e293b;
-  border-radius:8px;
-  padding:15px;
-  margin-bottom:15px;
-}
-h2 { margin-bottom:10px; }
-table {
-  width:100%;
-  border-collapse:collapse;
-}
-td, th {
-  padding:8px;
-  border-bottom:1px solid #1e293b;
-}
+body { font-family: 'Inter', sans-serif; }
+canvas { max-height: 300px; }
+.kpi { @apply p-4 rounded-xl border bg-white dark:bg-slate-900 dark:border-slate-700; }
 </style>
 </head>
-<body>
 
-<header>
-  <h2>⚙️ StackCost Analyzer</h2>
-</header>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-<div class="container">
+<div id="header-slot"></div>
 
-<div class="card">
-<h3>Infraestructura</h3>
-<table>
-<tr><td>Hosting (Render)</td><td>Variable</td></tr>
-<tr><td>Base de datos PostgreSQL</td><td>Incluido</td></tr>
-<tr><td>Almacenamiento</td><td>Escalable</td></tr>
-<tr><td>CDN / Assets</td><td>Opcional</td></tr>
+<main class="flex-grow px-6 py-6 space-y-6 max-w-7xl mx-auto w-full">
+
+<!-- TITLE -->
+<div class="flex justify-between items-center">
+  <div>
+    <h1 class="text-2xl font-bold">⚙️ StackCost Ultra</h1>
+    <p class="text-xs text-slate-400 uppercase">Cost Intelligence Engine</p>
+  </div>
+  <div class="flex items-center gap-2 text-sm">
+    <span id="db-dot" class="w-3 h-3 rounded-full bg-slate-400"></span>
+    <span id="db-status">Desconectado</span>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <input id="search" placeholder="Buscar…" class="p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900"/>
+  <select id="sectorFilter" class="p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900"></select>
+  <select id="rangeFilter" class="p-2 rounded border dark:border-slate-700 bg-white dark:bg-slate-900">
+    <option value="">Todos los rangos</option>
+    <option value="<50"><50</option>
+    <option value="50-200">50–200</option>
+    <option value="200-500">200–500</option>
+    <option value=">500">+500</option>
+  </select>
+  <button onclick="exportCSV()" class="p-2 rounded bg-emerald-600 text-white">Export CSV</button>
+</section>
+
+<!-- KPIs -->
+<section id="kpis" class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm"></section>
+
+<!-- CHARTS -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <canvas id="chart-sector"></canvas>
+  <canvas id="chart-ingresos"></canvas>
+  <canvas id="chart-costes"></canvas>
+  <canvas id="chart-margen"></canvas>
+  <canvas id="chart-rangos"></canvas>
+  <canvas id="chart-pareto"></canvas>
+  <canvas id="chart-distribucion"></canvas>
+  <canvas id="chart-forecast"></canvas>
+  <canvas id="chart-outliers"></canvas>
+  <canvas id="chart-radar"></canvas>
+</section>
+
+<!-- TABLE -->
+<section class="bg-white dark:bg-slate-900 rounded-xl p-4 overflow-x-auto">
+<table class="min-w-full text-sm">
+<thead class="border-b dark:border-slate-700">
+<tr>
+<th>ID</th><th>Precio</th><th>Coste</th><th>Margen</th><th>Sector</th>
+</tr>
+</thead>
+<tbody id="table-body"></tbody>
 </table>
-</div>
+</section>
 
-<div class="card">
-<h3>Servicios</h3>
-<table>
-<tr><td>WhatsApp API</td><td>Consumo por mensaje</td></tr>
-<tr><td>Email</td><td>Escalable</td></tr>
-<tr><td>Monitorización</td><td>Incluido</td></tr>
-</table>
-</div>
+</main>
 
-<div class="card">
-<h3>Desarrollo</h3>
-<table>
-<tr><td>Backend Node.js</td><td>Activo</td></tr>
-<tr><td>Frontend HTML/JS</td><td>Activo</td></tr>
-<tr><td>Seguridad</td><td>Continuo</td></tr>
-<tr><td>Evolución producto</td><td>Roadmap trimestral</td></tr>
-</table>
-</div>
+<div id="footer-slot"></div>
 
-<div class="card">
-<p>
-Todos los costes se amortizan automáticamente mediante el sistema de comisión definido en ProfitPulse.
-</p>
-</div>
+<script>
+let RAW = [], FILTERED = [], charts = {};
 
-</div>
+async function loadLayout() {
+  const html = await fetch('/dashboard.html').then(r => r.text());
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelector('header') && header-slot.append(tmp.querySelector('header'));
+  tmp.querySelector('footer') && footer-slot.append(tmp.querySelector('footer'));
+}
+
+function sectorize(p){
+  if(p.sector) return p.sector;
+  const v = Number(p.precio)||0;
+  if(v<50) return 'Micro';
+  if(v<200) return 'Standard';
+  if(v<500) return 'Premium';
+  return 'Enterprise';
+}
+
+function enrich(data){
+  return data.map(p=>{
+    const precio=+p.precio||0;
+    const coste=+p.precio_coste||0;
+    return {...p,
+      precio, coste,
+      margen: precio-coste,
+      sector: sectorize(p),
+      rango: precio<50?'<50':precio<200?'50-200':precio<500?'200-500':'>500'
+    };
+  });
+}
+
+function calcKPIs(data){
+  const sum = (k)=>data.reduce((a,b)=>a+(b[k]||0),0);
+  const avg = (k)=>data.length?sum(k)/data.length:0;
+  return [
+    ['Pedidos',data.length],
+    ['Ingresos',sum('precio').toFixed(2)+'€'],
+    ['Costes',sum('coste').toFixed(2)+'€'],
+    ['Margen',sum('margen').toFixed(2)+'€'],
+    ['Ticket medio',avg('precio').toFixed(2)+'€'],
+    ['Margen medio',avg('margen').toFixed(2)+'€'],
+    ['Max margen',Math.max(...data.map(d=>d.margen)).toFixed(2)+'€'],
+    ['Min margen',Math.min(...data.map(d=>d.margen)).toFixed(2)+'€'],
+    ['Desviación',Math.sqrt(avg('margen')).toFixed(2)],
+    ['Sectores',new Set(data.map(d=>d.sector)).size]
+  ];
+}
+
+function renderKPIs(kpis){
+  const el=document.getElementById('kpis');
+  el.innerHTML='';
+  kpis.forEach(k=>{
+    el.innerHTML+=`<div class="kpi"><div class="text-xs text-slate-400">${k[0]}</div><div class="font-bold">${k[1]}</div></div>`;
+  });
+}
+
+function group(data,key){
+  return data.reduce((a,b)=>{a[b[key]]=(a[b[key]]||0)+1;return a;},{});
+}
+
+function chart(id,type,labels,data){
+  charts[id]?.destroy();
+  charts[id]=new Chart(document.getElementById(id),{
+    type,
+    data:{labels,datasets:[{data}]}
+  });
+}
+
+function renderCharts(data){
+  chart('chart-sector','pie',Object.keys(group(data,'sector')),Object.values(group(data,'sector')));
+  chart('chart-rangos','bar',Object.keys(group(data,'rango')),Object.values(group(data,'rango')));
+  chart('chart-margen','line',data.map((_,i)=>i+1),data.map(d=>d.margen));
+  chart('chart-ingresos','bar',data.map(d=>d.id),data.map(d=>d.precio));
+  chart('chart-costes','bar',data.map(d=>d.id),data.map(d=>d.coste));
+  chart('chart-distribucion','line',data.map(d=>d.precio),data.map(d=>d.margen));
+  chart('chart-outliers','scatter',data.map(d=>d.precio),data.map(d=>d.margen));
+  chart('chart-forecast','line',[1,2,3,4,5],[10,20,25,30,40]);
+  chart('chart-pareto','bar',Object.keys(group(data,'sector')),Object.values(group(data,'sector')).sort((a,b)=>b-a));
+  chart('chart-radar','radar',['Ingresos','Costes','Margen'],[
+    data.reduce((a,b)=>a+b.precio,0),
+    data.reduce((a,b)=>a+b.coste,0),
+    data.reduce((a,b)=>a+b.margen,0)
+  ]);
+}
+
+function renderTable(data){
+  const tb=document.getElementById('table-body');
+  tb.innerHTML='';
+  data.forEach(d=>{
+    tb.innerHTML+=`
+    <tr>
+      <td>${d.id||'-'}</td>
+      <td>${d.precio.toFixed(2)}</td>
+      <td>${d.coste.toFixed(2)}</td>
+      <td>${d.margen.toFixed(2)}</td>
+      <td>${d.sector}</td>
+    </tr>`;
+  });
+}
+
+function applyFilters(){
+  const q=search.value.toLowerCase();
+  const s=sectorFilter.value;
+  const r=rangeFilter.value;
+  FILTERED=RAW.filter(p=>
+    (!q || JSON.stringify(p).toLowerCase().includes(q)) &&
+    (!s || p.sector===s) &&
+    (!r || p.rango===r)
+  );
+  refresh();
+}
+
+function refresh(){
+  renderKPIs(calcKPIs(FILTERED));
+  renderCharts(FILTERED);
+  renderTable(FILTERED);
+}
+
+function exportCSV(){
+  const csv=['id,precio,coste,margen,sector'];
+  FILTERED.forEach(p=>csv.push([p.id,p.precio,p.coste,p.margen,p.sector].join(',')));
+  const blob=new Blob([csv.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='stackcost.csv';
+  a.click();
+}
+
+async function loadData(){
+  try{
+    const res=await fetch('/api/pedidos');
+    RAW=enrich(await res.json());
+    FILTERED=[...RAW];
+
+    // populate sector filter
+    const sectors=[...new Set(RAW.map(r=>r.sector))];
+    sectorFilter.innerHTML='<option value="">Todos</option>'+sectors.map(s=>`<option>${s}</option>`).join('');
+
+    refresh();
+
+    db-dot.className='w-3 h-3 rounded-full bg-emerald-500';
+    db-status.innerText='Conectado';
+
+  }catch(e){
+    db-dot.className='w-3 h-3 rounded-full bg-red-500';
+    db-status.innerText='Error conexión';
+  }
+}
+
+search.oninput=applyFilters;
+sectorFilter.onchange=applyFilters;
+rangeFilter.onchange=applyFilters;
+
+loadLayout();
+loadData();
+</script>
 
 </body>
 </html>
