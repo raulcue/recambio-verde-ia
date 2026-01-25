@@ -60,7 +60,7 @@ function detectVIN(text) {
     return match ? match[1] : null;
 }
 
-export {
+module.exports = {
     normalizeText,
     detectPlate,
     detectVIN
