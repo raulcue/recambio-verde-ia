@@ -3,60 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title id="txt-page-title">Business Intelligence - Recambio Reciclado IA</title>
-    
+
+    <!-- ✅ NOMBRE OFICIAL -->
+    <title>Financial Intelligence Recambio Reciclado | ProfitPulse Analytics Engine</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
     </script>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
-        
-        .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 2.5rem; transition: all 0.3s ease; }
-        .dark .glass-card { background: #0f172a; border-color: #1e293b; }
-        .glass-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
 
-        .stat-badge { font-size: 9px; font-weight: 900; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 10px; text-transform: uppercase; }
-        
-        .nav-btn { width: 42px; height: 42px; border-radius: 15px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .glass-card {
+            background: white;
+            border: 1px solid #f1f5f9;
+            border-radius: 2.5rem;
+            transition: all 0.3s ease;
+        }
+        .dark .glass-card {
+            background: #0f172a;
+            border-color: #1e293b;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
 
-        canvas { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.02)); }
+        .stat-badge {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            padding: 4px 10px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+
+        canvas {
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.02));
+        }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen pb-12">
 
-    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-8 py-5">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-5">
-                <button onclick="window.location.href='landing.html'" class="nav-btn bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-blue-600 hover:text-white">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <div>
-                    <h1 class="text-xl font-black uppercase tracking-tighter leading-none">Business <span class="text-blue-600 italic">Stats</span></h1>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Análisis de Rendimiento IA</p>
-                </div>
-            </div>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-1.5 pr-4 rounded-2xl">
-                    <div id="user-avatar" class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-[10px]">--</div>
-                    <span id="user-name" class="text-[10px] font-black uppercase tracking-tight">Cargando...</span>
-                </div>
-                <button onclick="toggleDarkMode()" class="nav-btn bg-slate-100 dark:bg-slate-800 text-slate-400">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
+    <!-- ================= HEADER DINÁMICO ================= -->
+    <div id="app-header"></div>
+
+    <!-- ================= CONTENIDO ================= -->
+    <main class="flex-grow max-w-7xl mx-auto px-6 mt-10 pb-24">
+
+        <!-- TÍTULO PRINCIPAL -->
+        <div class="mb-10">
+            <h1 class="text-2xl font-black uppercase tracking-tight">
+                Financial Intelligence
+                <span class="text-blue-600 italic">Recambio Reciclado</span>
+            </h1>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                ProfitPulse Analytics Engine
+            </p>
         </div>
-    </nav>
 
-    <main class="max-w-7xl mx-auto px-8 mt-10">
-        
+        <!-- KPIs -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+
+            <!-- Ventas -->
             <div class="glass-card p-8">
                 <div class="flex justify-between items-start mb-4">
                     <div class="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600">
@@ -64,166 +79,94 @@
                     </div>
                     <span class="stat-badge bg-blue-100 text-blue-600">Mensual</span>
                 </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventas Totales</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Ventas Totales
+                </p>
                 <h3 id="stat-ventas" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
-                <div class="flex items-center gap-2 mt-4 text-[10px] font-bold text-emerald-500">
-                    <i class="fas fa-arrow-up"></i> 12.5% <span class="text-slate-400 font-normal">vs mes anterior</span>
-                </div>
             </div>
 
+            <!-- Beneficio -->
             <div class="glass-card p-8">
                 <div class="flex justify-between items-start mb-4">
                     <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600">
                         <i class="fas fa-wallet text-lg"></i>
                     </div>
-                    <span class="stat-badge bg-emerald-100 text-emerald-600">Neto</span>
+                    <span class="stat-badge bg-emerald-100 text-emerald-600">Estimado</span>
                 </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Beneficio Estimado</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Beneficio Estimado
+                </p>
                 <h3 id="stat-beneficio" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
-                <div class="flex items-center gap-2 mt-4 text-[10px] font-bold text-emerald-500">
-                    <i class="fas fa-arrow-up"></i> 8.2% <span class="text-slate-400 font-normal">eficiencia alzada</span>
-                </div>
             </div>
 
+            <!-- Pedidos -->
             <div class="glass-card p-8">
                 <div class="flex justify-between items-start mb-4">
                     <div class="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-600">
                         <i class="fas fa-box text-lg"></i>
                     </div>
                 </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pedidos Procesados</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Pedidos Procesados
+                </p>
                 <h3 id="stat-pedidos" class="text-3xl font-black mt-1 tracking-tighter">0</h3>
-                <p class="text-[10px] text-slate-400 mt-4 font-bold uppercase">Volumen total histórico</p>
             </div>
 
+            <!-- Ratio -->
             <div class="glass-card p-8 bg-slate-900 text-white border-none">
                 <div class="flex justify-between items-start mb-4">
                     <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-blue-400">
                         <i class="fas fa-bullseye text-lg"></i>
                     </div>
                 </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tasa de Cierre</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Tasa de Cierre
+                </p>
                 <h3 class="text-3xl font-black mt-1 tracking-tighter">94.2%</h3>
-                <div class="w-full bg-white/10 h-1.5 rounded-full mt-6 overflow-hidden">
-                    <div class="bg-blue-500 h-full w-[94%] shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
-                </div>
             </div>
         </div>
 
+        <!-- GRÁFICOS -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
+
+            <!-- Evolución -->
             <div class="lg:col-span-2 glass-card p-10">
                 <div class="flex justify-between items-center mb-10">
                     <div>
-                        <h2 class="text-sm font-black uppercase tracking-widest">Evolución de Ingresos</h2>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Comparativa Ventas vs Beneficio</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-[9px] font-black uppercase tracking-tighter">Día</button>
-                        <button class="px-4 py-2 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase tracking-tighter shadow-lg shadow-blue-500/20">Mes</button>
+                        <h2 class="text-sm font-black uppercase tracking-widest">
+                            Evolución de Ingresos
+                        </h2>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">
+                            Ventas vs Beneficio
+                        </p>
                     </div>
                 </div>
+
                 <div class="h-[350px] w-full">
                     <canvas id="chartVentas"></canvas>
                 </div>
             </div>
 
+            <!-- Incidencias -->
             <div class="glass-card p-10">
-                <h2 class="text-sm font-black uppercase tracking-widest mb-10 text-center">Incidencias y Logística</h2>
-                <div class="h-[250px] w-full mb-10">
+                <h2 class="text-sm font-black uppercase tracking-widest mb-10 text-center">
+                    Incidencias y Logística
+                </h2>
+
+                <div class="h-[250px] w-full">
                     <canvas id="chartIncidencias"></canvas>
                 </div>
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-orange-500"></div>
-                            <span class="text-[10px] font-black uppercase tracking-tighter">Rechazados</span>
-                        </div>
-                        <span class="text-xs font-black">12.4%</span>
-                    </div>
-                    <div class="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-                        <div class="flex items-center gap-3">
-                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                            <span class="text-[10px] font-black uppercase tracking-tighter">Devoluciones</span>
-                        </div>
-                        <span class="text-xs font-black">4.2%</span>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="glass-card mt-6 overflow-hidden">
-            <div class="p-8 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center">
-                <h2 class="text-xs font-black uppercase tracking-widest">Zonas de Mayor Actividad</h2>
-                <button class="text-[9px] font-black text-blue-600 uppercase tracking-widest">Ver Mapa Completo</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-slate-50 dark:bg-slate-800/30 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                            <th class="px-8 py-4">Provincia</th>
-                            <th class="px-8 py-4 text-center">Nº Pedidos</th>
-                            <th class="px-8 py-4 text-center">Volumen €</th>
-                            <th class="px-8 py-4 text-right">Crecimiento</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-xs font-bold text-slate-600 dark:text-slate-400">
-                        <tr class="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                            <td class="px-8 py-5 text-slate-900 dark:text-white font-black uppercase tracking-tighter italic">Madrid</td>
-                            <td class="px-8 py-5 text-center">142</td>
-                            <td class="px-8 py-5 text-center">24.500€</td>
-                            <td class="px-8 py-5 text-right text-emerald-500">+14%</td>
-                        </tr>
-                        <tr class="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                            <td class="px-8 py-5 text-slate-900 dark:text-white font-black uppercase tracking-tighter italic">Barcelona</td>
-                            <td class="px-8 py-5 text-center">98</td>
-                            <td class="px-8 py-5 text-center">18.200€</td>
-                            <td class="px-8 py-5 text-right text-emerald-500">+8%</td>
-                        </tr>
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                            <td class="px-8 py-5 text-slate-900 dark:text-white font-black uppercase tracking-tighter italic">Sevilla</td>
-                            <td class="px-8 py-5 text-center">64</td>
-                            <td class="px-8 py-5 text-center">9.800€</td>
-                            <td class="px-8 py-5 text-right text-red-400">-2%</td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
 
     </main>
 
+    <!-- ================= FOOTER DINÁMICO ================= -->
+    <div id="app-footer"></div>
+
+    <!-- ================= LÓGICA ================= -->
     <script>
         async function init() {
-            const userData = localStorage.getItem('user');
-            if (!userData) { window.location.href = 'index.html'; return; }
-
-            try {
-                const user = JSON.parse(userData);
-                // El rol admin y agente tienen acceso a stats
-                if (user.rol !== 'admin' && user.rol !== 'agente') {
-                    alert("Acceso restringido a administración.");
-                    window.location.href = 'landing.html';
-                    return;
-                }
-
-                const userNameEl = document.getElementById('user-name');
-                const userAvatarEl = document.getElementById('user-avatar');
-
-                if (userNameEl) userNameEl.innerText = user.nombre || 'Admin';
-                if (userAvatarEl) {
-                    userAvatarEl.innerText = user.iniciales || 'AD';
-                    if (user.rol === 'admin') {
-                        userAvatarEl.classList.remove('bg-blue-600');
-                        userAvatarEl.classList.add('bg-red-600');
-                    }
-                }
-            } catch (e) {
-                window.location.href = 'index.html';
-                return;
-            }
-
             if (localStorage.getItem('darkMode') === 'true') {
                 document.documentElement.classList.add('dark');
             }
@@ -232,52 +175,106 @@
             inicializarGraficos();
         }
 
-        function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
-        }
-
         async function cargarStats() {
             try {
                 const res = await fetch('/api/stats/global');
                 const data = await res.json();
-                
-                document.getElementById('stat-ventas').innerText = `${parseFloat(data.ventas).toLocaleString()}€`;
-                document.getElementById('stat-beneficio').innerText = `${(data.ventas * 0.25).toLocaleString()}€`;
-                document.getElementById('stat-pedidos').innerText = data.total;
+
+                document.getElementById('stat-ventas').innerText =
+                    `${parseFloat(data.ventas || 0).toLocaleString()}€`;
+
+                document.getElementById('stat-beneficio').innerText =
+                    `${(parseFloat(data.ventas || 0) * 0.25).toLocaleString()}€`;
+
+                document.getElementById('stat-pedidos').innerText =
+                    data.total || 0;
+
             } catch (err) {
                 console.error("Error cargando stats:", err);
             }
         }
 
         function inicializarGraficos() {
-            // GRÁFICO DE VENTAS
+
             new Chart(document.getElementById('chartVentas'), {
                 type: 'line',
                 data: {
                     labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
                     datasets: [
-                        { label: 'Ventas', data: [1200, 1900, 1500, 2100], borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.4 }, 
-                        { label: 'Beneficio', data: [300, 900, 600, 800], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }
+                        {
+                            label: 'Ventas',
+                            data: [1200, 1900, 1500, 2100],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Beneficio',
+                            data: [300, 900, 600, 800],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
             });
 
             new Chart(document.getElementById('chartIncidencias'), {
                 type: 'bar',
                 data: {
-                    labels: ['Lun', 'Mar', 'Mie', 'Jue', 'Vie'],
+                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'],
                     datasets: [
-                        { label: 'Rechazos', data: [0.2, 0.8, 0.4, 0.5, 0.3], backgroundColor: '#f59e0b', borderRadius: 8 }, 
-                        { label: 'Devoluciones', data: [0.1, 0.3, 0.6, 0.2, 0.1], backgroundColor: '#ef4444', borderRadius: 8 }
+                        {
+                            label: 'Rechazos',
+                            data: [0.2, 0.8, 0.4, 0.5, 0.3]
+                        },
+                        {
+                            label: 'Devoluciones',
+                            data: [0.1, 0.3, 0.6, 0.2, 0.1]
+                        }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
             });
         }
 
-        window.onload = init;
+        window.addEventListener('DOMContentLoaded', init);
     </script>
+
+    <!-- ================= CARGA HEADER ================= -->
+    <script>
+        fetch('/partials/header.html')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('app-header').innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error cargando header:', err);
+            });
+    </script>
+
+    <!-- ================= CARGA FOOTER ================= -->
+    <script>
+        fetch('/partials/footer.html')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('app-footer').innerHTML = html;
+            })
+            .catch(err => {
+                console.error('Error cargando footer:', err);
+            });
+    </script>
+
 </body>
 </html>
