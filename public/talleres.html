@@ -84,7 +84,9 @@
             localStorage.setItem('darkMode', isDark);
         }
 
-        // ✅ CAMBIO PRINCIPAL AQUÍ
+        // =============================
+        // CARGA DE TALLERES
+        // =============================
         async function cargarTalleres() {
             try {
                 const res = await fetch('/api/usuarios?rol=taller', {
@@ -104,37 +106,54 @@
             }
         }
 
+        // =============================
+        // FILTRADO (PROTEGIDO)
+        // =============================
         function filtrarTalleres() {
-    const searchEl = document.getElementById('searchInput');
-    const rolEl = document.getElementById('filterRol');
+            const searchEl = document.getElementById('searchInput');
+            const rolEl = document.getElementById('filterRol');
 
-    // 🛡️ Protección contra null (evita el crash actual)
-    const search = searchEl ? searchEl.value.toLowerCase() : '';
-    const rol = rolEl ? rolEl.value : 'todos';
+            // 🛡️ Protección contra null
+            const search = searchEl ? searchEl.value.toLowerCase() : '';
+            const rol = rolEl ? rolEl.value : 'todos';
 
-    datosFiltrados = allTalleres.filter(t => {
-        const matchSearch = 
-            (t.nombre_taller || '').toLowerCase().includes(search) || 
-            (t.email || '').toLowerCase().includes(search) ||
-            (t.provincia || '').toLowerCase().includes(search);
+            datosFiltrados = allTalleres.filter(t => {
+                const matchSearch = 
+                    (t.nombre_taller || '').toLowerCase().includes(search) || 
+                    (t.email || '').toLowerCase().includes(search) ||
+                    (t.provincia || '').toLowerCase().includes(search);
 
-        const matchRol = rol === 'todos' || t.rol === rol;
-        return matchSearch && matchRol;
-    });
+                const matchRol = rol === 'todos' || t.rol === rol;
+                return matchSearch && matchRol;
+            });
 
-    renderTalleres();
-}
+            renderTalleres();
+        }
 
+        // =============================
+        // RENDER (PROTEGIDO)
+        // =============================
         function renderTalleres() {
             const tbody = document.getElementById('tablaTalleres');
             const noRes = document.getElementById('noResults');
+
+            if (!tbody) {
+                console.error('❌ No existe el elemento #tablaTalleres en el DOM');
+                return;
+            }
+
+            if (!noRes) {
+                console.warn('⚠️ No existe el elemento #noResults en el DOM');
+            }
+
             tbody.innerHTML = '';
 
             if (datosFiltrados.length === 0) {
-                noRes.classList.remove('hidden');
+                if (noRes) noRes.classList.remove('hidden');
                 return;
             }
-            noRes.classList.add('hidden');
+
+            if (noRes) noRes.classList.add('hidden');
 
             datosFiltrados.forEach(t => {
                 const tr = document.createElement('tr');
@@ -183,7 +202,9 @@
             });
         }
 
-        // ✅ CAMBIO URL AQUÍ
+        // =============================
+        // CRUD
+        // =============================
         async function guardarTaller(e) {
             e.preventDefault();
             const id = document.getElementById('t-id').value;
@@ -236,7 +257,6 @@
             document.getElementById('modalTaller').classList.add('modal-active');
         }
 
-        // ✅ CAMBIO URL AQUÍ
         async function eliminarTaller(id) {
             if(!confirm("¿Estás seguro de eliminar este usuario?")) return;
 
