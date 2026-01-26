@@ -16,6 +16,21 @@
 body { font-family: 'Inter', sans-serif; }
 .glass-card { background:white;border:1px solid #f1f5f9;border-radius:2rem; }
 .dark .glass-card { background:#0f172a;border-color:#1e293b; }
+.tooltip { position: relative; cursor: help; }
+.tooltip:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: white;
+    padding: 8px 10px;
+    font-size: 11px;
+    border-radius: 8px;
+    white-space: nowrap;
+    z-index: 50;
+}
 </style>
 </head>
 
@@ -33,30 +48,60 @@ body { font-family: 'Inter', sans-serif; }
     <p class="text-xs font-bold text-slate-400 uppercase">ProfitPulse Analytics Engine</p>
 </div>
 
-<!-- ================= AJUSTES ================= -->
-<div class="glass-card p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- ================= AJUSTES AVANZADOS ================= -->
+<div class="glass-card p-6 grid grid-cols-1 md:grid-cols-5 gap-4">
     <div>
         <label class="text-xs font-bold">% Comisión</label>
         <input id="cfg-comision" type="number" step="0.1" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
     </div>
     <div>
         <label class="text-xs font-bold">Mínimo (€)</label>
-        <input id="cfg-minimo" type="number" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
+        <input id="cfg-minimo" type="number" step="0.1" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
     </div>
-    <div class="flex items-end">
-        <button onclick="saveConfig()" class="w-full bg-blue-600 text-white rounded p-2 font-bold">
+    <div>
+        <label class="text-xs font-bold">Máximo (€)</label>
+        <input id="cfg-maximo" type="number" step="0.1" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
+    </div>
+    <div>
+        <label class="text-xs font-bold">Simulador Precio</label>
+        <input id="sim-precio" type="number" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
+    </div>
+    <div>
+        <label class="text-xs font-bold">Simulador Coste</label>
+        <input id="sim-coste" type="number" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
+    </div>
+
+    <div class="md:col-span-5 flex gap-3">
+        <button onclick="saveConfig()" class="flex-1 bg-blue-600 text-white rounded p-2 font-bold">
             Guardar Ajustes
         </button>
+        <button onclick="runSimulator()" class="flex-1 bg-emerald-600 text-white rounded p-2 font-bold">
+            Simular Comisión
+        </button>
+        <div id="sim-result" class="flex-1 text-sm font-black flex items-center"></div>
     </div>
 </div>
 
 <!-- ================= KPIS ================= -->
-<div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-    <div class="glass-card p-5"><div class="text-xs">Ventas</div><div id="kpi-ventas" class="text-xl font-black">0€</div></div>
-    <div class="glass-card p-5"><div class="text-xs">Beneficio Bruto</div><div id="kpi-bruto" class="text-xl font-black">0€</div></div>
-    <div class="glass-card p-5"><div class="text-xs">Comisión</div><div id="kpi-comision" class="text-xl font-black">0€</div></div>
-    <div class="glass-card p-5"><div class="text-xs">Beneficio Neto</div><div id="kpi-neto" class="text-xl font-black">0€</div></div>
-    <div class="glass-card p-5 bg-slate-900 text-white"><div class="text-xs">Ratio</div><div id="kpi-ratio" class="text-xl font-black">–</div></div>
+<div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+    <div class="glass-card p-5 tooltip" data-tip="Suma total de precios de venta">
+        <div class="text-xs">Ventas</div><div id="kpi-ventas" class="text-xl font-black">0€</div>
+    </div>
+    <div class="glass-card p-5 tooltip" data-tip="Precio - Coste acumulado">
+        <div class="text-xs">Beneficio Bruto</div><div id="kpi-bruto" class="text-xl font-black">0€</div>
+    </div>
+    <div class="glass-card p-5 tooltip" data-tip="Comisiones aplicadas según reglas">
+        <div class="text-xs">Comisión</div><div id="kpi-comision" class="text-xl font-black">0€</div>
+    </div>
+    <div class="glass-card p-5 tooltip" data-tip="Bruto - Comisión">
+        <div class="text-xs">Beneficio Neto</div><div id="kpi-neto" class="text-xl font-black">0€</div>
+    </div>
+    <div class="glass-card p-5 tooltip" data-tip="% pedidos con precio válido">
+        <div class="text-xs">Ratio</div><div id="kpi-ratio" class="text-xl font-black">–</div>
+    </div>
+    <div class="glass-card p-5 tooltip" data-tip="Margen medio por pedido">
+        <div class="text-xs">Margen Medio</div><div id="kpi-margen-medio" class="text-xl font-black">–</div>
+    </div>
 </div>
 
 <!-- ================= ALERTAS ================= -->
@@ -74,6 +119,26 @@ body { font-family: 'Inter', sans-serif; }
     </div>
 </div>
 
+<!-- ================= TABLA PEDIDOS ================= -->
+<div class="glass-card p-6 overflow-auto">
+    <h2 class="font-black mb-3">Detalle de Pedidos</h2>
+    <table class="w-full text-xs">
+        <thead class="border-b">
+            <tr>
+                <th>ID</th>
+                <th>Taller</th>
+                <th>Precio</th>
+                <th>Coste</th>
+                <th>Margen</th>
+                <th>Comisión</th>
+                <th>Neto</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-pedidos"></tbody>
+    </table>
+</div>
+
 </main>
 
 <div id="app-footer"></div>
@@ -82,18 +147,31 @@ body { font-family: 'Inter', sans-serif; }
 let chartVentas, chartIncidencias;
 
 let config = JSON.parse(localStorage.getItem('profitpulse_config')) || {
-    comision: 1,
-    minimo: 1
+    comision: 1.5,
+    minimo: 1.5,
+    maximo: 3
 };
 
 document.getElementById('cfg-comision').value = config.comision;
 document.getElementById('cfg-minimo').value = config.minimo;
+document.getElementById('cfg-maximo').value = config.maximo;
 
 function saveConfig(){
-    config.comision = Number(document.getElementById('cfg-comision').value);
-    config.minimo = Number(document.getElementById('cfg-minimo').value);
+    config.comision = Number(cfg-comision.value);
+    config.minimo = Number(cfg-minimo.value);
+    config.maximo = Number(cfg-maximo.value);
     localStorage.setItem('profitpulse_config', JSON.stringify(config));
     cargarStats();
+}
+
+function runSimulator(){
+    const precio = Number(sim-precio.value||0);
+    const coste = Number(sim-coste.value||0);
+    const margen = precio-coste;
+    let fee = margen*(config.comision/100);
+    fee = Math.max(fee, config.minimo);
+    fee = Math.min(fee, config.maximo);
+    sim-result.innerText = `Comisión simulada: ${fee.toFixed(2)}€`;
 }
 
 // ---------------- INIT ----------------
@@ -107,6 +185,7 @@ async function cargarStats(){
     const metrics = calcularKPIs(pedidos);
     renderKPIs(metrics);
     renderAlerts(metrics.alerts);
+    renderTabla(pedidos);
 
     const talleres = aggregateByTaller(pedidos);
     renderCharts(talleres);
@@ -132,7 +211,10 @@ function calcularKPIs(pedidos){
             const margen = precio-coste;
             bruto+=margen;
 
-            const fee = Math.max(precio*(config.comision/100), config.minimo);
+            let fee = margen*(config.comision/100);
+            fee = Math.max(fee, config.minimo);
+            fee = Math.min(fee, config.maximo);
+
             comision+=fee;
             neto += (margen-fee);
 
@@ -142,17 +224,48 @@ function calcularKPIs(pedidos){
 
     return {
         ventas, bruto, comision, neto,
+        margenMedio: conPrecio ? (bruto/conPrecio) : 0,
         ratio: pedidos.length ? ((conPrecio/pedidos.length)*100).toFixed(1) : 0,
         alerts
     };
 }
 
 function renderKPIs(m){
-    document.getElementById('kpi-ventas').innerText = `${m.ventas.toFixed(0)}€`;
-    document.getElementById('kpi-bruto').innerText = `${m.bruto.toFixed(0)}€`;
-    document.getElementById('kpi-comision').innerText = `${m.comision.toFixed(0)}€`;
-    document.getElementById('kpi-neto').innerText = `${m.neto.toFixed(0)}€`;
-    document.getElementById('kpi-ratio').innerText = `${m.ratio}%`;
+    kpi-ventas.innerText = `${m.ventas.toFixed(0)}€`;
+    kpi-bruto.innerText = `${m.bruto.toFixed(0)}€`;
+    kpi-comision.innerText = `${m.comision.toFixed(0)}€`;
+    kpi-neto.innerText = `${m.neto.toFixed(0)}€`;
+    kpi-ratio.innerText = `${m.ratio}%`;
+    kpi-margen-medio.innerText = `${m.margenMedio.toFixed(0)}€`;
+}
+
+// ---------------- TABLE ----------------
+function renderTabla(pedidos){
+    const tbody = document.getElementById('tabla-pedidos');
+    tbody.innerHTML='';
+
+    pedidos.forEach(p=>{
+        const precio = Number(p.precio||0);
+        const coste = Number(p.precio_coste||0);
+        const margen = precio-coste;
+        let fee = margen*(config.comision/100);
+        fee = Math.max(fee, config.minimo);
+        fee = Math.min(fee, config.maximo);
+        const neto = margen-fee;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${p.nombre_usuario||'-'}</td>
+            <td>${precio}</td>
+            <td>${coste}</td>
+            <td>${margen.toFixed(1)}</td>
+            <td>${fee.toFixed(1)}</td>
+            <td>${neto.toFixed(1)}</td>
+            <td>${p.estado}</td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 // ---------------- ALERTS ----------------
@@ -162,7 +275,7 @@ function renderAlerts(alerts){
 
     box.classList.remove('hidden');
     box.innerHTML = `<h3 class="font-black mb-2">⚠️ Alertas</h3>` +
-        alerts.slice(0,8).map(a=>`<div class="text-xs text-red-500">• ${a}</div>`).join('');
+        alerts.slice(0,12).map(a=>`<div class="text-xs text-red-500">• ${a}</div>`).join('');
 }
 
 // ---------------- AGGREGATION ----------------
@@ -191,11 +304,11 @@ function renderCharts(data){
     if(chartVentas) chartVentas.destroy();
     if(chartIncidencias) chartIncidencias.destroy();
 
-    chartVentas = new Chart(document.getElementById('chartVentas'),{
+    chartVentas = new Chart(chartVentas = new Chart(document.getElementById('chartVentas'),{
         type:'bar',
         data:{ labels, datasets:[{ label:'Ventas €', data:ventas }]},
         options:{ responsive:true }
-    });
+    }));
 
     chartIncidencias = new Chart(document.getElementById('chartIncidencias'),{
         type:'bar',
