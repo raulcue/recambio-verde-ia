@@ -43,101 +43,8 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div class="px-4 lg:px-6 h-20 flex items-center justify-between w-full">
-            <div class="flex items-center gap-3">
-                <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <img src="assets/logo.png" alt="Kanban" class="h-8 w-auto logo-invert">
-                    <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
-                        Kanban <span style="color: #7cb65d;">Recambio Reciclado</span>
-                        <span id="db-status" class="w-2 h-2 rounded-full bg-red-500 transition-colors ml-2" title="Estado BBDD"></span>
-                    </h1>
-                </a>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="hidden md:block relative">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="buscador" onkeyup="filtrar()" placeholder="Buscar..." class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-48 lg:w-64 focus:ring-2 focus:ring-blue-500 transition-all">
-                </div>
-                <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-4">
-                    <button onclick="document.documentElement.classList.toggle('dark')" class="w-8 h-8 md:w-10 md:h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
-                        <i class="fas fa-moon dark:hidden text-xs"></i><i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
-                    </button>
-                    <button onclick="togglePrivacy()" class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
-                        <i id="eye-icon" class="fas fa-eye text-xs"></i>
-                    </button>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="hidden md:flex flex-col items-end">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total Tránsito</span>
-                        <span id="total-general" class="text-lg font-black text-blue-600 blur-data leading-none">0€</span>
-                    </div>
-                    <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
-                    
-                    <div class="flex items-center gap-1">
-                        <div class="waffle-container group">
-                            <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-colors">
-                                <i class="fas fa-th text-xs"></i>
-                            </button>
-                            <div class="absolute right-0 top-full mt-0 hidden group-hover:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[2rem] overflow-hidden z-[60]">
-                                <div class="waffle-grid">
-                                    <a href="landing.html" class="waffle-item text-blue-600"><i class="fas fa-home"></i><span class="text-[9px] font-black uppercase text-slate-500">Principal</span></a>
-                                    <a href="dashboard.html" class="waffle-item text-indigo-500"><i class="fas fa-columns"></i><span class="text-[9px] font-black uppercase text-slate-500">Flujos</span></a>
-                                    <a href="stats.html" class="waffle-item text-emerald-500"><i class="fas fa-chart-line"></i><span class="text-[9px] font-black uppercase text-slate-500">BI Stats</span></a>
-                                    <a href="talleres.html" class="waffle-item text-orange-500"><i class="fas fa-users-cog"></i><span class="text-[9px] font-black uppercase text-slate-500">Equipo</span></a>
-                                    <a href="pedidos-taller.html" class="waffle-item text-purple-500"><i class="fas fa-list-check"></i><span class="text-[9px] font-black uppercase text-slate-500">Pedidos</span></a>
-                                    <a href="admin-logs.html" class="waffle-item text-slate-500"><i class="fas fa-history"></i><span class="text-[9px] font-black uppercase text-slate-500">Logs</span></a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- 🔔 NOTIFICACIONES WHATSAPP -->
-							<button id="bell-btn"
-									onclick="openWhatsappPanel()"
-									class="relative w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
-								<i class="fas fa-bell text-xs"></i>
-								<span id="bell-count"
-									  class="hidden absolute -top-1 -right-1 bg-emerald-600 text-white text-[9px] font-black rounded-full px-1.5">
-									0
-								</span>
-							</button>
-							
-							
-						<!-- 🔔 Panel de notificaciones WhatsApp -->
-						<div id="whatsapp-panel"
- class="hidden absolute right-2 md:right-0 mt-2 w-[90vw] md:w-80 max-w-sm
-        bg-white dark:bg-slate-900 rounded-xl shadow-xl border
-        border-slate-200 dark:border-slate-700 z-50">
-
-							<div class="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-								<span class="font-semibold text-sm">Notificaciones WhatsApp</span>
-								<button onclick="closeWhatsappPanel()"
-										class="text-xs text-slate-400 hover:text-slate-600">
-									Cerrar
-								</button>
-							</div>
-
-							<div id="whatsapp-panel-body" class="max-h-80 overflow-y-auto custom-scrollbar p-3 space-y-2 text-sm">
-								<div class="text-slate-400 text-center">
-									Sin notificaciones
-								</div>
-							</div>
-
-							<div class="p-2 border-t border-slate-200 dark:border-slate-700 text-center">
-								<button onclick="resetWhatsappNotifications()"
-										class="text-xs text-red-500 hover:text-red-600">
-									Limpiar notificaciones
-								</button>
-							</div>
-						</div>
-                        <button class="w-8 h-8 text-slate-400 hover:text-red-600 transition-colors">
-                            <i class="fas fa-power-off text-sm"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- HEADER DINÁMICO -->
+    <div id="app-header"></div>
 
     <nav class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 lg:px-6 py-3">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 w-full">
@@ -978,5 +885,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(pollWhatsappNotifications, 5000);
 });
     </script>
+<script>
+  fetch('partials/header.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('app-header').innerHTML = html;
+    })
+    .catch(err => {
+      console.error('Error cargando header:', err);
+    });
+</script>   
 </body>
 </html>
