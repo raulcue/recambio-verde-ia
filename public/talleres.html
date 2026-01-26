@@ -113,7 +113,6 @@
             const searchEl = document.getElementById('searchInput');
             const rolEl = document.getElementById('filterRol');
 
-            // 🛡️ Protección contra null
             const search = searchEl ? searchEl.value.toLowerCase() : '';
             const rol = rolEl ? rolEl.value : 'todos';
 
@@ -131,20 +130,15 @@
         }
 
         // =============================
-        // RENDER (PROTEGIDO)
+        // RENDER (CORREGIDO)
         // =============================
         function renderTalleres() {
-            const tbody = document.getElementById('tablaTalleres');
+            const tbody = document.querySelector('tbody');   // ✅ CAMBIO AQUÍ
             const noRes = document.getElementById('noResults');
 
-            // 🛡️ Protección principal
             if (!tbody) {
-                console.error('❌ No existe el elemento #tablaTalleres en el DOM');
+                console.error('❌ No existe ningún <tbody> en el DOM');
                 return;
-            }
-
-            if (!noRes) {
-                console.warn('⚠️ No existe el elemento #noResults en el DOM');
             }
 
             tbody.innerHTML = '';
