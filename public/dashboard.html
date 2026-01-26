@@ -219,12 +219,6 @@
         </div>
     </div>
 
-    <footer class="fixed bottom-0 w-full py-3 border-t bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-[10px] text-slate-400 uppercase font-bold tracking-widest z-40 px-4 flex flex-col md:flex-row justify-between items-center border-slate-100 dark:border-slate-800 gap-2">
-        <div>v2.2.0 | CREADOR: RAUL CUE</div>
-        <div class="hidden md:block">CONTACTO: RAULCUE@GMAIL.COM</div>
-        <div>COPYRIGHT 2026-2030</div>
-    </footer>
-
     <script>
         let db = [];
         let isPrivate = false;
@@ -894,6 +888,19 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(err => {
       console.error('Error cargando header:', err);
     });
-</script>   
+</script> 
+<script>
+  fetch('partials/footer.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('app-footer').innerHTML = html;
+    })
+    .catch(err => {
+      console.error('Error cargando footer:', err);
+    });
+</script>
+<!-- FOOTER DINÁMICO -->
+<div id="app-footer"></div>
+  
 </body>
 </html>
