@@ -414,7 +414,7 @@
                              data-pedido-id="${p.id}"
                              ondragstart="dragStartHandler(event, ${p.id})" 
                              ondragend="dragEndHandler(event)"
-                             onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
+                             onclick="abrirEditarById(${p.id})"
                              class="drag-item bg-white dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-grab text-[10px]">
 
                             <div class="font-black text-blue-600 truncate">
@@ -437,7 +437,7 @@
                          data-pedido-id="${p.id}"
                          ondragstart="dragStartHandler(event, ${p.id})" 
                          ondragend="dragEndHandler(event)"
-                         onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
+                         onclick="abrirEditarById(${p.id})"
                          class="drag-item bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-xl transition-all cursor-grab">
 
                         <div class="flex justify-between mb-3">
@@ -721,6 +721,14 @@ async function cargarDatos() {
             document.getElementById('modal').classList.remove('hidden');
             switchTab('gen');
         }
+        function abrirEditarById(id) {
+    const pedido = db.find(p => p.id == id);
+    if (!pedido) {
+        showToast('Pedido no encontrado', 'error');
+        return;
+    }
+    abrirEditar(pedido);
+}
 
         function cerrarModal() { document.getElementById('modal').classList.add('hidden'); }
 
