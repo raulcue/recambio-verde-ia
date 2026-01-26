@@ -377,96 +377,46 @@
             }
         }
 
-        async function cargarDatos() {
-            const board = document.getElementById('kanbanBoard');
-            let tId = document.getElementById('filtroTaller').value;
-            board.style.opacity = '0.5';
-            try {
-				const res = await fetch(`/api/pedidos`, {
-				cache: 'no-store'
-				});               
-				if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}`);
-                }
-                db = await res.json();
-console.log('Datos cargados:', db.length, 'registros');
+async function cargarDatos() {
+    const board = document.getElementById('kanbanBoard');
+    board.style.opacity = '0.5';
 
-// 👉 APLICAR FILTRO DE TALLER
-const tId = document.getElementById('filtroTaller').value;
+    try {
+        const res = await fetch('/api/pedidos', {
+            cache: 'no-store'
+        });
 
-let filtrados = db;
-if (tId !== 'todos') {
-    filtrados = db.filter(p => String(p.usuario_id) === String(tId));
-}
-
-console.log('Filtro taller:', tId, 'Registros visibles:', filtrados.length);
-
-// IMPORTANTE: Verificar los estados reales que tenemos
-const estadosUnicos = [...new Set(filtrados.map(p => p.estado))];
-console.log('Estados encontrados en los datos:', estadosUnicos);
-
-// 👉 Pintar usando los datos filtrados
-renderBoard(filtrados);
-            } catch(e) { 
-                console.error("Error cargando datos:", e); 
-                showToast('ERROR CARGANDO DATOS', 'error');
-            } 
-            finally { board.style.opacity = '1'; }
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
         }
 
-        function renderBoard(dataToRender = null) {
-            const board = document.getElementById('kanbanBoard');
-            board.innerHTML = '';
-            let globalSum = 0;
-            const sourceData = dataToRender || db;
+        db = await res.json();
+        console.log('Datos cargados:', db.length, 'registros');
 
-            columns.forEach(col => {
-// FILTRO MEJORADO: Aceptar múltiples estados equivalentes según las nuevas columnas
-const items = sourceData.filter(p => {
-    const estado = p.estado ? p.estado.toLowerCase() : '';
-    
-    if (col.id === 'solicitud') {
-        return estado === 'solicitud' || estado === 'pendiente' || estado === 'solicitado';
-    }
-    if (col.id === 'desguace') {
-        return estado === 'desguace' || estado === 'en desguace' || estado === 'proceso' || estado === 'en proceso';
-    }
-    if (col.id === 'listo') {
-        return estado === 'listo' || estado === 'verificado' || estado === 'listo / verificado';
-    }
-    if (col.id === 'transito') {
-        return estado === 'transito' || estado === 'en tránsito' || estado === 'en transito';
-    }
-    if (col.id === 'finalizado') {
-        return estado === 'finalizado' || estado === 'entregado' || estado === 'completado';
-    }
-    if (col.id === 'incidencia') {
-        return estado === 'incidencia' || estado === 'cancelado' || estado === 'anulado' || estado === 'error';
-    }
-    return estado === col.id;
-});
+        // 👉 APLICAR FILTRO DE TALLER
+        const tId = document.getElementById('filtroTaller').value;
 
-const colSum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
-globalSum += colSum;
+        let filtrados = db;
+        if (tId !== 'todos') {
+            filtrados = db.filter(p => String(p.usuario_id) === String(tId));
+        }
 
-const columnHtml = `
-<div class="kanban-column flex flex-col gap-4 h-full transition-all duration-300" 
-     data-column-id="${col.id}"
-     ondragover="event.preventDefault(); this.classList.add('drag-over')" 
-     ondragenter="this.classList.add('drag-over')" 
-     ondragleave="this.classList.remove('drag-over')" 
-     ondrop="dropHandler(event, '${col.id}')">
+        console.log('Filtro taller:', tId, 'Registros visibles:', filtrados.length);
 
-    <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color} py-1">
-    <div>
-        <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
-        <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
-    </div>
-    ${col.id === 'finalizado' 
-        ? '' 
-        : `<span class="text-xs font-black text-blue-600 italic">${colSum.toFixed(0)}€</span>`
+        // IMPORTANTE: Verificar los estados reales que tenemos
+        const estadosUnicos = [...new Set(filtrados.map(p => p.estado))];
+        console.log('Estados encontrados en los datos:', estadosUnicos);
+
+        // 👉 Pintar usando los datos filtrados
+        renderBoard(filtrados);
+
+    } catch (e) {
+        console.error("Error cargando datos:", e);
+        showToast('ERROR CARGANDO DATOS', 'error');
+    } finally {
+        board.style.opacity = '1';
     }
-</div>
+}
 
     <div class="flex-1 space-y-2 pb-10 overflow-y-auto custom-scrollbar">
 
