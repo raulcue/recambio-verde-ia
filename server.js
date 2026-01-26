@@ -539,6 +539,34 @@ app.get('/api/pedidos', async (req, res) => {
   }
 });
 
+// Eliminar pedido
+app.delete('/api/pedidos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    console.log('🗑️ Eliminando pedido ID:', id);
+
+    const result = await query(
+      'DELETE FROM pedidos WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      deletedId: id
+    });
+
+  } catch (error) {
+    console.error('❌ Error eliminando pedido:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // Actualizar estado (drag & drop)
 app.put('/api/pedidos/:id/estado', async (req, res) => {
   try {
