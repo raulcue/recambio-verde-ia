@@ -14,17 +14,19 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
 body { font-family: 'Inter', sans-serif; }
-.glass-card { background:white;border:1px solid #f1f5f9;border-radius:1.8rem; }
+
+.glass-card {
+    background:white;
+    border:1px solid #f1f5f9;
+    border-radius:1.8rem;
+}
 .dark .glass-card { background:#0f172a;border-color:#1e293b; }
 
-.tooltip {
-    position: relative;
-    cursor: pointer;
-}
+.tooltip { position: relative; cursor: pointer; }
 .tooltip:hover::after {
     content: attr(data-tip);
     position: absolute;
-    bottom: 120%;
+    bottom: 130%;
     left: 50%;
     transform: translateX(-50%);
     background: #020617;
@@ -45,8 +47,8 @@ body { font-family: 'Inter', sans-serif; }
 
 <!-- BOTÓN AJUSTES -->
 <button onclick="toggleSettings()"
-        class="fixed bottom-6 right-6 z-50 bg-blue-600 text-white w-14 h-14 rounded-full shadow-xl hover:bg-blue-700">
-    <i class="fas fa-gear"></i>
+        class="fixed bottom-6 right-6 z-50 bg-blue-600 text-white w-14 h-14 rounded-full shadow-xl hover:bg-blue-700 transition-all">
+    <i class="fas fa-sliders"></i>
 </button>
 
 <!-- PANEL AJUSTES -->
@@ -80,7 +82,7 @@ body { font-family: 'Inter', sans-serif; }
 </div>
 
 <!-- CONTENIDO -->
-<main class="flex-grow max-w-full px-4 xl:px-10 mt-8 pb-24 space-y-10">
+<main class="flex-grow max-w-screen-2xl mx-auto px-4 xl:px-8 mt-8 pb-24 space-y-10">
 
 <!-- TITLE -->
 <div>
@@ -95,49 +97,61 @@ body { font-family: 'Inter', sans-serif; }
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
 
     <div class="glass-card p-5">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
             <div class="text-xs">Ventas</div>
-            <div class="tooltip" data-tip="Suma total de precios de venta">ℹ️</div>
+            <div class="tooltip" data-tip="Suma total de precios de venta">
+                <i class="fas fa-circle-info text-slate-400 hover:text-blue-500"></i>
+            </div>
         </div>
         <div id="kpi-ventas" class="text-xl font-black">0€</div>
     </div>
 
     <div class="glass-card p-5">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
             <div class="text-xs">Beneficio Bruto</div>
-            <div class="tooltip" data-tip="Precio - Coste acumulado">ℹ️</div>
+            <div class="tooltip" data-tip="Precio de venta menos precio de coste acumulado">
+                <i class="fas fa-circle-info text-slate-400 hover:text-blue-500"></i>
+            </div>
         </div>
         <div id="kpi-bruto" class="text-xl font-black">0€</div>
     </div>
 
     <div class="glass-card p-5">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
             <div class="text-xs">Comisión</div>
-            <div class="tooltip" data-tip="Aplicando % comisión, mínimo y máximo configurados">ℹ️</div>
+            <div class="tooltip" data-tip="Comisión aplicada según % , mínimo y máximo configurados">
+                <i class="fas fa-circle-info text-slate-400 hover:text-blue-500"></i>
+            </div>
         </div>
         <div id="kpi-comision" class="text-xl font-black">0€</div>
     </div>
 
     <div class="glass-card p-5">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
             <div class="text-xs">Beneficio Neto</div>
-            <div class="tooltip" data-tip="Beneficio bruto menos comisiones">ℹ️</div>
+            <div class="tooltip" data-tip="Beneficio bruto menos comisiones">
+                <i class="fas fa-circle-info text-slate-400 hover:text-blue-500"></i>
+            </div>
         </div>
         <div id="kpi-neto" class="text-xl font-black">0€</div>
     </div>
 
     <div class="glass-card p-5">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
             <div class="text-xs">Ratio</div>
-            <div class="tooltip" data-tip="% pedidos con precio válido">ℹ️</div>
+            <div class="tooltip" data-tip="% de pedidos con precio válido">
+                <i class="fas fa-circle-info text-slate-400 hover:text-blue-500"></i>
+            </div>
         </div>
         <div id="kpi-ratio" class="text-xl font-black">–</div>
     </div>
 
     <div class="glass-card p-5">
-        <div class="flex justify-between">
+        <div class="flex justify-between items-center">
             <div class="text-xs">Margen Medio</div>
-            <div class="tooltip" data-tip="Beneficio bruto dividido entre pedidos con precio">ℹ️</div>
+            <div class="tooltip" data-tip="Beneficio bruto dividido entre pedidos con precio">
+                <i class="fas fa-circle-info text-slate-400 hover:text-blue-500"></i>
+            </div>
         </div>
         <div id="kpi-margen-medio" class="text-xl font-black">–</div>
     </div>
@@ -159,33 +173,14 @@ body { font-family: 'Inter', sans-serif; }
     </div>
 </div>
 
-<!-- TABLA -->
-<div class="glass-card p-6 overflow-auto">
-    <h2 class="font-black mb-3">Detalle de Pedidos</h2>
-    <table class="w-full text-xs">
-        <thead class="border-b">
-        <tr>
-            <th>ID</th>
-            <th>Taller</th>
-            <th>Precio</th>
-            <th>Coste</th>
-            <th>Margen</th>
-            <th>Comisión</th>
-            <th>Neto</th>
-            <th>Estado</th>
-        </tr>
-        </thead>
-        <tbody id="tabla-pedidos"></tbody>
-    </table>
-</div>
-
 </main>
 
 <!-- FOOTER -->
 <div id="app-footer"></div>
 
 <script>
-let chartVentas, chartIncidencias;
+let chartVentas = null;
+let chartIncidencias = null;
 
 let config = JSON.parse(localStorage.getItem('profitpulse_config')) || {
     comision: 1.5,
@@ -193,23 +188,27 @@ let config = JSON.parse(localStorage.getItem('profitpulse_config')) || {
     maximo: 3
 };
 
-cfg-comision.value = config.comision;
-cfg-minimo.value = config.minimo;
-cfg-maximo.value = config.maximo;
-
+// ---------------- SETTINGS ----------------
 function toggleSettings(){
-    settings-panel.classList.toggle('hidden');
+    const panel = document.getElementById('settings-panel');
+    panel.classList.toggle('hidden');
 }
 
 function saveConfig(){
-    config.comision = Number(cfg-comision.value);
-    config.minimo = Number(cfg-minimo.value);
-    config.maximo = Number(cfg-maximo.value);
+    config.comision = Number(document.getElementById('cfg-comision').value);
+    config.minimo   = Number(document.getElementById('cfg-minimo').value);
+    config.maximo   = Number(document.getElementById('cfg-maximo').value);
     localStorage.setItem('profitpulse_config', JSON.stringify(config));
     cargarStats();
 }
 
-window.addEventListener('DOMContentLoaded', cargarStats);
+// ---------------- INIT ----------------
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('cfg-comision').value = config.comision;
+    document.getElementById('cfg-minimo').value   = config.minimo;
+    document.getElementById('cfg-maximo').value   = config.maximo;
+    cargarStats();
+});
 
 // ---------------- LOAD DATA ----------------
 async function cargarStats(){
@@ -219,7 +218,6 @@ async function cargarStats(){
     const metrics = calcularKPIs(pedidos);
     renderKPIs(metrics);
     renderAlerts(metrics.alerts);
-    renderTabla(pedidos);
 
     const talleres = aggregateByTaller(pedidos);
     renderCharts(talleres);
@@ -233,26 +231,26 @@ function calcularKPIs(pedidos){
 
     pedidos.forEach(p=>{
         const precio = Number(p.precio||0);
-        const coste = Number(p.precio_coste||0);
+        const coste  = Number(p.precio_coste||0);
 
         if(precio===0) alerts.push(`Pedido #${p.id} sin precio`);
-        if(coste===0) alerts.push(`Pedido #${p.id} sin coste`);
+        if(coste===0)  alerts.push(`Pedido #${p.id} sin coste`);
 
         if(precio>0){
-            ventas+=precio;
+            ventas += precio;
             conPrecio++;
 
-            const margen = precio-coste;
-            bruto+=margen;
+            const margen = precio - coste;
+            bruto += margen;
 
-            let fee = margen*(config.comision/100);
+            let fee = margen * (config.comision/100);
             fee = Math.max(fee, config.minimo);
             fee = Math.min(fee, config.maximo);
 
-            comision+=fee;
-            neto += (margen-fee);
+            comision += fee;
+            neto += (margen - fee);
 
-            if(margen<0) alerts.push(`Pedido #${p.id} con margen negativo`);
+            if(margen < 0) alerts.push(`Pedido #${p.id} con margen negativo`);
         }
     });
 
@@ -265,47 +263,23 @@ function calcularKPIs(pedidos){
 }
 
 function renderKPIs(m){
-    kpi-ventas.innerText = `${m.ventas.toFixed(0)}€`;
-    kpi-bruto.innerText = `${m.bruto.toFixed(0)}€`;
-    kpi-comision.innerText = `${m.comision.toFixed(0)}€`;
-    kpi-neto.innerText = `${m.neto.toFixed(0)}€`;
-    kpi-ratio.innerText = `${m.ratio}%`;
-    kpi-margen-medio.innerText = `${m.margenMedio.toFixed(0)}€`;
-}
-
-// ---------------- TABLE ----------------
-function renderTabla(pedidos){
-    tabla-pedidos.innerHTML='';
-    pedidos.forEach(p=>{
-        const precio = Number(p.precio||0);
-        const coste = Number(p.precio_coste||0);
-        const margen = precio-coste;
-        let fee = margen*(config.comision/100);
-        fee = Math.max(fee, config.minimo);
-        fee = Math.min(fee, config.maximo);
-        const neto = margen-fee;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${p.id}</td>
-            <td>${p.nombre_usuario||'-'}</td>
-            <td>${precio}</td>
-            <td>${coste}</td>
-            <td>${margen.toFixed(1)}</td>
-            <td>${fee.toFixed(1)}</td>
-            <td>${neto.toFixed(1)}</td>
-            <td>${p.estado}</td>
-        `;
-        tabla-pedidos.appendChild(tr);
-    });
+    document.getElementById('kpi-ventas').innerText        = `${m.ventas.toFixed(0)}€`;
+    document.getElementById('kpi-bruto').innerText         = `${m.bruto.toFixed(0)}€`;
+    document.getElementById('kpi-comision').innerText      = `${m.comision.toFixed(0)}€`;
+    document.getElementById('kpi-neto').innerText          = `${m.neto.toFixed(0)}€`;
+    document.getElementById('kpi-ratio').innerText         = `${m.ratio}%`;
+    document.getElementById('kpi-margen-medio').innerText  = `${m.margenMedio.toFixed(0)}€`;
 }
 
 // ---------------- ALERTS ----------------
 function renderAlerts(alerts){
-    if(!alerts.length){ alerts.classList.add('hidden'); return; }
-    alerts.classList.remove('hidden');
-    alerts.innerHTML = `<h3 class="font-black mb-2">⚠️ Alertas</h3>` +
-        alerts.slice(0,12).map(a=>`<div class="text-xs text-red-500">• ${a}</div>`).join('');
+    const box = document.getElementById('alerts');
+    if(!alerts.length){ box.classList.add('hidden'); return; }
+
+    box.classList.remove('hidden');
+    box.innerHTML =
+        `<h3 class="font-black mb-2">⚠️ Alertas</h3>` +
+        alerts.slice(0,10).map(a=>`<div class="text-xs text-red-500">• ${a}</div>`).join('');
 }
 
 // ---------------- AGGREGATION ----------------
@@ -330,11 +304,11 @@ function renderCharts(data){
     if(chartVentas) chartVentas.destroy();
     if(chartIncidencias) chartIncidencias.destroy();
 
-    chartVentas = new Chart(chartVentas = new Chart(document.getElementById('chartVentas'),{
+    chartVentas = new Chart(document.getElementById('chartVentas'),{
         type:'bar',
         data:{ labels, datasets:[{ label:'Ventas €', data:ventas }]},
         options:{ responsive:true }
-    }));
+    });
 
     chartIncidencias = new Chart(document.getElementById('chartIncidencias'),{
         type:'bar',
