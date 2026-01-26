@@ -51,132 +51,91 @@
 
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
-    <!-- ================= HEADER DINÁMICO ================= -->
-    <div id="app-header"></div>
+<!-- ================= HEADER DINÁMICO ================= -->
+<div id="app-header"></div>
 
-    <!-- ================= CONTENIDO ================= -->
-    <main class="flex-grow max-w-7xl mx-auto px-6 mt-10 pb-24">
+<!-- ================= CONTENIDO ================= -->
+<main class="flex-grow max-w-7xl mx-auto px-6 mt-10 pb-24">
 
-        <!-- TÍTULO PRINCIPAL -->
-        <div class="mb-10">
-            <h1 class="text-2xl font-black uppercase tracking-tight">
-                Financial Intelligence
-                <span class="text-blue-600 italic">Recambio Reciclado</span>
-            </h1>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                ProfitPulse Analytics Engine
-            </p>
+    <!-- TÍTULO PRINCIPAL -->
+    <div class="mb-10">
+        <h1 class="text-2xl font-black uppercase tracking-tight">
+            Financial Intelligence
+            <span class="text-blue-600 italic">Recambio Reciclado</span>
+        </h1>
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+            ProfitPulse Analytics Engine
+        </p>
+    </div>
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+
+        <!-- Ventas -->
+        <div class="glass-card p-8">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventas Totales</p>
+            <h3 id="stat-ventas" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
         </div>
 
-        <!-- KPIs -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <!-- Beneficio -->
+        <div class="glass-card p-8">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Beneficio Estimado</p>
+            <h3 id="stat-beneficio" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
+        </div>
 
-            <!-- Ventas -->
-            <div class="glass-card p-8">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600">
-                        <i class="fas fa-chart-line text-lg"></i>
-                    </div>
-                    <span class="stat-badge bg-blue-100 text-blue-600">Mensual</span>
-                </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Ventas Totales
-                </p>
-                <h3 id="stat-ventas" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
-            </div>
+        <!-- Pedidos -->
+        <div class="glass-card p-8">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pedidos Procesados</p>
+            <h3 id="stat-pedidos" class="text-3xl font-black mt-1 tracking-tighter">0</h3>
+        </div>
 
-            <!-- Beneficio -->
-            <div class="glass-card p-8">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600">
-                        <i class="fas fa-wallet text-lg"></i>
-                    </div>
-                    <span class="stat-badge bg-emerald-100 text-emerald-600">Estimado</span>
-                </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Beneficio Estimado
-                </p>
-                <h3 id="stat-beneficio" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
-            </div>
+        <!-- Ratio -->
+        <div class="glass-card p-8 bg-slate-900 text-white border-none">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tasa de Cierre</p>
+            <h3 id="stat-ratio" class="text-3xl font-black mt-1 tracking-tighter">–</h3>
+        </div>
+    </div>
 
-            <!-- Pedidos -->
-            <div class="glass-card p-8">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-600">
-                        <i class="fas fa-box text-lg"></i>
-                    </div>
-                </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Pedidos Procesados
-                </p>
-                <h3 id="stat-pedidos" class="text-3xl font-black mt-1 tracking-tighter">0</h3>
-            </div>
+    <!-- GRÁFICOS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            <!-- Ratio -->
-            <div class="glass-card p-8 bg-slate-900 text-white border-none">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-blue-400">
-                        <i class="fas fa-bullseye text-lg"></i>
-                    </div>
-                </div>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                    Tasa de Cierre
-                </p>
-                <h3 class="text-3xl font-black mt-1 tracking-tighter">94.2%</h3>
+        <!-- Evolución -->
+        <div class="lg:col-span-2 glass-card p-10">
+            <h2 class="text-sm font-black uppercase tracking-widest mb-6">Evolución de Ingresos</h2>
+            <div class="h-[350px] w-full">
+                <canvas id="chartVentas"></canvas>
             </div>
         </div>
 
-        <!-- GRÁFICOS -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            <!-- Evolución -->
-            <div class="lg:col-span-2 glass-card p-10">
-                <div class="flex justify-between items-center mb-10">
-                    <div>
-                        <h2 class="text-sm font-black uppercase tracking-widest">
-                            Evolución de Ingresos
-                        </h2>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                            Ventas vs Beneficio
-                        </p>
-                    </div>
-                </div>
-
-                <div class="h-[350px] w-full">
-                    <canvas id="chartVentas"></canvas>
-                </div>
-            </div>
-
-            <!-- Incidencias -->
-            <div class="glass-card p-10">
-                <h2 class="text-sm font-black uppercase tracking-widest mb-10 text-center">
-                    Incidencias y Logística
-                </h2>
-
-                <div class="h-[250px] w-full">
-                    <canvas id="chartIncidencias"></canvas>
-                </div>
+        <!-- Incidencias -->
+        <div class="glass-card p-10">
+            <h2 class="text-sm font-black uppercase tracking-widest mb-6 text-center">Incidencias</h2>
+            <div class="h-[250px] w-full">
+                <canvas id="chartIncidencias"></canvas>
             </div>
         </div>
+    </div>
 
-    </main>
+</main>
 
-    <!-- ================= FOOTER DINÁMICO ================= -->
-    <div id="app-footer"></div>
+<!-- ================= FOOTER DINÁMICO ================= -->
+<div id="app-footer"></div>
 
-    <!-- ================= LÓGICA ================= -->
-    <script>
-        async function init() {
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.documentElement.classList.add('dark');
-            }
+<!-- ================= LÓGICA ================= -->
+<script>
+let chartVentas = null;
+let chartIncidencias = null;
 
-            await cargarStats();
-            inicializarGraficos();
-        }
+// ---------------- BOOTSTRAP ----------------
+async function init() {
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
 
-        async function cargarStats() {
-            try {
+    await cargarStats();
+}
+
+// ---------------- DATA LOADER ----------------
 async function cargarStats() {
     try {
         const res = await fetch('/api/pedidos', { cache: 'no-store' });
@@ -187,22 +146,56 @@ async function cargarStats() {
 
         buildProfitPulseMetrics(pedidos);
 
+        const talleres = aggregateByTaller(pedidos);
+        buildChartsFromTalleres(talleres);
+
     } catch (err) {
         console.error("❌ Error cargando stats:", err);
     }
 }
+
+// ---------------- AGREGACIÓN ----------------
+function aggregateByTaller(pedidos) {
+    const talleres = {};
+
+    pedidos.forEach(p => {
+        const taller = p.nombre_usuario || 'Sin Taller';
+        const precio = Number(p.precio || 0);
+        const coste = Number(p.precio_coste || 0);
+
+        if (!talleres[taller]) {
+            talleres[taller] = { pedidos: 0, ventas: 0, beneficio: 0, incidencias: 0 };
+        }
+
+        talleres[taller].pedidos++;
+        talleres[taller].ventas += precio;
+
+        if (precio > 0 && coste > 0) {
+            talleres[taller].beneficio += (precio - coste);
+        }
+
+        if (p.estado === 'incidencia') {
+            talleres[taller].incidencias++;
+        }
+    });
+
+    console.log('🏭 Segmentación por taller:', talleres);
+    return talleres;
+}
+
+// ---------------- KPIs ----------------
 function buildProfitPulseMetrics(pedidos) {
     let ventas = 0;
     let beneficio = 0;
-    let pedidosValidos = 0;
+    let pedidosConPrecio = 0;
 
     pedidos.forEach(p => {
-        const precio = parseFloat(p.precio || 0);
-        const coste = parseFloat(p.precio_coste || 0);
+        const precio = Number(p.precio || 0);
+        const coste = Number(p.precio_coste || 0);
 
         if (precio > 0) {
             ventas += precio;
-            pedidosValidos++;
+            pedidosConPrecio++;
         }
 
         if (precio > 0 && coste > 0) {
@@ -210,104 +203,70 @@ function buildProfitPulseMetrics(pedidos) {
         }
     });
 
-    // Pintar KPIs
-    document.getElementById('stat-ventas').innerText =
-        `${ventas.toLocaleString()}€`;
+    const ratio = pedidos.length
+        ? ((pedidosConPrecio / pedidos.length) * 100).toFixed(1)
+        : 0;
 
-    document.getElementById('stat-beneficio').innerText =
-        `${beneficio.toLocaleString()}€`;
+    document.getElementById('stat-ventas').innerText = `${ventas.toLocaleString()}€`;
+    document.getElementById('stat-beneficio').innerText = `${beneficio.toLocaleString()}€`;
+    document.getElementById('stat-pedidos').innerText = pedidos.length;
+    document.getElementById('stat-ratio').innerText = `${ratio}%`;
 
-    document.getElementById('stat-pedidos').innerText =
-        pedidos.length;
+    console.log('✅ KPIs:', { ventas, beneficio, pedidos: pedidos.length, ratio });
+}
 
-    console.log('✅ ProfitPulse Metrics:', {
-        ventas,
-        beneficio,
-        pedidos: pedidos.length,
-        pedidosValidos
+// ---------------- CHARTS ----------------
+function buildChartsFromTalleres(talleres) {
+    const labels = Object.keys(talleres);
+    const ventas = labels.map(t => talleres[t].ventas);
+    const incidencias = labels.map(t => talleres[t].incidencias);
+
+    if (chartVentas) chartVentas.destroy();
+    if (chartIncidencias) chartIncidencias.destroy();
+
+    chartVentas = new Chart(document.getElementById('chartVentas'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Ventas (€)',
+                data: ventas
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    chartIncidencias = new Chart(document.getElementById('chartIncidencias'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Incidencias',
+                data: incidencias
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
-        function inicializarGraficos() {
 
-            new Chart(document.getElementById('chartVentas'), {
-                type: 'line',
-                data: {
-                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
-                    datasets: [
-                        {
-                            label: 'Ventas',
-                            data: [1200, 1900, 1500, 2100],
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Beneficio',
-                            data: [300, 900, 600, 800],
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
+window.addEventListener('DOMContentLoaded', init);
+</script>
 
-            new Chart(document.getElementById('chartIncidencias'), {
-                type: 'bar',
-                data: {
-                    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'],
-                    datasets: [
-                        {
-                            label: 'Rechazos',
-                            data: [0.2, 0.8, 0.4, 0.5, 0.3]
-                        },
-                        {
-                            label: 'Devoluciones',
-                            data: [0.1, 0.3, 0.6, 0.2, 0.1]
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
+<!-- ================= CARGA HEADER ================= -->
+<script>
+fetch('/partials/header.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('app-header').innerHTML = html)
+    .catch(err => console.error('Error cargando header:', err));
+</script>
 
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
-
-    <!-- ================= CARGA HEADER ================= -->
-    <script>
-        fetch('/partials/header.html')
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('app-header').innerHTML = html;
-            })
-            .catch(err => {
-                console.error('Error cargando header:', err);
-            });
-    </script>
-
-    <!-- ================= CARGA FOOTER ================= -->
-    <script>
-        fetch('/partials/footer.html')
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('app-footer').innerHTML = html;
-            })
-            .catch(err => {
-                console.error('Error cargando footer:', err);
-            });
-    </script>
+<!-- ================= CARGA FOOTER ================= -->
+<script>
+fetch('/partials/footer.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('app-footer').innerHTML = html)
+    .catch(err => console.error('Error cargando footer:', err));
+</script>
 
 </body>
 </html>
