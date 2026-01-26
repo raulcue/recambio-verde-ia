@@ -177,23 +177,56 @@
 
         async function cargarStats() {
             try {
-                const res = await fetch('/api/stats/global');
-                const data = await res.json();
+async function cargarStats() {
+    try {
+        const res = await fetch('/api/pedidos', { cache: 'no-store' });
+        if (!res.ok) throw new Error('No se pudo cargar pedidos');
 
-                document.getElementById('stat-ventas').innerText =
-                    `${parseFloat(data.ventas || 0).toLocaleString()}€`;
+        const pedidos = await res.json();
+        console.log('📊 Pedidos cargados para ProfitPulse:', pedidos.length);
 
-                document.getElementById('stat-beneficio').innerText =
-                    `${(parseFloat(data.ventas || 0) * 0.25).toLocaleString()}€`;
+        buildProfitPulseMetrics(pedidos);
 
-                document.getElementById('stat-pedidos').innerText =
-                    data.total || 0;
+    } catch (err) {
+        console.error("❌ Error cargando stats:", err);
+    }
+}
+function buildProfitPulseMetrics(pedidos) {
+    let ventas = 0;
+    let beneficio = 0;
+    let pedidosValidos = 0;
 
-            } catch (err) {
-                console.error("Error cargando stats:", err);
-            }
+    pedidos.forEach(p => {
+        const precio = parseFloat(p.precio || 0);
+        const coste = parseFloat(p.precio_coste || 0);
+
+        if (precio > 0) {
+            ventas += precio;
+            pedidosValidos++;
         }
 
+        if (precio > 0 && coste > 0) {
+            beneficio += (precio - coste);
+        }
+    });
+
+    // Pintar KPIs
+    document.getElementById('stat-ventas').innerText =
+        `${ventas.toLocaleString()}€`;
+
+    document.getElementById('stat-beneficio').innerText =
+        `${beneficio.toLocaleString()}€`;
+
+    document.getElementById('stat-pedidos').innerText =
+        pedidos.length;
+
+    console.log('✅ ProfitPulse Metrics:', {
+        ventas,
+        beneficio,
+        pedidos: pedidos.length,
+        pedidosValidos
+    });
+}
         function inicializarGraficos() {
 
             new Chart(document.getElementById('chartVentas'), {
