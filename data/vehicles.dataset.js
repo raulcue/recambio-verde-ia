@@ -84,25 +84,11 @@ const VEHICLES = [
   },
   
   
-  {
+{
   brand: "Alfa Romeo",
-  aliases: ["alfa", "alfaromeo", "alfa romeo"],
-  models: [
-    "Giulia",
-    "Giulietta",
-    "Stelvio",
-    "Tonale",
-    "Brera",
-    "159",
-    "147",
-    "156",
-    "GT",
-    "Spider",
-    "MiTo",
-    "4C",
-    "8C"
-  ]
-}
+  aliases: ["alfa","alfaromeo","alfa romeo"],
+  models: ["Giulia","Giulietta","Stelvio","Tonale","Brera","159","147","156","GT","Spider","MiTo","4C","8C"]
+},
   
   
   {
