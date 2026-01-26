@@ -409,96 +409,133 @@
             const sourceData = dataToRender || db;
 
             columns.forEach(col => {
-                // FILTRO MEJORADO: Aceptar múltiples estados equivalentes según las nuevas columnas
-                const items = sourceData.filter(p => {
-                    const estado = p.estado ? p.estado.toLowerCase() : '';
-                    
-                    if (col.id === 'solicitud') {
-                        return estado === 'solicitud' || estado === 'pendiente' || estado === 'solicitado';
-                    }
-                    if (col.id === 'desguace') {
-                        return estado === 'desguace' || estado === 'en desguace' || estado === 'proceso' || estado === 'en proceso';
-                    }
-                    if (col.id === 'listo') {
-                        return estado === 'listo' || estado === 'verificado' || estado === 'listo / verificado';
-                    }
-                    if (col.id === 'transito') {
-                        return estado === 'transito' || estado === 'en tránsito' || estado === 'en transito';
-                    }
-                    if (col.id === 'finalizado') {
-                        return estado === 'finalizado' || estado === 'entregado' || estado === 'completado';
-                    }
-                    if (col.id === 'incidencia') {
-                        return estado === 'incidencia' || estado === 'cancelado' || estado === 'anulado' || estado === 'error';
-                    }
-                    return estado === col.id;
-                });
+// FILTRO MEJORADO: Aceptar múltiples estados equivalentes según las nuevas columnas
+const items = sourceData.filter(p => {
+    const estado = p.estado ? p.estado.toLowerCase() : '';
+    
+    if (col.id === 'solicitud') {
+        return estado === 'solicitud' || estado === 'pendiente' || estado === 'solicitado';
+    }
+    if (col.id === 'desguace') {
+        return estado === 'desguace' || estado === 'en desguace' || estado === 'proceso' || estado === 'en proceso';
+    }
+    if (col.id === 'listo') {
+        return estado === 'listo' || estado === 'verificado' || estado === 'listo / verificado';
+    }
+    if (col.id === 'transito') {
+        return estado === 'transito' || estado === 'en tránsito' || estado === 'en transito';
+    }
+    if (col.id === 'finalizado') {
+        return estado === 'finalizado' || estado === 'entregado' || estado === 'completado';
+    }
+    if (col.id === 'incidencia') {
+        return estado === 'incidencia' || estado === 'cancelado' || estado === 'anulado' || estado === 'error';
+    }
+    return estado === col.id;
+});
+
+const colSum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
+globalSum += colSum;
+
+const columnHtml = `
+<div class="kanban-column flex flex-col gap-4 h-full transition-all duration-300" 
+     data-column-id="${col.id}"
+     ondragover="event.preventDefault(); this.classList.add('drag-over')" 
+     ondragenter="this.classList.add('drag-over')" 
+     ondragleave="this.classList.remove('drag-over')" 
+     ondrop="dropHandler(event, '${col.id}')">
+
+    <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color} py-1">
+    <div>
+        <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
+        <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
+    </div>
+    ${col.id === 'finalizado' 
+        ? '' 
+        : `<span class="text-xs font-black text-blue-600 italic">${colSum.toFixed(0)}€</span>`
+    }
+</div>
+
+    <div class="flex-1 space-y-2 pb-10 overflow-y-auto custom-scrollbar">
+
+        ${items.map((p, index) => {
+            const fechaCreacion = p.fecha_creacion ? new Date(p.fecha_creacion) : new Date();
+            const dias = Math.floor((new Date() - fechaCreacion) / (1000 * 60 * 60 * 24));
+            let semColor = 'bg-emerald-500';
+            if (dias >= ajustesSemaf.rojo) semColor = 'bg-red-600';
+            else if (dias >= ajustesSemaf.naranja) semColor = 'bg-orange-500';
+
+            const isEntregado = col.id === 'finalizado';
+
+            // 🟦 TARJETA COMPACTA (ENTREGADO)
+            if (isEntregado) {
+                return `
+                <div draggable="true" 
+                     data-pedido-id="${p.id}"
+                     data-estado-actual="${p.estado}"
+                     ondragstart="dragStartHandler(event, ${p.id})" 
+                     ondragend="dragEndHandler(event)"
+                     onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
+                     class="drag-item bg-white dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-grab text-[10px]">
+
+                    <div class="font-black text-blue-600 truncate">
+                        ${p.nombre_usuario || 'Taller Particular'}
+                    </div>
+
+                    <div class="font-bold truncate">
+                        ${p.pieza}
+                    </div>
+
+                    <div class="text-slate-400 truncate">
+                        ${p.marca_coche || ''} ${p.modelo_coche || ''}
+                    </div>
+                </div>`;
+            }
+
+            // 🟧 TARJETA NORMAL (RESTO DE COLUMNAS)
+            return `
+            <div draggable="true" 
+                 data-pedido-id="${p.id}"
+                 data-estado-actual="${p.estado}"
+                 ondragstart="dragStartHandler(event, ${p.id})" 
+                 ondragend="dragEndHandler(event)"
+                 onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
+                 class="drag-item bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500/40 hover:shadow-xl transition-all cursor-grab active:cursor-grabbing group card-anim" 
+                 style="animation-delay: ${index * 0.05}s">
+
+                <div class="flex justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors">
+                            <i class="fas ${col.icon} text-[10px]"></i>
+                        </div>
+                        <div class="${semColor} w-2 h-2 rounded-full animate-pulse"></div>
+                        <span class="text-[8px] font-bold text-slate-400 uppercase">${dias}d</span>
+                    </div>
+                    <span class="text-[8px] font-bold text-slate-300">#${p.id}</span>
+                </div>
                 
-                const colSum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
-                globalSum += colSum;
+                <div class="mb-2">
+                    <span class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
+                        <i class="fas fa-tools mr-1 opacity-50"></i>
+                        ${p.nombre_usuario || 'Taller Particular'}
+                    </span>
+                </div>
 
-                const columnHtml = `
-                    <div class="kanban-column flex flex-col gap-4 h-full transition-all duration-300" 
-                         data-column-id="${col.id}"
-                         ondragover="event.preventDefault(); this.classList.add('drag-over')" 
-                         ondragenter="this.classList.add('drag-over')" 
-                         ondragleave="this.classList.remove('drag-over')" 
-                         ondrop="dropHandler(event, '${col.id}')">
-                        <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color} py-1">
-                            <div>
-                                <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
-                            </div>
-                            <span class="text-xs font-black text-blue-600 italic">${colSum.toFixed(0)}€</span>
-                        </div>
-                        <div class="flex-1 space-y-3 pb-10 overflow-y-auto custom-scrollbar">
-                            ${items.map((p, index) => {
-                                const fechaCreacion = p.fecha_creacion ? new Date(p.fecha_creacion) : new Date();
-                                const dias = Math.floor((new Date() - fechaCreacion) / (1000 * 60 * 60 * 24));
-                                let semColor = 'bg-emerald-500';
-                                if (dias >= ajustesSemaf.rojo) semColor = 'bg-red-600';
-                                else if (dias >= ajustesSemaf.naranja) semColor = 'bg-orange-500';
+                <h4 class="text-xs font-black uppercase dark:text-white truncate">${p.pieza}</h4>
+                <p class="text-[9px] font-bold text-slate-400 mb-3 truncate">${p.marca_coche || ''} ${p.modelo_coche || '---'}</p>
+                <div class="flex justify-between items-center pt-3 border-t dark:border-slate-800">
+                    <span class="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg truncate max-w-[60%]">
+                        ${p.matricula || 'S/M'}
+                    </span>
+                    <span class="text-xs font-black dark:text-white">${p.precio || 0}€</span>
+                </div>
+            </div>`;
+        }).join('')}
 
-                                return `
-                                <div draggable="true" 
-                                     data-pedido-id="${p.id}"
-                                     data-estado-actual="${p.estado}"
-                                     ondragstart="dragStartHandler(event, ${p.id})" 
-                                     ondragend="dragEndHandler(event)"
-                                     onclick='abrirEditar(${JSON.stringify(p).replace(/'/g, "&apos;")})'
-                                     class="drag-item bg-white dark:bg-slate-900 p-4 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 hover:border-blue-500/40 hover:shadow-xl transition-all cursor-grab active:cursor-grabbing group card-anim" style="animation-delay: ${index * 0.05}s">
-                                    <div class="flex justify-between mb-3">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-8 h-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors">
-                                                <i class="fas ${col.icon} text-[10px]"></i>
-                                            </div>
-                                            <div class="${semColor} w-2 h-2 rounded-full animate-pulse"></div>
-                                            <span class="text-[8px] font-bold text-slate-400 uppercase">${dias}d</span>
-                                        </div>
-                                        <span class="text-[8px] font-bold text-slate-300">#${p.id}</span>
-                                    </div>
-                                    
-                                    <div class="mb-2">
-                                        <span class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
-                                            <i class="fas fa-tools mr-1 opacity-50"></i>
-                                            ${p.nombre_usuario || 'Taller Particular'}
-                                        </span>
-                                    </div>
+    </div>
+</div>`;
 
-                                    <h4 class="text-xs font-black uppercase dark:text-white truncate">${p.pieza}</h4>
-                                    <p class="text-[9px] font-bold text-slate-400 mb-3 truncate">${p.marca_coche || ''} ${p.modelo_coche || '---'}</p>
-                                    <div class="flex justify-between items-center pt-3 border-t dark:border-slate-800">
-                                        <span class="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg truncate max-w-[60%]">${p.matricula || 'S/M'}</span>
-                                        <span class="text-xs font-black dark:text-white">${p.precio || 0}€</span>
-                                    </div>
-                                </div>`;
-                            }).join('')}
-                        </div>
-                    </div>`;
-                board.insertAdjacentHTML('beforeend', columnHtml);
-            });
-            document.getElementById('total-general').innerText = `${globalSum.toLocaleString()}€`;
-        }
+board.insertAdjacentHTML('beforeend', columnHtml);
 
         // --- LÓGICA DE DRAG & DROP MEJORADA ---
         function dragStartHandler(e, id) {
