@@ -82,6 +82,29 @@ const VEHICLES = [
     aliases: ["mazda","masda"],
     models: ["Mazda2","Mazda3","Mazda6","CX-3","CX-5","CX-30","CX-60","MX-5","RX-8","RX-7","BT-50","Premacy","Demio","Tribute","323","626","929","MPV","CX-9","CX-90"]
   },
+  
+  
+  {
+  brand: "Alfa Romeo",
+  aliases: ["alfa", "alfaromeo", "alfa romeo"],
+  models: [
+    "Giulia",
+    "Giulietta",
+    "Stelvio",
+    "Tonale",
+    "Brera",
+    "159",
+    "147",
+    "156",
+    "GT",
+    "Spider",
+    "MiTo",
+    "4C",
+    "8C"
+  ]
+}
+  
+  
   {
     brand: "Honda",
     aliases: ["honda","hunda"],
