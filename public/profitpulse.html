@@ -14,16 +14,20 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
 body { font-family: 'Inter', sans-serif; }
-.glass-card { background:white;border:1px solid #f1f5f9;border-radius:2rem; }
+.glass-card { background:white;border:1px solid #f1f5f9;border-radius:1.8rem; }
 .dark .glass-card { background:#0f172a;border-color:#1e293b; }
-.tooltip { position: relative; cursor: help; }
+
+.tooltip {
+    position: relative;
+    cursor: pointer;
+}
 .tooltip:hover::after {
     content: attr(data-tip);
     position: absolute;
     bottom: 120%;
     left: 50%;
     transform: translateX(-50%);
-    background: #0f172a;
+    background: #020617;
     color: white;
     padding: 8px 10px;
     font-size: 11px;
@@ -36,79 +40,115 @@ body { font-family: 'Inter', sans-serif; }
 
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
+<!-- HEADER -->
 <div id="app-header"></div>
 
-<main class="flex-grow max-w-7xl mx-auto px-6 mt-10 pb-24 space-y-10">
+<!-- BOTÓN AJUSTES -->
+<button onclick="toggleSettings()"
+        class="fixed bottom-6 right-6 z-50 bg-blue-600 text-white w-14 h-14 rounded-full shadow-xl hover:bg-blue-700">
+    <i class="fas fa-gear"></i>
+</button>
 
-<!-- ================= TITLE ================= -->
+<!-- PANEL AJUSTES -->
+<div id="settings-panel"
+     class="hidden fixed bottom-24 right-6 w-96 glass-card p-5 shadow-2xl z-50 space-y-3">
+
+    <h3 class="font-black text-sm uppercase">⚙️ Ajustes de Comisión</h3>
+
+    <div>
+        <label class="text-xs font-bold">% Comisión</label>
+        <input id="cfg-comision" type="number" step="0.1"
+               class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
+    </div>
+
+    <div>
+        <label class="text-xs font-bold">Mínimo (€)</label>
+        <input id="cfg-minimo" type="number" step="0.1"
+               class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
+    </div>
+
+    <div>
+        <label class="text-xs font-bold">Máximo (€)</label>
+        <input id="cfg-maximo" type="number" step="0.1"
+               class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
+    </div>
+
+    <button onclick="saveConfig()"
+            class="w-full bg-blue-600 text-white rounded p-2 font-bold">
+        Guardar Ajustes
+    </button>
+</div>
+
+<!-- CONTENIDO -->
+<main class="flex-grow max-w-full px-4 xl:px-10 mt-8 pb-24 space-y-10">
+
+<!-- TITLE -->
 <div>
-    <h1 class="text-2xl font-black uppercase">Financial Intelligence
+    <h1 class="text-2xl font-black uppercase">
+        Financial Intelligence
         <span class="text-blue-600 italic">Recambio Reciclado</span>
     </h1>
     <p class="text-xs font-bold text-slate-400 uppercase">ProfitPulse Analytics Engine</p>
 </div>
 
-<!-- ================= AJUSTES AVANZADOS ================= -->
-<div class="glass-card p-6 grid grid-cols-1 md:grid-cols-5 gap-4">
-    <div>
-        <label class="text-xs font-bold">% Comisión</label>
-        <input id="cfg-comision" type="number" step="0.1" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
-    </div>
-    <div>
-        <label class="text-xs font-bold">Mínimo (€)</label>
-        <input id="cfg-minimo" type="number" step="0.1" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
-    </div>
-    <div>
-        <label class="text-xs font-bold">Máximo (€)</label>
-        <input id="cfg-maximo" type="number" step="0.1" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
-    </div>
-    <div>
-        <label class="text-xs font-bold">Simulador Precio</label>
-        <input id="sim-precio" type="number" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
-    </div>
-    <div>
-        <label class="text-xs font-bold">Simulador Coste</label>
-        <input id="sim-coste" type="number" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
+<!-- KPIS -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
+
+    <div class="glass-card p-5">
+        <div class="flex justify-between">
+            <div class="text-xs">Ventas</div>
+            <div class="tooltip" data-tip="Suma total de precios de venta">ℹ️</div>
+        </div>
+        <div id="kpi-ventas" class="text-xl font-black">0€</div>
     </div>
 
-    <div class="md:col-span-5 flex gap-3">
-        <button onclick="saveConfig()" class="flex-1 bg-blue-600 text-white rounded p-2 font-bold">
-            Guardar Ajustes
-        </button>
-        <button onclick="runSimulator()" class="flex-1 bg-emerald-600 text-white rounded p-2 font-bold">
-            Simular Comisión
-        </button>
-        <div id="sim-result" class="flex-1 text-sm font-black flex items-center"></div>
+    <div class="glass-card p-5">
+        <div class="flex justify-between">
+            <div class="text-xs">Beneficio Bruto</div>
+            <div class="tooltip" data-tip="Precio - Coste acumulado">ℹ️</div>
+        </div>
+        <div id="kpi-bruto" class="text-xl font-black">0€</div>
     </div>
+
+    <div class="glass-card p-5">
+        <div class="flex justify-between">
+            <div class="text-xs">Comisión</div>
+            <div class="tooltip" data-tip="Aplicando % comisión, mínimo y máximo configurados">ℹ️</div>
+        </div>
+        <div id="kpi-comision" class="text-xl font-black">0€</div>
+    </div>
+
+    <div class="glass-card p-5">
+        <div class="flex justify-between">
+            <div class="text-xs">Beneficio Neto</div>
+            <div class="tooltip" data-tip="Beneficio bruto menos comisiones">ℹ️</div>
+        </div>
+        <div id="kpi-neto" class="text-xl font-black">0€</div>
+    </div>
+
+    <div class="glass-card p-5">
+        <div class="flex justify-between">
+            <div class="text-xs">Ratio</div>
+            <div class="tooltip" data-tip="% pedidos con precio válido">ℹ️</div>
+        </div>
+        <div id="kpi-ratio" class="text-xl font-black">–</div>
+    </div>
+
+    <div class="glass-card p-5">
+        <div class="flex justify-between">
+            <div class="text-xs">Margen Medio</div>
+            <div class="tooltip" data-tip="Beneficio bruto dividido entre pedidos con precio">ℹ️</div>
+        </div>
+        <div id="kpi-margen-medio" class="text-xl font-black">–</div>
+    </div>
+
 </div>
 
-<!-- ================= KPIS ================= -->
-<div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-    <div class="glass-card p-5 tooltip" data-tip="Suma total de precios de venta">
-        <div class="text-xs">Ventas</div><div id="kpi-ventas" class="text-xl font-black">0€</div>
-    </div>
-    <div class="glass-card p-5 tooltip" data-tip="Precio - Coste acumulado">
-        <div class="text-xs">Beneficio Bruto</div><div id="kpi-bruto" class="text-xl font-black">0€</div>
-    </div>
-    <div class="glass-card p-5 tooltip" data-tip="Comisiones aplicadas según reglas">
-        <div class="text-xs">Comisión</div><div id="kpi-comision" class="text-xl font-black">0€</div>
-    </div>
-    <div class="glass-card p-5 tooltip" data-tip="Bruto - Comisión">
-        <div class="text-xs">Beneficio Neto</div><div id="kpi-neto" class="text-xl font-black">0€</div>
-    </div>
-    <div class="glass-card p-5 tooltip" data-tip="% pedidos con precio válido">
-        <div class="text-xs">Ratio</div><div id="kpi-ratio" class="text-xl font-black">–</div>
-    </div>
-    <div class="glass-card p-5 tooltip" data-tip="Margen medio por pedido">
-        <div class="text-xs">Margen Medio</div><div id="kpi-margen-medio" class="text-xl font-black">–</div>
-    </div>
-</div>
-
-<!-- ================= ALERTAS ================= -->
+<!-- ALERTAS -->
 <div id="alerts" class="glass-card p-5 hidden"></div>
 
-<!-- ================= CHARTS ================= -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<!-- CHARTS -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
     <div class="glass-card p-6">
         <h2 class="font-black mb-2">Ventas por Taller</h2>
         <canvas id="chartVentas"></canvas>
@@ -119,21 +159,21 @@ body { font-family: 'Inter', sans-serif; }
     </div>
 </div>
 
-<!-- ================= TABLA PEDIDOS ================= -->
+<!-- TABLA -->
 <div class="glass-card p-6 overflow-auto">
     <h2 class="font-black mb-3">Detalle de Pedidos</h2>
     <table class="w-full text-xs">
         <thead class="border-b">
-            <tr>
-                <th>ID</th>
-                <th>Taller</th>
-                <th>Precio</th>
-                <th>Coste</th>
-                <th>Margen</th>
-                <th>Comisión</th>
-                <th>Neto</th>
-                <th>Estado</th>
-            </tr>
+        <tr>
+            <th>ID</th>
+            <th>Taller</th>
+            <th>Precio</th>
+            <th>Coste</th>
+            <th>Margen</th>
+            <th>Comisión</th>
+            <th>Neto</th>
+            <th>Estado</th>
+        </tr>
         </thead>
         <tbody id="tabla-pedidos"></tbody>
     </table>
@@ -141,6 +181,7 @@ body { font-family: 'Inter', sans-serif; }
 
 </main>
 
+<!-- FOOTER -->
 <div id="app-footer"></div>
 
 <script>
@@ -152,9 +193,13 @@ let config = JSON.parse(localStorage.getItem('profitpulse_config')) || {
     maximo: 3
 };
 
-document.getElementById('cfg-comision').value = config.comision;
-document.getElementById('cfg-minimo').value = config.minimo;
-document.getElementById('cfg-maximo').value = config.maximo;
+cfg-comision.value = config.comision;
+cfg-minimo.value = config.minimo;
+cfg-maximo.value = config.maximo;
+
+function toggleSettings(){
+    settings-panel.classList.toggle('hidden');
+}
 
 function saveConfig(){
     config.comision = Number(cfg-comision.value);
@@ -164,17 +209,6 @@ function saveConfig(){
     cargarStats();
 }
 
-function runSimulator(){
-    const precio = Number(sim-precio.value||0);
-    const coste = Number(sim-coste.value||0);
-    const margen = precio-coste;
-    let fee = margen*(config.comision/100);
-    fee = Math.max(fee, config.minimo);
-    fee = Math.min(fee, config.maximo);
-    sim-result.innerText = `Comisión simulada: ${fee.toFixed(2)}€`;
-}
-
-// ---------------- INIT ----------------
 window.addEventListener('DOMContentLoaded', cargarStats);
 
 // ---------------- LOAD DATA ----------------
@@ -241,9 +275,7 @@ function renderKPIs(m){
 
 // ---------------- TABLE ----------------
 function renderTabla(pedidos){
-    const tbody = document.getElementById('tabla-pedidos');
-    tbody.innerHTML='';
-
+    tabla-pedidos.innerHTML='';
     pedidos.forEach(p=>{
         const precio = Number(p.precio||0);
         const coste = Number(p.precio_coste||0);
@@ -264,34 +296,28 @@ function renderTabla(pedidos){
             <td>${neto.toFixed(1)}</td>
             <td>${p.estado}</td>
         `;
-        tbody.appendChild(tr);
+        tabla-pedidos.appendChild(tr);
     });
 }
 
 // ---------------- ALERTS ----------------
 function renderAlerts(alerts){
-    const box = document.getElementById('alerts');
-    if(!alerts.length){ box.classList.add('hidden'); return; }
-
-    box.classList.remove('hidden');
-    box.innerHTML = `<h3 class="font-black mb-2">⚠️ Alertas</h3>` +
+    if(!alerts.length){ alerts.classList.add('hidden'); return; }
+    alerts.classList.remove('hidden');
+    alerts.innerHTML = `<h3 class="font-black mb-2">⚠️ Alertas</h3>` +
         alerts.slice(0,12).map(a=>`<div class="text-xs text-red-500">• ${a}</div>`).join('');
 }
 
 // ---------------- AGGREGATION ----------------
 function aggregateByTaller(pedidos){
     const map={};
-
     pedidos.forEach(p=>{
         const t = p.nombre_usuario || 'Sin Taller';
         if(!map[t]) map[t]={ventas:0, incidencias:0};
-
         const precio = Number(p.precio||0);
         map[t].ventas += precio;
-
         if(p.estado==='incidencia') map[t].incidencias++;
     });
-
     return map;
 }
 
@@ -319,8 +345,13 @@ function renderCharts(data){
 </script>
 
 <script>
-fetch('/partials/header.html').then(r=>r.text()).then(h=>app-header.innerHTML=h);
-fetch('/partials/footer.html').then(r=>r.text()).then(h=>app-footer.innerHTML=h);
+fetch('/partials/header.html')
+    .then(r=>r.text())
+    .then(h=>document.getElementById('app-header').innerHTML = h);
+
+fetch('/partials/footer.html')
+    .then(r=>r.text())
+    .then(h=>document.getElementById('app-footer').innerHTML = h);
 </script>
 
 </body>
