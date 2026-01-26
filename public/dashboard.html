@@ -384,17 +384,29 @@
             try {
 				const res = await fetch(`/api/pedidos`, {
 				cache: 'no-store'
-				});               if (!res.ok) {
+				});               
+				if (!res.ok) {
                     throw new Error(`HTTP ${res.status}`);
                 }
                 db = await res.json();
-                console.log('Datos cargados:', db.length, 'registros');
-                
-                // IMPORTANTE: Verificar los estados reales que tenemos
-                const estadosUnicos = [...new Set(db.map(p => p.estado))];
-                console.log('Estados encontrados en los datos:', estadosUnicos);
-                
-                renderBoard();
+console.log('Datos cargados:', db.length, 'registros');
+
+// 👉 APLICAR FILTRO DE TALLER
+const tId = document.getElementById('filtroTaller').value;
+
+let filtrados = db;
+if (tId !== 'todos') {
+    filtrados = db.filter(p => String(p.usuario_id) === String(tId));
+}
+
+console.log('Filtro taller:', tId, 'Registros visibles:', filtrados.length);
+
+// IMPORTANTE: Verificar los estados reales que tenemos
+const estadosUnicos = [...new Set(filtrados.map(p => p.estado))];
+console.log('Estados encontrados en los datos:', estadosUnicos);
+
+// 👉 Pintar usando los datos filtrados
+renderBoard(filtrados);
             } catch(e) { 
                 console.error("Error cargando datos:", e); 
                 showToast('ERROR CARGANDO DATOS', 'error');
