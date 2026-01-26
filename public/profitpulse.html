@@ -1,271 +1,213 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- ✅ NOMBRE OFICIAL -->
-    <title>Financial Intelligence Recambio Reciclado | ProfitPulse Analytics Engine</title>
+<title>Financial Intelligence Recambio Reciclado | ProfitPulse Analytics Engine</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { darkMode: 'class' }</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
-
-        .glass-card {
-            background: white;
-            border: 1px solid #f1f5f9;
-            border-radius: 2.5rem;
-            transition: all 0.3s ease;
-        }
-        .dark .glass-card {
-            background: #0f172a;
-            border-color: #1e293b;
-        }
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-badge {
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 0.1em;
-            padding: 4px 10px;
-            border-radius: 10px;
-            text-transform: uppercase;
-        }
-
-        canvas {
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.02));
-        }
-    </style>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
+body { font-family: 'Inter', sans-serif; }
+.glass-card { background:white;border:1px solid #f1f5f9;border-radius:2rem; }
+.dark .glass-card { background:#0f172a;border-color:#1e293b; }
+</style>
 </head>
 
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
-<!-- ================= HEADER DINÁMICO ================= -->
 <div id="app-header"></div>
 
-<!-- ================= CONTENIDO ================= -->
-<main class="flex-grow max-w-7xl mx-auto px-6 mt-10 pb-24">
+<main class="flex-grow max-w-7xl mx-auto px-6 mt-10 pb-24 space-y-10">
 
-    <!-- TÍTULO PRINCIPAL -->
-    <div class="mb-10">
-        <h1 class="text-2xl font-black uppercase tracking-tight">
-            Financial Intelligence
-            <span class="text-blue-600 italic">Recambio Reciclado</span>
-        </h1>
-        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-            ProfitPulse Analytics Engine
-        </p>
+<!-- ================= TITLE ================= -->
+<div>
+    <h1 class="text-2xl font-black uppercase">Financial Intelligence
+        <span class="text-blue-600 italic">Recambio Reciclado</span>
+    </h1>
+    <p class="text-xs font-bold text-slate-400 uppercase">ProfitPulse Analytics Engine</p>
+</div>
+
+<!-- ================= AJUSTES ================= -->
+<div class="glass-card p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+        <label class="text-xs font-bold">% Comisión</label>
+        <input id="cfg-comision" type="number" step="0.1" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
     </div>
-
-    <!-- KPIs -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-
-        <!-- Ventas -->
-        <div class="glass-card p-8">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventas Totales</p>
-            <h3 id="stat-ventas" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
-        </div>
-
-        <!-- Beneficio -->
-        <div class="glass-card p-8">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Beneficio Estimado</p>
-            <h3 id="stat-beneficio" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
-        </div>
-
-        <!-- Pedidos -->
-        <div class="glass-card p-8">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pedidos Procesados</p>
-            <h3 id="stat-pedidos" class="text-3xl font-black mt-1 tracking-tighter">0</h3>
-        </div>
-
-        <!-- Ratio -->
-        <div class="glass-card p-8 bg-slate-900 text-white border-none">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tasa de Cierre</p>
-            <h3 id="stat-ratio" class="text-3xl font-black mt-1 tracking-tighter">–</h3>
-        </div>
+    <div>
+        <label class="text-xs font-bold">Mínimo (€)</label>
+        <input id="cfg-minimo" type="number" class="w-full p-2 rounded bg-slate-100 dark:bg-slate-800">
     </div>
-
-    <!-- GRÁFICOS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Evolución -->
-        <div class="lg:col-span-2 glass-card p-10">
-            <h2 class="text-sm font-black uppercase tracking-widest mb-6">Evolución de Ingresos</h2>
-            <div class="h-[350px] w-full">
-                <canvas id="chartVentas"></canvas>
-            </div>
-        </div>
-
-        <!-- Incidencias -->
-        <div class="glass-card p-10">
-            <h2 class="text-sm font-black uppercase tracking-widest mb-6 text-center">Incidencias</h2>
-            <div class="h-[250px] w-full">
-                <canvas id="chartIncidencias"></canvas>
-            </div>
-        </div>
+    <div class="flex items-end">
+        <button onclick="saveConfig()" class="w-full bg-blue-600 text-white rounded p-2 font-bold">
+            Guardar Ajustes
+        </button>
     </div>
+</div>
+
+<!-- ================= KPIS ================= -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="glass-card p-5"><div class="text-xs">Ventas</div><div id="kpi-ventas" class="text-xl font-black">0€</div></div>
+    <div class="glass-card p-5"><div class="text-xs">Beneficio Bruto</div><div id="kpi-bruto" class="text-xl font-black">0€</div></div>
+    <div class="glass-card p-5"><div class="text-xs">Comisión</div><div id="kpi-comision" class="text-xl font-black">0€</div></div>
+    <div class="glass-card p-5"><div class="text-xs">Beneficio Neto</div><div id="kpi-neto" class="text-xl font-black">0€</div></div>
+    <div class="glass-card p-5 bg-slate-900 text-white"><div class="text-xs">Ratio</div><div id="kpi-ratio" class="text-xl font-black">–</div></div>
+</div>
+
+<!-- ================= ALERTAS ================= -->
+<div id="alerts" class="glass-card p-5 hidden"></div>
+
+<!-- ================= CHARTS ================= -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="glass-card p-6">
+        <h2 class="font-black mb-2">Ventas por Taller</h2>
+        <canvas id="chartVentas"></canvas>
+    </div>
+    <div class="glass-card p-6">
+        <h2 class="font-black mb-2">Incidencias por Taller</h2>
+        <canvas id="chartIncidencias"></canvas>
+    </div>
+</div>
 
 </main>
 
-<!-- ================= FOOTER DINÁMICO ================= -->
 <div id="app-footer"></div>
 
-<!-- ================= LÓGICA ================= -->
 <script>
-let chartVentas = null;
-let chartIncidencias = null;
+let chartVentas, chartIncidencias;
 
-// ---------------- BOOTSTRAP ----------------
-async function init() {
-    if (localStorage.getItem('darkMode') === 'true') {
-        document.documentElement.classList.add('dark');
-    }
+let config = JSON.parse(localStorage.getItem('profitpulse_config')) || {
+    comision: 1,
+    minimo: 1
+};
 
-    await cargarStats();
+document.getElementById('cfg-comision').value = config.comision;
+document.getElementById('cfg-minimo').value = config.minimo;
+
+function saveConfig(){
+    config.comision = Number(document.getElementById('cfg-comision').value);
+    config.minimo = Number(document.getElementById('cfg-minimo').value);
+    localStorage.setItem('profitpulse_config', JSON.stringify(config));
+    cargarStats();
 }
 
-// ---------------- DATA LOADER ----------------
-async function cargarStats() {
-    try {
-        const res = await fetch('/api/pedidos', { cache: 'no-store' });
-        if (!res.ok) throw new Error('No se pudo cargar pedidos');
+// ---------------- INIT ----------------
+window.addEventListener('DOMContentLoaded', cargarStats);
 
-        const pedidos = await res.json();
-        console.log('📊 Pedidos cargados para ProfitPulse:', pedidos.length);
+// ---------------- LOAD DATA ----------------
+async function cargarStats(){
+    const res = await fetch('/api/pedidos', { cache:'no-store' });
+    const pedidos = await res.json();
 
-        buildProfitPulseMetrics(pedidos);
+    const metrics = calcularKPIs(pedidos);
+    renderKPIs(metrics);
+    renderAlerts(metrics.alerts);
 
-        const talleres = aggregateByTaller(pedidos);
-        buildChartsFromTalleres(talleres);
-
-    } catch (err) {
-        console.error("❌ Error cargando stats:", err);
-    }
+    const talleres = aggregateByTaller(pedidos);
+    renderCharts(talleres);
 }
 
-// ---------------- AGREGACIÓN ----------------
-function aggregateByTaller(pedidos) {
-    const talleres = {};
+// ---------------- KPI ENGINE ----------------
+function calcularKPIs(pedidos){
+    let ventas=0, bruto=0, comision=0, neto=0;
+    let conPrecio=0;
+    const alerts=[];
 
-    pedidos.forEach(p => {
-        const taller = p.nombre_usuario || 'Sin Taller';
-        const precio = Number(p.precio || 0);
-        const coste = Number(p.precio_coste || 0);
+    pedidos.forEach(p=>{
+        const precio = Number(p.precio||0);
+        const coste = Number(p.precio_coste||0);
 
-        if (!talleres[taller]) {
-            talleres[taller] = { pedidos: 0, ventas: 0, beneficio: 0, incidencias: 0 };
-        }
+        if(precio===0) alerts.push(`Pedido #${p.id} sin precio`);
+        if(coste===0) alerts.push(`Pedido #${p.id} sin coste`);
 
-        talleres[taller].pedidos++;
-        talleres[taller].ventas += precio;
+        if(precio>0){
+            ventas+=precio;
+            conPrecio++;
 
-        if (precio > 0 && coste > 0) {
-            talleres[taller].beneficio += (precio - coste);
-        }
+            const margen = precio-coste;
+            bruto+=margen;
 
-        if (p.estado === 'incidencia') {
-            talleres[taller].incidencias++;
+            const fee = Math.max(precio*(config.comision/100), config.minimo);
+            comision+=fee;
+            neto += (margen-fee);
+
+            if(margen<0) alerts.push(`Pedido #${p.id} con margen negativo`);
         }
     });
 
-    console.log('🏭 Segmentación por taller:', talleres);
-    return talleres;
+    return {
+        ventas, bruto, comision, neto,
+        ratio: pedidos.length ? ((conPrecio/pedidos.length)*100).toFixed(1) : 0,
+        alerts
+    };
 }
 
-// ---------------- KPIs ----------------
-function buildProfitPulseMetrics(pedidos) {
-    let ventas = 0;
-    let beneficio = 0;
-    let pedidosConPrecio = 0;
+function renderKPIs(m){
+    document.getElementById('kpi-ventas').innerText = `${m.ventas.toFixed(0)}€`;
+    document.getElementById('kpi-bruto').innerText = `${m.bruto.toFixed(0)}€`;
+    document.getElementById('kpi-comision').innerText = `${m.comision.toFixed(0)}€`;
+    document.getElementById('kpi-neto').innerText = `${m.neto.toFixed(0)}€`;
+    document.getElementById('kpi-ratio').innerText = `${m.ratio}%`;
+}
 
-    pedidos.forEach(p => {
-        const precio = Number(p.precio || 0);
-        const coste = Number(p.precio_coste || 0);
+// ---------------- ALERTS ----------------
+function renderAlerts(alerts){
+    const box = document.getElementById('alerts');
+    if(!alerts.length){ box.classList.add('hidden'); return; }
 
-        if (precio > 0) {
-            ventas += precio;
-            pedidosConPrecio++;
-        }
+    box.classList.remove('hidden');
+    box.innerHTML = `<h3 class="font-black mb-2">⚠️ Alertas</h3>` +
+        alerts.slice(0,8).map(a=>`<div class="text-xs text-red-500">• ${a}</div>`).join('');
+}
 
-        if (precio > 0 && coste > 0) {
-            beneficio += (precio - coste);
-        }
+// ---------------- AGGREGATION ----------------
+function aggregateByTaller(pedidos){
+    const map={};
+
+    pedidos.forEach(p=>{
+        const t = p.nombre_usuario || 'Sin Taller';
+        if(!map[t]) map[t]={ventas:0, incidencias:0};
+
+        const precio = Number(p.precio||0);
+        map[t].ventas += precio;
+
+        if(p.estado==='incidencia') map[t].incidencias++;
     });
 
-    const ratio = pedidos.length
-        ? ((pedidosConPrecio / pedidos.length) * 100).toFixed(1)
-        : 0;
-
-    document.getElementById('stat-ventas').innerText = `${ventas.toLocaleString()}€`;
-    document.getElementById('stat-beneficio').innerText = `${beneficio.toLocaleString()}€`;
-    document.getElementById('stat-pedidos').innerText = pedidos.length;
-    document.getElementById('stat-ratio').innerText = `${ratio}%`;
-
-    console.log('✅ KPIs:', { ventas, beneficio, pedidos: pedidos.length, ratio });
+    return map;
 }
 
 // ---------------- CHARTS ----------------
-function buildChartsFromTalleres(talleres) {
-    const labels = Object.keys(talleres);
-    const ventas = labels.map(t => talleres[t].ventas);
-    const incidencias = labels.map(t => talleres[t].incidencias);
+function renderCharts(data){
+    const labels = Object.keys(data);
+    const ventas = labels.map(l=>data[l].ventas);
+    const incidencias = labels.map(l=>data[l].incidencias);
 
-    if (chartVentas) chartVentas.destroy();
-    if (chartIncidencias) chartIncidencias.destroy();
+    if(chartVentas) chartVentas.destroy();
+    if(chartIncidencias) chartIncidencias.destroy();
 
-    chartVentas = new Chart(document.getElementById('chartVentas'), {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                label: 'Ventas (€)',
-                data: ventas
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
+    chartVentas = new Chart(document.getElementById('chartVentas'),{
+        type:'bar',
+        data:{ labels, datasets:[{ label:'Ventas €', data:ventas }]},
+        options:{ responsive:true }
     });
 
-    chartIncidencias = new Chart(document.getElementById('chartIncidencias'), {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                label: 'Incidencias',
-                data: incidencias
-            }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
+    chartIncidencias = new Chart(document.getElementById('chartIncidencias'),{
+        type:'bar',
+        data:{ labels, datasets:[{ label:'Incidencias', data:incidencias }]},
+        options:{ responsive:true }
     });
 }
-
-window.addEventListener('DOMContentLoaded', init);
 </script>
 
-<!-- ================= CARGA HEADER ================= -->
 <script>
-fetch('/partials/header.html')
-    .then(res => res.text())
-    .then(html => document.getElementById('app-header').innerHTML = html)
-    .catch(err => console.error('Error cargando header:', err));
-</script>
-
-<!-- ================= CARGA FOOTER ================= -->
-<script>
-fetch('/partials/footer.html')
-    .then(res => res.text())
-    .then(html => document.getElementById('app-footer').innerHTML = html)
-    .catch(err => console.error('Error cargando footer:', err));
+fetch('/partials/header.html').then(r=>r.text()).then(h=>app-header.innerHTML=h);
+fetch('/partials/footer.html').then(r=>r.text()).then(h=>app-footer.innerHTML=h);
 </script>
 
 </body>
