@@ -2,24 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Equipo y Talleres - Logística IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
     <script>
-        tailwind.config = { 
-            darkMode: 'class',
-            theme: { 
-                extend: { 
-                    colors: { 
-                        darkBg: '#0f172a', 
-                        cardDark: '#1e293b' 
-                    } 
-                } 
-            }
+        tailwind.config = {
+            darkMode: 'class'
         };
     </script>
 
@@ -27,214 +18,339 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
         body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
 
-        .row-anim { transition: all 0.2s; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .row-anim:hover { background: rgba(59, 130, 246, 0.03); }
+        .row-anim { transition: all 0.2s; }
+        .row-anim:hover { background: rgba(59,130,246,0.04); }
 
-        .btn-action { 
-            width: 36px; 
-            height: 36px; 
-            border-radius: 12px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            transition: all 0.2s; 
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
         }
     </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-darkBg text-slate-900 dark:text-slate-100 min-h-screen">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
 
-    <!-- HEADER SIN CAMBIOS -->
-    <!-- ... (tu header real sigue aquí) -->
+<!-- HEADER -->
+<div id="app-header"></div>
 
-    <!-- ✅ CONTENEDOR REAL PARA TALLERES -->
-    <main class="p-6 max-w-7xl mx-auto">
+<!-- CONTENIDO -->
+<main class="flex-grow p-6 max-w-7xl mx-auto w-full">
 
-        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow overflow-hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow overflow-hidden">
 
-            <!-- FILTROS -->
-            <div class="p-4 border-b flex flex-col sm:flex-row gap-3">
-                <input 
-                    id="searchInput"
-                    oninput="filtrarTalleres()"
-                    placeholder="Buscar taller..."
-                    class="flex-1 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-sm outline-none"
-                />
+        <!-- FILTROS -->
+        <div class="p-4 border-b flex flex-col sm:flex-row gap-3">
+            <input
+                id="searchInput"
+                oninput="filtrarTalleres()"
+                placeholder="Buscar taller..."
+                class="flex-1 bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-sm outline-none"
+            />
 
-                <select 
-                    id="filterRol"
-                    onchange="filtrarTalleres()"
-                    class="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-sm outline-none"
-                >
-                    <option value="todos">Todos</option>
-                    <option value="taller">Solo Taller</option>
-                </select>
+            <select
+                id="filterRol"
+                onchange="filtrarTalleres()"
+                class="bg-slate-100 dark:bg-slate-800 px-4 py-2 rounded-lg text-sm outline-none"
+            >
+                <option value="todos">Todos</option>
+                <option value="taller">Solo Taller</option>
+            </select>
+        </div>
+
+        <!-- TABLA -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-100 dark:bg-slate-800 text-xs uppercase">
+                    <tr>
+                        <th class="px-6 py-3">Taller</th>
+                        <th class="px-6 py-3">Email</th>
+                        <th class="px-6 py-3">Provincia</th>
+                        <th class="px-6 py-3">Rol</th>
+                        <th class="px-6 py-3 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaTalleres"></tbody>
+            </table>
+
+            <div id="noResults" class="hidden text-center text-slate-400 p-6">
+                No hay resultados
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL EDICIÓN TALLER -->
+<div id="modalTaller" class="fixed inset-0 z-[100] hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+
+    <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
+
+        <form id="form-taller">
+            <input type="hidden" id="t-id">
+
+            <!-- HEADER MODAL -->
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50 dark:bg-slate-800">
+                <h2 id="modal-title" class="text-lg font-black uppercase tracking-tight">
+                    Editar Taller 🛠️
+                </h2>
+                <button type="button" onclick="cerrarModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
-            <!-- TABLA -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead class="bg-slate-100 dark:bg-slate-800 text-xs uppercase">
-                        <tr>
-                            <th class="px-6 py-3">Taller</th>
-                            <th class="px-6 py-3">Email</th>
-                            <th class="px-6 py-3">Provincia</th>
-                            <th class="px-6 py-3">Rol</th>
-                            <th class="px-6 py-3 text-right">Acciones</th>
-                        </tr>
-                    </thead>
+            <!-- BODY -->
+            <div class="p-6 space-y-5 max-h-[65vh] overflow-y-auto">
 
-                    <!-- 🔴 ESTE TBODY ES EL QUE USA EL JS -->
-                    <tbody id="tablaTalleres"></tbody>
-                </table>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-slate-400">🏷 Nombre Taller</label>
+                        <input id="t-nombre" class="w-full bg-slate-100 dark:bg-slate-800 p-3 rounded-xl font-bold outline-none">
+                    </div>
 
-                <div id="noResults" class="hidden text-center text-slate-400 p-6">
-                    No hay resultados
+                    <div>
+                        <label class="text-xs font-bold text-slate-400">📧 Email</label>
+                        <input id="t-email" class="w-full bg-slate-100 dark:bg-slate-800 p-3 rounded-xl font-bold outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-400">📍 Provincia</label>
+                        <input id="t-provincia" class="w-full bg-slate-100 dark:bg-slate-800 p-3 rounded-xl font-bold outline-none">
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-400">👤 Rol</label>
+                        <select id="t-rol" class="w-full bg-slate-100 dark:bg-slate-800 p-3 rounded-xl font-bold outline-none">
+                            <option value="taller">Taller</option>
+                            <option value="agente">Agente</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- WHATSAPP -->
+                <div>
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">📱 WhatsApp (1 por línea)</label>
+                    <textarea id="t-whatsapp" rows="4" class="w-full bg-slate-100 dark:bg-slate-800 p-3 rounded-xl font-mono text-sm outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-slate-400">🔐 Nueva contraseña (opcional)</label>
+                    <input id="t-pass" type="password" class="w-full bg-slate-100 dark:bg-slate-800 p-3 rounded-xl font-bold outline-none">
                 </div>
             </div>
 
+            <!-- FOOTER -->
+            <div class="p-6 border-t flex justify-between gap-4 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="cerrarModal()" class="text-slate-400 font-black text-xs uppercase">
+                    Cancelar
+                </button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3 rounded-full text-xs font-black uppercase shadow-lg active:scale-95">
+                    Guardar Cambios
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN -->
+<div id="modalConfirm" class="fixed inset-0 z-[110] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-6 text-center">
+        <div class="text-red-500 text-3xl mb-3">
+            <i class="fas fa-exclamation-triangle"></i>
         </div>
-    </main>
+        <h3 class="font-black uppercase mb-2">¿Eliminar taller?</h3>
+        <p class="text-xs text-slate-400 mb-6">Esta acción no se puede deshacer.</p>
+        <div class="flex gap-3">
+            <button onclick="cerrarConfirm()" class="flex-1 text-xs font-black uppercase text-slate-400">Cancelar</button>
+            <button onclick="confirmarEliminar()" class="flex-1 bg-red-600 text-white rounded-xl py-2 text-xs font-black uppercase">Eliminar</button>
+        </div>
+    </div>
+</div>
 
-    <script>
-        let allTalleres = [];
-        let datosFiltrados = [];
+<!-- FOOTER -->
+<div id="app-footer"></div>
 
-        async function init() {
-            const userData = localStorage.getItem('user');
-            if (!userData) {
-                window.location.href = 'index.html';
-                return;
-            }
+<script>
+let allTalleres = [];
+let datosFiltrados = [];
+let deleteId = null;
 
-            try {
-                const user = JSON.parse(userData);
-                if (user.rol !== 'admin' && user.rol !== 'agente') {
-                    alert("Acceso denegado");
-                    window.location.href = 'landing.html';
-                    return;
-                }
-            } catch (e) {
-                console.error("Error en validación:", e);
-                window.location.href = 'index.html';
-                return;
-            }
+// INIT
+async function init() {
+    const userData = localStorage.getItem('user');
+    if (!userData) return location.href = 'index.html';
 
-            if (localStorage.getItem('darkMode') === 'true') {
-                document.documentElement.classList.add('dark');
-            }
+    const user = JSON.parse(userData);
+    if (!['admin','agente'].includes(user.rol)) {
+        alert("Acceso denegado");
+        return location.href = 'landing.html';
+    }
 
-            await cargarTalleres();
-        }
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
 
-        // =============================
-        // CARGA DE TALLERES
-        // =============================
-        async function cargarTalleres() {
-            try {
-                const res = await fetch('/api/usuarios?rol=taller', { cache: 'no-store' });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await cargarTalleres();
+}
 
-                allTalleres = await res.json();
-                console.log('Talleres cargados:', allTalleres.length);
+// CARGAR
+async function cargarTalleres() {
+    const res = await fetch('/api/usuarios?rol=taller', { cache:'no-store' });
+    allTalleres = await res.json();
+    filtrarTalleres();
+}
 
-                filtrarTalleres();
-            } catch (err) {
-                console.error("Error al cargar talleres:", err);
-                alert("Error conectando con la base de datos");
-            }
-        }
+// FILTRAR
+function filtrarTalleres() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const rol = document.getElementById('filterRol').value;
 
-        // =============================
-        // FILTRO
-        // =============================
-        function filtrarTalleres() {
-            const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
-            const rol = document.getElementById('filterRol')?.value || 'todos';
+    datosFiltrados = allTalleres.filter(t => {
+        const texto =
+            `${t.nombre_taller||''} ${t.email||''} ${t.provincia||''}`.toLowerCase();
 
-            datosFiltrados = allTalleres.filter(t => {
-                const matchSearch =
-                    (t.nombre_taller || '').toLowerCase().includes(search) ||
-                    (t.email || '').toLowerCase().includes(search) ||
-                    (t.provincia || '').toLowerCase().includes(search);
+        return texto.includes(search) && (rol === 'todos' || t.rol === rol);
+    });
 
-                const matchRol = rol === 'todos' || t.rol === rol;
-                return matchSearch && matchRol;
-            });
+    renderTalleres();
+}
 
-            renderTalleres();
-        }
+// RENDER
+function renderTalleres() {
+    const tbody = document.getElementById('tablaTalleres');
+    const noRes = document.getElementById('noResults');
+    tbody.innerHTML = '';
 
-        // =============================
-        // RENDER
-        // =============================
-        function renderTalleres() {
-            const tbody = document.getElementById('tablaTalleres');
-            const noRes = document.getElementById('noResults');
+    if (!datosFiltrados.length) {
+        noRes.classList.remove('hidden');
+        return;
+    }
+    noRes.classList.add('hidden');
 
-            if (!tbody) {
-                console.error('❌ No existe #tablaTalleres en el DOM');
-                return;
-            }
+    datosFiltrados.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.className = 'row-anim';
 
-            tbody.innerHTML = '';
+        const rolClass =
+            t.rol === 'admin' ? 'bg-red-100 text-red-600' :
+            t.rol === 'agente' ? 'bg-orange-100 text-orange-600' :
+            'bg-blue-100 text-blue-600';
 
-            if (datosFiltrados.length === 0) {
-                noRes.classList.remove('hidden');
-                return;
-            } else {
-                noRes.classList.add('hidden');
-            }
+        tr.innerHTML = `
+            <td class="px-6 py-4 font-bold">${t.nombre_taller || ''}</td>
+            <td class="px-6 py-4">${t.email || ''}</td>
+            <td class="px-6 py-4">${t.provincia || ''}</td>
+            <td class="px-6 py-4">
+                <span class="px-3 py-1 rounded-full text-[10px] font-black ${rolClass}">
+                    ${t.rol}
+                </span>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex justify-end gap-2">
+                    <button onclick="editarTaller(${t.id})" class="btn-action bg-slate-100 hover:bg-blue-600 hover:text-white">
+                        <i class="fas fa-pen text-xs"></i>
+                    </button>
+                    <button onclick="pedirEliminar(${t.id})" class="btn-action bg-slate-100 hover:bg-red-600 hover:text-white">
+                        <i class="fas fa-trash text-xs"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
-            datosFiltrados.forEach(t => {
-                const tr = document.createElement('tr');
-                tr.className = 'row-anim';
+// EDITAR
+function editarTaller(id) {
+    const t = allTalleres.find(x => x.id === id);
+    if (!t) return;
 
-                const rolClass =
-                    t.rol === 'admin' ? 'bg-red-100 text-red-600' :
-                    (t.rol === 'agente' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600');
+    document.getElementById('t-id').value = t.id;
+    document.getElementById('t-nombre').value = t.nombre_taller || '';
+    document.getElementById('t-email').value = t.email || '';
+    document.getElementById('t-provincia').value = t.provincia || '';
+    document.getElementById('t-rol').value = t.rol || 'taller';
 
-                tr.innerHTML = `
-                    <td class="px-6 py-4 font-bold">${t.nombre_taller || 'Sin nombre'}</td>
-                    <td class="px-6 py-4">${t.email || ''}</td>
-                    <td class="px-6 py-4">${t.provincia || 'N/A'}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-3 py-1 rounded-full text-[10px] font-black ${rolClass}">
-                            ${t.rol}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-right">
-                        <button onclick="editarTaller(${t.id})" class="btn-action bg-slate-100 hover:bg-blue-600 hover:text-white">
-                            <i class="fas fa-pen text-xs"></i>
-                        </button>
-                        <button onclick="eliminarTaller(${t.id})" class="btn-action bg-slate-100 hover:bg-red-600 hover:text-white ml-2">
-                            <i class="fas fa-trash text-xs"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+    const phones = [];
+    for (let i = 1; i <= 10; i++) {
+        const key = i === 1 ? 'telefono_whatsapp' : `telefono_whatsapp_${i}`;
+        if (t[key]) phones.push(t[key]);
+    }
+    document.getElementById('t-whatsapp').value = phones.join('\n');
+    document.getElementById('t-pass').value = '';
 
-        // =============================
-        // ACCIONES
-        // =============================
-        function editarTaller(id) {
-            alert("Editar taller ID: " + id);
-        }
+    document.getElementById('modalTaller').classList.remove('hidden');
+}
 
-        async function eliminarTaller(id) {
-            if (!confirm("¿Eliminar este taller?")) return;
+function cerrarModal() {
+    document.getElementById('modalTaller').classList.add('hidden');
+}
 
-            try {
-                await fetch(`/api/usuarios/${id}`, { method: 'DELETE' });
-                await cargarTalleres();
-            } catch (err) {
-                console.error(err);
-            }
-        }
+// GUARDAR
+document.getElementById('form-taller').addEventListener('submit', async e => {
+    e.preventDefault();
 
-        window.onload = init;
-    </script>
+    const id = document.getElementById('t-id').value;
+    const phones = document.getElementById('t-whatsapp').value.split('\n').map(p => p.trim()).filter(Boolean);
+
+    const payload = {
+        nombre_taller: document.getElementById('t-nombre').value,
+        email: document.getElementById('t-email').value,
+        provincia: document.getElementById('t-provincia').value,
+        rol: document.getElementById('t-rol').value,
+        password: document.getElementById('t-pass').value || undefined
+    };
+
+    phones.forEach((p, i) => {
+        payload[i === 0 ? 'telefono_whatsapp' : `telefono_whatsapp_${i+1}`] = p;
+    });
+
+    await fetch(`/api/usuarios/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+    });
+
+    cerrarModal();
+    await cargarTalleres();
+});
+
+// ELIMINAR
+function pedirEliminar(id) {
+    deleteId = id;
+    document.getElementById('modalConfirm').classList.remove('hidden');
+}
+
+function cerrarConfirm() {
+    deleteId = null;
+    document.getElementById('modalConfirm').classList.add('hidden');
+}
+
+async function confirmarEliminar() {
+    if (!deleteId) return;
+    await fetch(`/api/usuarios/${deleteId}`, { method:'DELETE' });
+    cerrarConfirm();
+    await cargarTalleres();
+}
+
+window.onload = init;
+</script>
+
+<!-- HEADER / FOOTER DINÁMICOS -->
+<script>
+fetch('/partials/header.html')
+  .then(r => r.text())
+  .then(html => document.getElementById('app-header').innerHTML = html);
+
+fetch('/partials/footer.html')
+  .then(r => r.text())
+  .then(html => document.getElementById('app-footer').innerHTML = html);
+</script>
+
 </body>
 </html>
