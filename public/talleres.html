@@ -105,21 +105,25 @@
         }
 
         function filtrarTalleres() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const rol = document.getElementById('filterRol').value;
+    const searchEl = document.getElementById('searchInput');
+    const rolEl = document.getElementById('filterRol');
 
-            datosFiltrados = allTalleres.filter(t => {
-                const matchSearch = 
-                    (t.nombre_taller || '').toLowerCase().includes(search) || 
-                    (t.email || '').toLowerCase().includes(search) ||
-                    (t.provincia || '').toLowerCase().includes(search);
+    // 🛡️ Protección contra null (evita el crash actual)
+    const search = searchEl ? searchEl.value.toLowerCase() : '';
+    const rol = rolEl ? rolEl.value : 'todos';
 
-                const matchRol = rol === 'todos' || t.rol === rol;
-                return matchSearch && matchRol;
-            });
+    datosFiltrados = allTalleres.filter(t => {
+        const matchSearch = 
+            (t.nombre_taller || '').toLowerCase().includes(search) || 
+            (t.email || '').toLowerCase().includes(search) ||
+            (t.provincia || '').toLowerCase().includes(search);
 
-            renderTalleres();
-        }
+        const matchRol = rol === 'todos' || t.rol === rol;
+        return matchSearch && matchRol;
+    });
+
+    renderTalleres();
+}
 
         function renderTalleres() {
             const tbody = document.getElementById('tablaTalleres');
