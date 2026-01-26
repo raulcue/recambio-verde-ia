@@ -1,291 +1,271 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<title>ProfitPulse · Financial Intelligence</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { darkMode: 'class' }</script>
+    <!-- ✅ NOMBRE OFICIAL -->
+    <title>Financial Intelligence Recambio Reciclado | ProfitPulse Analytics Engine</title>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-body { font-family: 'Inter', sans-serif; }
-canvas { max-height: 320px; }
-.glass-card {
-  background: white;
-  border: 1px solid #f1f5f9;
-  border-radius: 2rem;
-  transition: all .25s ease;
-}
-.dark .glass-card { background: #0f172a; border-color: #1e293b; }
-.glass-card:hover { transform: translateY(-4px); box-shadow: 0 15px 25px rgba(0,0,0,.05); }
-.suspicious { background: rgba(250,204,21,0.15); }
-</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
+        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
+
+        .glass-card {
+            background: white;
+            border: 1px solid #f1f5f9;
+            border-radius: 2.5rem;
+            transition: all 0.3s ease;
+        }
+        .dark .glass-card {
+            background: #0f172a;
+            border-color: #1e293b;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-badge {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            padding: 4px 10px;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+
+        canvas {
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.02));
+        }
+    </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col min-h-screen">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
-<div id="header-slot"></div>
+<!-- ================= HEADER DINÁMICO ================= -->
+<div id="app-header"></div>
 
-<main class="flex-grow px-6 py-8 space-y-8 max-w-7xl mx-auto w-full">
+<!-- ================= CONTENIDO ================= -->
+<main class="flex-grow max-w-7xl mx-auto px-6 mt-10 pb-24">
 
-<!-- TITLE -->
-<div class="flex justify-between items-center">
-  <div>
-    <h1 class="text-2xl font-black uppercase tracking-tight">
-      Financial Intelligence <span class="text-blue-600 italic">Recambio Reciclado</span>
-    </h1>
-    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-      ProfitPulse Analytics Engine
-    </p>
-  </div>
+    <!-- TÍTULO PRINCIPAL -->
+    <div class="mb-10">
+        <h1 class="text-2xl font-black uppercase tracking-tight">
+            Financial Intelligence
+            <span class="text-blue-600 italic">Recambio Reciclado</span>
+        </h1>
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+            ProfitPulse Analytics Engine
+        </p>
+    </div>
 
-  <div class="flex items-center gap-2 text-xs font-bold">
-    <span id="db-dot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-    <span id="db-status">Desconectado</span>
-  </div>
-</div>
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
 
-<!-- CONFIG -->
-<section class="glass-card p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-  <div>
-    <label class="text-[10px] font-bold uppercase text-slate-400">% Comisión</label>
-    <input id="cfgPercent" type="number" value="1" step="0.1"
-      class="w-full mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none"/>
-  </div>
+        <!-- Ventas -->
+        <div class="glass-card p-8">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventas Totales</p>
+            <h3 id="stat-ventas" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
+        </div>
 
-  <div>
-    <label class="text-[10px] font-bold uppercase text-slate-400">Mínimo (€)</label>
-    <input id="cfgMin" type="number" value="1.5" step="0.1"
-      class="w-full mt-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 outline-none"/>
-  </div>
+        <!-- Beneficio -->
+        <div class="glass-card p-8">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Beneficio Estimado</p>
+            <h3 id="stat-beneficio" class="text-3xl font-black mt-1 tracking-tighter">0€</h3>
+        </div>
 
-  <div class="flex items-end text-[10px] text-slate-400 font-bold uppercase">
-    Cambios aplicados en tiempo real
-  </div>
-</section>
+        <!-- Pedidos -->
+        <div class="glass-card p-8">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pedidos Procesados</p>
+            <h3 id="stat-pedidos" class="text-3xl font-black mt-1 tracking-tighter">0</h3>
+        </div>
 
-<!-- KPIS -->
-<section id="kpis" class="grid grid-cols-2 md:grid-cols-6 gap-5"></section>
+        <!-- Ratio -->
+        <div class="glass-card p-8 bg-slate-900 text-white border-none">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tasa de Cierre</p>
+            <h3 id="stat-ratio" class="text-3xl font-black mt-1 tracking-tighter">–</h3>
+        </div>
+    </div>
 
-<!-- CHARTS -->
-<section class="grid grid-cols-1 md:grid-cols-2 gap-6">
-  <div class="glass-card p-6">
-    <h3 class="font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-      <i class="fas fa-chart-bar text-blue-600"></i> Comisión mensual
-    </h3>
-    <canvas id="chartMonth"></canvas>
-  </div>
+    <!-- GRÁFICOS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-  <div class="glass-card p-6">
-    <h3 class="font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-      <i class="fas fa-chart-line text-emerald-600"></i> Comisión anual
-    </h3>
-    <canvas id="chartYear"></canvas>
-  </div>
+        <!-- Evolución -->
+        <div class="lg:col-span-2 glass-card p-10">
+            <h2 class="text-sm font-black uppercase tracking-widest mb-6">Evolución de Ingresos</h2>
+            <div class="h-[350px] w-full">
+                <canvas id="chartVentas"></canvas>
+            </div>
+        </div>
 
-  <div class="glass-card p-6 md:col-span-2">
-    <h3 class="font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-      <i class="fas fa-bullseye text-purple-600"></i> Forecast
-    </h3>
-    <canvas id="chartForecast"></canvas>
-  </div>
-</section>
-
-<!-- TABLE -->
-<section class="glass-card p-6 overflow-x-auto">
-<table class="min-w-full text-xs">
-<thead class="border-b dark:border-slate-700">
-<tr class="uppercase text-slate-400">
-<th class="py-3 text-left">ID</th>
-<th>Fecha</th>
-<th>Taller</th>
-<th>Precio</th>
-<th>Coste</th>
-<th>GGR</th>
-<th>Comisión</th>
-</tr>
-</thead>
-<tbody id="table-body"></tbody>
-</table>
-
-<div class="flex justify-between items-center mt-4 text-xs font-bold">
-  <button onclick="prevPage()" class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
-    <i class="fas fa-arrow-left"></i>
-  </button>
-  <div id="page-info"></div>
-  <button onclick="nextPage()" class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
-    <i class="fas fa-arrow-right"></i>
-  </button>
-</div>
-</section>
+        <!-- Incidencias -->
+        <div class="glass-card p-10">
+            <h2 class="text-sm font-black uppercase tracking-widest mb-6 text-center">Incidencias</h2>
+            <div class="h-[250px] w-full">
+                <canvas id="chartIncidencias"></canvas>
+            </div>
+        </div>
+    </div>
 
 </main>
 
-<div id="footer-slot"></div>
+<!-- ================= FOOTER DINÁMICO ================= -->
+<div id="app-footer"></div>
 
+<!-- ================= LÓGICA ================= -->
 <script>
-let RAW=[], FILTERED=[];
-let charts={};
-let currentPage=1;
-const pageSize=10;
+let chartVentas = null;
+let chartIncidencias = null;
 
-let CFG={ percent:1, min:1.5 };
+// ---------------- BOOTSTRAP ----------------
+async function init() {
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
 
-// ---------------- LAYOUT ----------------
-async function loadLayout(){
-  const html = await fetch('/dashboard.html').then(r=>r.text());
-  const tmp=document.createElement('div');
-  tmp.innerHTML=html;
-  const header = tmp.querySelector('header');
-  const footer = tmp.querySelector('footer');
-  if(header) document.getElementById('header-slot').append(header);
-  if(footer) document.getElementById('footer-slot').append(footer);
+    await cargarStats();
 }
 
-// ---------------- CALC ----------------
-function calcular(precio,coste){
-  const ggr = precio - coste;
-  let com = (!isFinite(ggr) || ggr<=0) ? CFG.min : ggr * (CFG.percent/100);
-  com = Math.min(com,3.5);
-  return { ggr, com: Math.round(com*100)/100 };
+// ---------------- DATA LOADER ----------------
+async function cargarStats() {
+    try {
+        const res = await fetch('/api/pedidos', { cache: 'no-store' });
+        if (!res.ok) throw new Error('No se pudo cargar pedidos');
+
+        const pedidos = await res.json();
+        console.log('📊 Pedidos cargados para ProfitPulse:', pedidos.length);
+
+        buildProfitPulseMetrics(pedidos);
+
+        const talleres = aggregateByTaller(pedidos);
+        buildChartsFromTalleres(talleres);
+
+    } catch (err) {
+        console.error("❌ Error cargando stats:", err);
+    }
 }
 
-function enrich(data){
-  return data.map(p=>{
-    const precio = Number(p.precio);
-    const coste  = Number(p.precio_coste);
-    const fecha  = new Date(p.fecha_creacion || Date.now());
-    const invalid = !isFinite(precio) || !isFinite(coste);
-    const {ggr,com} = calcular(precio||0,coste||0);
-    return {...p, precio, coste, fecha, ggr, com, invalid};
-  });
+// ---------------- AGREGACIÓN ----------------
+function aggregateByTaller(pedidos) {
+    const talleres = {};
+
+    pedidos.forEach(p => {
+        const taller = p.nombre_usuario || 'Sin Taller';
+        const precio = Number(p.precio || 0);
+        const coste = Number(p.precio_coste || 0);
+
+        if (!talleres[taller]) {
+            talleres[taller] = { pedidos: 0, ventas: 0, beneficio: 0, incidencias: 0 };
+        }
+
+        talleres[taller].pedidos++;
+        talleres[taller].ventas += precio;
+
+        if (precio > 0 && coste > 0) {
+            talleres[taller].beneficio += (precio - coste);
+        }
+
+        if (p.estado === 'incidencia') {
+            talleres[taller].incidencias++;
+        }
+    });
+
+    console.log('🏭 Segmentación por taller:', talleres);
+    return talleres;
 }
 
-// ---------------- KPIS ----------------
-function renderKPIs(data){
-  const sum = k => data.reduce((a,b)=>a+(b[k]||0),0);
-  const avg = k => data.length?sum(k)/data.length:0;
+// ---------------- KPIs ----------------
+function buildProfitPulseMetrics(pedidos) {
+    let ventas = 0;
+    let beneficio = 0;
+    let pedidosConPrecio = 0;
 
-  const kpis=[
-    ['Pedidos',data.length],
-    ['Comisión Total',sum('com').toFixed(2)+'€'],
-    ['GGR Total',sum('ggr').toFixed(2)+'€'],
-    ['Comisión Media',avg('com').toFixed(2)+'€'],
-    ['Pedidos sospechosos',data.filter(d=>d.invalid).length],
-    ['% en mínimo',(data.filter(d=>d.ggr<=0).length/data.length*100||0).toFixed(1)+'%']
-  ];
+    pedidos.forEach(p => {
+        const precio = Number(p.precio || 0);
+        const coste = Number(p.precio_coste || 0);
 
-  const el=document.getElementById('kpis');
-  el.innerHTML='';
-  kpis.forEach(k=>{
-    el.innerHTML+=`
-      <div class="glass-card p-5">
-        <div class="text-[10px] font-bold uppercase text-slate-400">${k[0]}</div>
-        <div class="font-black text-2xl mt-1">${k[1]}</div>
-      </div>`;
-  });
+        if (precio > 0) {
+            ventas += precio;
+            pedidosConPrecio++;
+        }
+
+        if (precio > 0 && coste > 0) {
+            beneficio += (precio - coste);
+        }
+    });
+
+    const ratio = pedidos.length
+        ? ((pedidosConPrecio / pedidos.length) * 100).toFixed(1)
+        : 0;
+
+    document.getElementById('stat-ventas').innerText = `${ventas.toLocaleString()}€`;
+    document.getElementById('stat-beneficio').innerText = `${beneficio.toLocaleString()}€`;
+    document.getElementById('stat-pedidos').innerText = pedidos.length;
+    document.getElementById('stat-ratio').innerText = `${ratio}%`;
+
+    console.log('✅ KPIs:', { ventas, beneficio, pedidos: pedidos.length, ratio });
 }
-
-// ---------------- TABLE ----------------
-function paginate(data){
-  const start=(currentPage-1)*pageSize;
-  return data.slice(start,start+pageSize);
-}
-
-function renderTable(){
-  const tbody=document.getElementById('table-body');
-  tbody.innerHTML='';
-
-  paginate(FILTERED).forEach(p=>{
-    tbody.innerHTML+=`
-      <tr class="border-b dark:border-slate-800 ${p.invalid?'suspicious':''}">
-        <td>${p.id||'-'}</td>
-        <td>${p.fecha.toISOString().slice(0,10)}</td>
-        <td>${p.nombre_usuario||'—'}</td>
-        <td>${isFinite(p.precio)?p.precio.toFixed(2):'—'}</td>
-        <td>${isFinite(p.coste)?p.coste.toFixed(2):'—'}</td>
-        <td>${p.ggr.toFixed(2)}</td>
-        <td class="font-black">${p.com.toFixed(2)}</td>
-      </tr>`;
-  });
-
-  document.getElementById('page-info').innerText =
-    `Página ${currentPage} / ${Math.ceil(FILTERED.length/pageSize)||1}`;
-}
-
-function prevPage(){ if(currentPage>1){currentPage--;renderTable();}}
-function nextPage(){ if(currentPage<Math.ceil(FILTERED.length/pageSize)){currentPage++;renderTable();}}
 
 // ---------------- CHARTS ----------------
-function groupBy(data,fn){
-  return data.reduce((a,b)=>{
-    const k=fn(b);
-    a[k]=(a[k]||0)+b.com;
-    return a;
-  },{});
+function buildChartsFromTalleres(talleres) {
+    const labels = Object.keys(talleres);
+    const ventas = labels.map(t => talleres[t].ventas);
+    const incidencias = labels.map(t => talleres[t].incidencias);
+
+    if (chartVentas) chartVentas.destroy();
+    if (chartIncidencias) chartIncidencias.destroy();
+
+    chartVentas = new Chart(document.getElementById('chartVentas'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Ventas (€)',
+                data: ventas
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    chartIncidencias = new Chart(document.getElementById('chartIncidencias'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Incidencias',
+                data: incidencias
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
 }
 
-function renderCharts(data){
-  const byMonth = groupBy(data,p=>p.fecha.getMonth()+1);
-  const byYear  = groupBy(data,p=>p.fecha.getFullYear());
+window.addEventListener('DOMContentLoaded', init);
+</script>
 
-  charts.month?.destroy();
-  charts.year?.destroy();
-  charts.forecast?.destroy();
+<!-- ================= CARGA HEADER ================= -->
+<script>
+fetch('/partials/header.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('app-header').innerHTML = html)
+    .catch(err => console.error('Error cargando header:', err));
+</script>
 
-  charts.month=new Chart(document.getElementById('chartMonth'),{
-    type:'bar',
-    data:{labels:Object.keys(byMonth),datasets:[{data:Object.values(byMonth)}]}
-  });
-
-  charts.year=new Chart(document.getElementById('chartYear'),{
-    type:'bar',
-    data:{labels:Object.keys(byYear),datasets:[{data:Object.values(byYear)}]}
-  });
-
-  const base = Object.values(byMonth).reduce((a,b)=>a+b,0)/(Object.keys(byMonth).length||1);
-  charts.forecast=new Chart(document.getElementById('chartForecast'),{
-    type:'line',
-    data:{
-      labels:['Base','Optimista','Pesimista'],
-      datasets:[{data:[base,base*1.1,base*0.9]}]
-    }
-  });
-}
-
-// ---------------- LOAD ----------------
-function refresh(){
-  renderKPIs(FILTERED);
-  renderCharts(FILTERED);
-  renderTable();
-}
-
-async function loadData(){
-  try{
-    const res=await fetch('/api/pedidos',{cache:'no-store'});
-    RAW=enrich(await res.json());
-    FILTERED=[...RAW];
-
-    document.getElementById('db-dot').className='w-2.5 h-2.5 rounded-full bg-emerald-500';
-    document.getElementById('db-status').innerText='Conectado';
-
-    refresh();
-  }catch(e){
-    document.getElementById('db-dot').className='w-2.5 h-2.5 rounded-full bg-red-500';
-    document.getElementById('db-status').innerText='Error conexión';
-  }
-}
-
-cfgPercent.oninput = e => { CFG.percent = Number(e.target.value)||1; RAW=enrich(RAW); FILTERED=[...RAW]; refresh(); };
-cfgMin.oninput     = e => { CFG.min = Number(e.target.value)||1.5; RAW=enrich(RAW); FILTERED=[...RAW]; refresh(); };
-
-loadLayout();
-loadData();
+<!-- ================= CARGA FOOTER ================= -->
+<script>
+fetch('/partials/footer.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('app-footer').innerHTML = html)
+    .catch(err => console.error('Error cargando footer:', err));
 </script>
 
 </body>
