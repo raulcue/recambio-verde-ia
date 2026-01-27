@@ -767,7 +767,65 @@ app.post('/api/pedidos', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// Actualizar pedido completo
+app.put('/api/pedidos/:id', async (req, res) => {
+  const { id } = req.params;
+  const p = req.body;
 
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ error: 'ID inválido' });
+  }
+
+  try {
+    const result = await query(`
+      UPDATE pedidos SET
+        pieza = $1,
+        matricula = $2,
+        marca_coche = $3,
+        modelo_coche = $4,
+        anio_coche = $5,
+        estado = $6,
+        precio = $7,
+        precio_coste = $8,
+        proveedor = $9,
+        bastidor = $10,
+        sub_estado_incidencia = $11,
+        notas_tecnicas = $12,
+        usuario_id = $13,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $14
+      RETURNING *
+    `, [
+      p.pieza,
+      p.matricula,
+      p.marca_coche,
+      p.modelo_coche,
+      p.anio_coche,
+      p.estado,
+      p.precio,
+      p.precio_coste,
+      p.proveedor,
+      p.bastidor,
+      p.sub_estado_incidencia,
+      p.notas_tecnicas,
+      p.usuario_id,
+      id
+    ]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      pedido: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('❌ Error actualizando pedido:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 // ============================================================================
 // 🧾 API - OBTENER LOGS DE AUDITORÍA
 // ============================================================================
