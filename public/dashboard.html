@@ -70,25 +70,99 @@
 
     <main id="kanbanBoard" class="flex-grow p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full max-w-screen-2xl mx-auto items-start pb-20 transition-opacity duration-300"></main>
 
-    <div id="modalAjustes" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border border-white/10">
-            <h3 class="text-sm font-black uppercase tracking-widest mb-6">Días de Alerta</h3>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-orange-500 mr-2"></i> Naranja</span>
-                    <input type="number" id="adj-naranja" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold uppercase text-slate-500"><i class="fas fa-circle text-red-600 mr-2"></i> Rojo</span>
-                    <input type="number" id="adj-rojo" class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
+<div id="modalAjustes" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl p-8 border border-white/10">
+        
+        <h3 class="text-sm font-black uppercase tracking-widest mb-6">
+            Días de Alerta
+        </h3>
+
+        <!-- ALERTAS -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase text-slate-500">
+                    <i class="fas fa-circle text-orange-500 mr-2"></i> Naranja
+                </span>
+                <input 
+                    type="number" 
+                    id="adj-naranja" 
+                    class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-            <div class="mt-8 flex gap-2">
-                <button onclick="cerrarAjustes()" class="flex-1 text-[10px] font-black uppercase p-3 hover:text-slate-400">Cerrar</button>
-                <button onclick="guardarAjustes()" class="flex-1 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase p-3 shadow-lg hover:bg-blue-700 active:scale-95">Guardar</button>
+
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold uppercase text-slate-500">
+                    <i class="fas fa-circle text-red-600 mr-2"></i> Rojo
+                </span>
+                <input 
+                    type="number" 
+                    id="adj-rojo" 
+                    class="w-16 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg text-xs font-bold text-center outline-none focus:ring-2 focus:ring-blue-500">
             </div>
         </div>
+
+        <!-- DATOS A COPIAR -->
+        <div class="mt-6">
+            <h4 class="text-[11px] font-black uppercase tracking-widest mb-3 text-slate-500">
+                Datos a copiar
+            </h4>
+
+            <div class="space-y-2 text-[10px] font-bold uppercase text-slate-600">
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="copy-pieza" checked>
+                    Pieza
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="copy-marca" checked>
+                    Marca
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="copy-modelo" checked>
+                    Modelo
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="copy-anio" checked>
+                    Año
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="copy-matricula">
+                    Matrícula
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="copy-bastidor">
+                    Bastidor
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer opacity-60">
+                    <input type="checkbox" id="copy-precio">
+                    Precio (desactivado por defecto)
+                </label>
+
+            </div>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="mt-8 flex gap-2">
+            <button 
+                onclick="cerrarAjustes()" 
+                class="flex-1 text-[10px] font-black uppercase p-3 hover:text-slate-400">
+                Cerrar
+            </button>
+
+            <button 
+                onclick="guardarAjustes()" 
+                class="flex-1 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase p-3 shadow-lg hover:bg-blue-700 active:scale-95">
+                Guardar
+            </button>
+        </div>
+
     </div>
+</div>
 
     <div id="modalExportar" class="fixed inset-0 z-[110] hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10">
@@ -128,11 +202,28 @@
                     </div>
                     <button type="button" onclick="cerrarModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="flex border-b px-8 bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800">
-                    <button type="button" id="tab-gen-btn" onclick="switchTab('gen')" class="py-4 px-6 text-[10px] font-black uppercase tab-active">General</button>
-                    <button type="button" id="tab-eco-btn" onclick="switchTab('eco')" class="py-4 px-6 text-[10px] font-black uppercase">Económico</button>
-                    <button type="button" id="tab-tec-btn" onclick="switchTab('tec')" class="py-4 px-6 text-[10px] font-black uppercase">Técnico</button>
-                </div>
+              <div class="flex border-b px-8 bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 items-center justify-between">
+    <div>
+        <button type="button" id="tab-gen-btn" onclick="switchTab('gen')" class="py-4 px-6 text-[10px] font-black uppercase tab-active">
+            General
+        </button>
+        <button type="button" id="tab-eco-btn" onclick="switchTab('eco')" class="py-4 px-6 text-[10px] font-black uppercase">
+            Económico
+        </button>
+        <button type="button" id="tab-tec-btn" onclick="switchTab('tec')" class="py-4 px-6 text-[10px] font-black uppercase">
+            Técnico
+        </button>
+    </div>
+
+    <!-- BOTÓN COPIAR -->
+    <button 
+        type="button"
+        onclick="copiarMensajePedido()"
+        title="Copiar mensaje"
+        class="mr-4 text-slate-400 hover:text-blue-600 transition text-lg">
+        <i class="fas fa-copy"></i>
+    </button>
+</div>
                 <div class="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
     <div id="tab-gen" class="space-y-6">
 
