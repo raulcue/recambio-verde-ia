@@ -518,11 +518,12 @@ try {
                     <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
                     <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
                 </div>
-                ${col.id === 'finalizado' ? '' : `
-                    <span class="text-xs font-black text-blue-600 italic">
-                        ${colSum.toFixed(0)}€
-                    </span>
-                `}
+                ${col.id === 'finalizado'
+    ? ''
+    : '<span class="text-xs font-black text-blue-600 italic">' +
+        colSum.toFixed(0) + '€' +
+      '</span>'
+}
             </div>
 
             <!-- LISTADO -->
