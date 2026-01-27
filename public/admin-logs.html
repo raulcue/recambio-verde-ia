@@ -116,23 +116,41 @@
 <script>
 let allLogs = [];
 
+// Sanitiza texto para evitar inyección accidental
+function escapeHTML(text) {
+    return String(text || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 async function init() {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || user.rol !== 'admin') {
-        window.location.href = 'index.html';
-        return;
+    try {
+        const userRaw = localStorage.getItem('user');
+        const user = userRaw ? JSON.parse(userRaw) : null;
+
+        if (!user || user.rol !== 'admin') {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        const avatar = document.getElementById('avatar-circle');
+        if (avatar) avatar.innerText = user.iniciales || 'AD';
+
+        if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
+        if (localStorage.getItem('privacyMode') === 'true') document.body.classList.add('privacy-active');
+
+        await cargarLogs();
+    } catch (err) {
+        console.error('❌ Error inicializando página:', err);
     }
-
-    const avatar = document.getElementById('avatar-circle');
-    if (avatar) avatar.innerText = user.iniciales || 'AD';
-
-    if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
-    if (localStorage.getItem('privacyMode') === 'true') document.body.classList.add('privacy-active');
-
-    await cargarLogs();
 }
 
 async function cargarLogs() {
+    const tbody = document.getElementById('tablaLogs');
+
     try {
         const res = await fetch('/api/logs', { cache: 'no-store' });
 
@@ -140,15 +158,25 @@ async function cargarLogs() {
             throw new Error(`HTTP ${res.status}`);
         }
 
-        const data = await res.json();
+        const text = await res.text();
 
-        // Ordenar por fecha descendente
-        allLogs = (data || []).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            console.error('❌ Respuesta no es JSON:', text);
+            throw new Error('Respuesta inválida del servidor');
+        }
+
+        allLogs = Array.isArray(data)
+            ? data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+            : [];
+
         renderLogs(allLogs);
 
     } catch (err) {
         console.error("❌ Error cargando logs:", err);
-        document.getElementById('tablaLogs').innerHTML = `
+        tbody.innerHTML = `
             <tr>
                 <td colspan="5" class="text-center py-10 text-red-500 text-xs font-bold">
                     Error cargando logs desde servidor
@@ -162,7 +190,7 @@ function renderLogs(logs) {
     const tbody = document.getElementById('tablaLogs');
     if (!tbody) return;
 
-    if (!logs.length) {
+    if (!logs || !logs.length) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="5" class="text-center py-10 text-slate-400 text-xs font-bold">
@@ -178,32 +206,32 @@ function renderLogs(logs) {
                 ${l.fecha ? new Date(l.fecha).toLocaleString() : '---'}
             </td>
             <td class="px-8 py-5 text-[10px] font-mono text-slate-400">
-                ${l.ip_address || '---'}
+                ${escapeHTML(l.ip_address || '---')}
             </td>
             <td class="px-8 py-5">
                 <div class="flex items-center gap-2">
                     <span class="w-6 h-6 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center text-[8px] font-black">
-                        ${l.usuario_iniciales || '??'}
+                        ${escapeHTML(l.usuario_iniciales || '??')}
                     </span>
                     <span class="text-[10px] font-black uppercase">
-                        ${l.usuario_nombre || '---'}
+                        ${escapeHTML(l.usuario_nombre || '---')}
                     </span>
                 </div>
             </td>
             <td class="px-8 py-5">
                 <span class="px-3 py-1 rounded-lg text-[8px] font-black ${getBadgeClass(l.accion)}">
-                    ${l.accion || '---'}
+                    ${escapeHTML(l.accion || '---')}
                 </span>
             </td>
             <td class="px-8 py-5 text-[10px] font-medium italic text-slate-600 dark:text-slate-400">
-                "${l.detalle || ''}"
+                "${escapeHTML(l.detalle || '')}"
             </td>
         </tr>
     `).join('');
 }
 
 function filtrarLogs() {
-    const term = document.getElementById('buscador').value.toLowerCase();
+    const term = (document.getElementById('buscador').value || '').toLowerCase();
     const action = document.getElementById('filtroAccion').value;
 
     const filtered = allLogs.filter(l => {
@@ -248,9 +276,15 @@ function cerrarSesion() {
 
 function exportarCSV() {
     let csv = "\uFEFFFecha,IP,Usuario,Accion,Detalle\n";
+
     allLogs.forEach(l => {
+        const fecha = l.fecha ? new Date(l.fecha).toLocaleString() : '';
+        const ip = (l.ip_address || '').replace(/"/g, '""');
+        const usuario = (l.usuario_nombre || '').replace(/"/g, '""');
+        const accion = (l.accion || '').replace(/"/g, '""');
         const detalle = (l.detalle || '').replace(/"/g, '""');
-        csv += `"${new Date(l.fecha).toLocaleString()}","${l.ip_address || ''}","${l.usuario_nombre || ''}","${l.accion || ''}","${detalle}"\n`;
+
+        csv += `"${fecha}","${ip}","${usuario}","${accion}","${detalle}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
