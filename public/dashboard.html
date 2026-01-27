@@ -401,10 +401,18 @@
                     bastidor: document.getElementById('p-bastidor').value,
                     sub_estado_incidencia: document.getElementById('p-subestado').value,
                     notas_tecnicas: document.getElementById('p-notes').value,
-                    admin_user: 'Admin Root'
-                };
-                try {
-const isEdit = !!data.id;
+					admin_user: 'Admin Root'
+				};
+
+		try {
+
+		const isEdit = !!data.id;
+
+		const url = isEdit 
+			? `/api/pedidos/${data.id}` 
+			: '/api/pedidos';
+
+    const method = isEdit ? 'PUT' : 'POST';
 
 const url = isEdit 
     ? `/api/pedidos/${data.id}` 
