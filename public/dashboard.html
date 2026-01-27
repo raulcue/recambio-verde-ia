@@ -1103,6 +1103,35 @@ async function resetWhatsappNotifications() {
     // 🔥 Forzar sincronización inmediata con backend
     setTimeout(pollWhatsappNotifications, 500);
 }
+// 📋 COPIAR MENSAJE DEL PEDIDO (VERSIÓN INICIAL)
+function copiarMensajePedido() {
+    try {
+        const pieza = document.getElementById('p-pieza')?.value || '';
+        const marca = document.getElementById('p-marca')?.value || '';
+        const modelo = document.getElementById('p-modelo')?.value || '';
+        const anio = document.getElementById('p-anio')?.value || '';
+
+        let mensaje = `Hola, estoy buscando una pieza`;
+
+        if (pieza) mensaje += `: ${pieza}`;
+        if (marca || modelo || anio) mensaje += ` para`;
+
+        if (marca) mensaje += ` ${marca}`;
+        if (modelo) mensaje += ` ${modelo}`;
+        if (anio) mensaje += ` del año ${anio}`;
+
+        mensaje = mensaje.trim() + '.';
+
+        navigator.clipboard.writeText(mensaje);
+
+        console.log('📋 Mensaje copiado:', mensaje);
+        showToast('MENSAJE COPIADO', 'success');
+
+    } catch (err) {
+        console.error('Error copiando mensaje:', err);
+        showToast('ERROR AL COPIAR', 'error');
+    }
+}
 // ===============================
 // 🚀 BOOTSTRAP DASHBOARD
 // ===============================
