@@ -473,18 +473,41 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/usuarios', async (req, res) => {
   try {
     const { rol } = req.query;
-    let sql = 'SELECT id, email, rol, nombre_taller, provincia, telefono_whatsapp, telefono_whatsapp_2, telefono_whatsapp_3, telefono_whatsapp_4, telefono_whatsapp_5, telefono_whatsapp_6, telefono_whatsapp_7, telefono_whatsapp_8, telefono_whatsapp_9, telefono_whatsapp_10 FROM usuarios WHERE 1=1';
+
+    let sql = `
+      SELECT
+        id,
+        email,
+        rol,
+        nombre_taller,
+        provincia,
+        telefono_whatsapp,
+        telefono_whatsapp_2,
+        telefono_whatsapp_3,
+        telefono_whatsapp_4,
+        telefono_whatsapp_5,
+        telefono_whatsapp_6,
+        telefono_whatsapp_7,
+        telefono_whatsapp_8,
+        telefono_whatsapp_9,
+        telefono_whatsapp_10
+      FROM usuarios
+      WHERE 1=1
+    `;
     const params = [];
-    
+
     if (rol) {
       sql += ' AND rol = $1';
       params.push(rol);
     }
-    
+
     sql += ' ORDER BY nombre_taller';
+
     const result = await query(sql, params);
     res.json(result.rows);
+
   } catch (error) {
+    console.error('❌ Error /api/usuarios:', error);
     res.status(500).json({ error: error.message });
   }
 });
