@@ -473,7 +473,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/usuarios', async (req, res) => {
   try {
     const { rol } = req.query;
-    let sql = 'SELECT id, email, rol, nombre_taller as nombre FROM usuarios WHERE 1=1';
+    let sql = 'SELECT id, email, rol, nombre_taller, provincia, telefono_whatsapp, telefono_whatsapp_2, telefono_whatsapp_3, telefono_whatsapp_4, telefono_whatsapp_5, telefono_whatsapp_6, telefono_whatsapp_7, telefono_whatsapp_8, telefono_whatsapp_9, telefono_whatsapp_10 FROM usuarios WHERE 1=1';
     const params = [];
     
     if (rol) {
