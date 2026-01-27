@@ -216,12 +216,13 @@
     </div>
 
     <!-- BOTÓN COPIAR -->
-    <button 
-        type="button"
-        onclick="copiarMensajePedido()"
-        title="Copiar mensaje"
-        class="mr-4 text-slate-400 hover:text-blue-600 transition text-lg">
-        <i class="fas fa-copy"></i>
+<button 
+    type="button"
+    id="btn-copiar"
+    onclick="copiarMensajePedido()"
+    title="Copiar mensaje al portapapeles"
+    class="mr-4 text-slate-400 hover:text-blue-600 active:scale-95 transition text-lg flex items-center justify-center">
+    <i class="fas fa-copy"></i>
     </button>
 </div>
                 <div class="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
@@ -804,10 +805,23 @@ const nuevoEstadoLower = nuevoEstado
         }
 
         function abrirAjustes() {
-            document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
-            document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
-            document.getElementById('modalAjustes').classList.remove('hidden');
-        }
+    // 🔴 Semáforo
+    document.getElementById('adj-naranja').value = ajustesSemaf.naranja;
+    document.getElementById('adj-rojo').value = ajustesSemaf.rojo;
+
+    // 🟢 Configuración de copiado
+    const cfg = getCopyConfig();
+
+    document.getElementById('copy-pieza').checked = !!cfg.pieza;
+    document.getElementById('copy-marca').checked = !!cfg.marca;
+    document.getElementById('copy-modelo').checked = !!cfg.modelo;
+    document.getElementById('copy-anio').checked = !!cfg.anio;
+    document.getElementById('copy-matricula').checked = !!cfg.matricula;
+    document.getElementById('copy-bastidor').checked = !!cfg.bastidor;
+    document.getElementById('copy-precio').checked = !!cfg.precio;
+
+    document.getElementById('modalAjustes').classList.remove('hidden');
+}
         function cerrarAjustes() { document.getElementById('modalAjustes').classList.add('hidden'); }
         function guardarAjustes() {
     // 🔴 Ajustes semáforo (existente)
@@ -1108,24 +1122,48 @@ async function resetWhatsappNotifications() {
     // 🔥 Forzar sincronización inmediata con backend
     setTimeout(pollWhatsappNotifications, 500);
 }
+// ✅ NUEVO BLOQUE — Configuración de datos a copiar
+function getCopyConfig() {
+    return JSON.parse(localStorage.getItem('kanban_copy_config')) || {
+        pieza: true,
+        marca: true,
+        modelo: true,
+        anio: true,
+        matricula: false,
+        bastidor: false,
+        precio: false
+    };
+}
 // 📋 COPIAR MENSAJE DEL PEDIDO (VERSIÓN INICIAL)
 function copiarMensajePedido() {
     try {
-        const pieza = document.getElementById('p-pieza')?.value || '';
-        const marca = document.getElementById('p-marca')?.value || '';
-        const modelo = document.getElementById('p-modelo')?.value || '';
-        const anio = document.getElementById('p-anio')?.value || '';
+        const cfg = getCopyConfig();
 
-        let mensaje = `Hola, estoy buscando una pieza`;
+        const pieza = document.getElementById('p-pieza')?.value?.trim() || '';
+        const marca = document.getElementById('p-marca')?.value?.trim() || '';
+        const modelo = document.getElementById('p-modelo')?.value?.trim() || '';
+        const anio = document.getElementById('p-anio')?.value?.trim() || '';
+        const matricula = document.getElementById('p-matricula')?.value?.trim() || '';
+        const bastidor = document.getElementById('p-bastidor')?.value?.trim() || '';
+        const precio = document.getElementById('p-precio')?.value?.trim() || '';
 
-        if (pieza) mensaje += `: ${pieza}`;
-        if (marca || modelo || anio) mensaje += ` para`;
+        let partes = [];
 
-        if (marca) mensaje += ` ${marca}`;
-        if (modelo) mensaje += ` ${modelo}`;
-        if (anio) mensaje += ` del año ${anio}`;
+        // 👉 Construcción dinámica según ajustes
+        if (cfg.pieza && pieza) partes.push(pieza);
+        if (cfg.marca && marca) partes.push(marca);
+        if (cfg.modelo && modelo) partes.push(modelo);
+        if (cfg.anio && anio) partes.push(`año ${anio}`);
+        if (cfg.matricula && matricula) partes.push(`matrícula ${matricula}`);
+        if (cfg.bastidor && bastidor) partes.push(`VIN ${bastidor}`);
+        if (cfg.precio && precio) partes.push(`precio ${precio}€`);
 
-        mensaje = mensaje.trim() + '.';
+        if (partes.length === 0) {
+            showToast('NO HAY DATOS PARA COPIAR', 'error');
+            return;
+        }
+
+        const mensaje = `Hola, estoy buscando ${partes.join(' ') }.`;
 
         navigator.clipboard.writeText(mensaje);
 

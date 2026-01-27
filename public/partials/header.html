@@ -31,11 +31,17 @@
 
             <div class="flex items-center gap-3">
                 <div class="hidden md:flex flex-col items-end">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Total Tránsito</span>
-                    <span id="total-general" class="text-lg font-black text-blue-600 blur-data leading-none">0€</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">
+                        Total Tránsito
+                    </span>
+                    <span id="total-general" class="text-lg font-black text-blue-600 blur-data leading-none">
+                        0€
+                    </span>
                 </div>
 
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">AD</div>
+                <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">
+                    AD
+                </div>
 
                 <!-- WAFFLE + NOTIFICACIONES -->
                 <div class="flex items-center gap-1">
@@ -73,3 +79,57 @@
         </div>
     </div>
 </header>
+
+<!-- ============================= -->
+<!-- 🚚 TOTAL TRÁNSITO ENGINE -->
+<!-- ============================= -->
+<script>
+/**
+ * Normaliza texto para comparar estados
+ */
+function normalizarEstado(txt = '') {
+    return txt
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+}
+
+/**
+ * Calcula el total € de pedidos en estado TRÁNSITO
+ */
+async function actualizarTotalTransito() {
+    try {
+        const res = await fetch('/api/pedidos', { cache: 'no-store' });
+        if (!res.ok) return;
+
+        const pedidos = await res.json();
+
+        const total = pedidos
+            .filter(p => {
+                const estado = normalizarEstado(p.estado);
+                return estado === 'transito' || estado === 'en transito';
+            })
+            .reduce((sum, p) => sum + Number(p.precio || 0), 0);
+
+        const el = document.getElementById('total-general');
+        if (el) {
+            el.innerText = `${total.toFixed(0)}€`;
+        }
+
+        console.log('🚚 Total Tránsito actualizado:', total);
+
+    } catch (err) {
+        console.warn('⚠️ Error calculando total tránsito:', err);
+    }
+}
+
+// ▶️ Ejecutar al cargar el header
+document.addEventListener('DOMContentLoaded', () => {
+    actualizarTotalTransito();
+
+    // 🔄 Refresco automático cada 15 segundos
+    setInterval(actualizarTotalTransito, 15000);
+});
+</script>
