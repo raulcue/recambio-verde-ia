@@ -8,20 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
-        }
+        body { font-family: 'Inter', sans-serif; transition: all 0.3s ease; }
 
-        /* Estilos Header y Waffle para Paridad Total */
         .logo-invert { transition: filter 0.3s ease; }
         .dark .logo-invert { filter: brightness(0) invert(1); }
         .waffle-container { position: relative; padding-bottom: 15px; margin-bottom: -15px; } 
@@ -38,206 +31,240 @@
         .privacy-active .blur-data { filter: blur(6px); pointer-events: none; }
     </style>
 </head>
+
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
 
-    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
-            
-            <div class="flex items-center gap-4">
-                <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <img src="assets/logo.png" alt="Logo" class="h-8 w-auto logo-invert">
-                    <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
-                        Auditoría <span style="color: #7cb65d;">Recambio Reciclado</span>
-                        <span id="db-status" class="w-2 h-2 rounded-full bg-emerald-500 transition-colors"></span>
-                    </h1>
-                </a>
-            </div>
-
-            <div class="flex items-center gap-6">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                    <input type="text" id="buscador" onkeyup="filtrarLogs()" placeholder="Buscar en el registro..." 
-                           class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
-                </div>
-
-                <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
-                    <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
-                        <i class="fas fa-moon dark:hidden text-xs"></i>
-                        <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
-                    </button>
-                    <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
-                        <i class="fas fa-eye text-xs"></i>
-                    </button>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <div id="avatar-circle" onclick="cerrarSesion()" class="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg cursor-pointer">--</div>
-                    
-                    <div class="waffle-container group">
-                        <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 transition-colors">
-                            <i class="fas fa-th text-xs"></i>
-                        </button>
-                        <div class="absolute right-0 top-full mt-0 hidden group-hover:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[2rem] overflow-hidden z-[60]">
-                            <div class="waffle-grid">
-                                <a href="landing.html" class="waffle-item text-blue-600"><i class="fas fa-home"></i><span class="text-[9px] font-black uppercase text-slate-500">Principal</span></a>
-                                <a href="dashboard.html" class="waffle-item text-indigo-500"><i class="fas fa-columns"></i><span class="text-[9px] font-black uppercase text-slate-500">Flujos</span></a>
-                                <a href="stats.html" class="waffle-item text-emerald-500"><i class="fas fa-chart-line"></i><span class="text-[9px] font-black uppercase text-slate-500">BI Stats</span></a>
-                                <a href="talleres.html" class="waffle-item text-orange-500"><i class="fas fa-users-cog"></i><span class="text-[9px] font-black uppercase text-slate-500">Equipo</span></a>
-                                <a href="pedidos-taller.html" class="waffle-item text-purple-500"><i class="fas fa-list-check"></i><span class="text-[9px] font-black uppercase text-slate-500">Pedidos</span></a>
-                                <a href="admin-logs.html" class="waffle-item text-red-600 bg-red-50 dark:bg-red-900/20"><i class="fas fa-history"></i><span class="text-[9px] font-black uppercase text-red-600">Logs</span></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-full mx-auto px-6 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <a href="landing.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <img src="assets/logo.png" alt="Logo" class="h-8 w-auto logo-invert">
+                <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                <h1 class="text-slate-800 dark:text-white font-black text-xs uppercase tracking-tighter flex items-center gap-2">
+                    Auditoría <span style="color: #7cb65d;">Recambio Reciclado</span>
+                    <span id="db-status" class="w-2 h-2 rounded-full bg-emerald-500 transition-colors"></span>
+                </h1>
+            </a>
         </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto w-full p-8 flex-grow">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-            <div>
-                <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-2">Sistema de Auditoría Root</p>
-                <h2 class="text-4xl font-black uppercase tracking-tighter italic">Historial de <span class="text-blue-600">Eventos</span></h2>
+        <div class="flex items-center gap-6">
+            <div class="relative">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="buscador" onkeyup="filtrarLogs()" placeholder="Buscar en el registro..." 
+                       class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-xs w-64 focus:ring-2 focus:ring-blue-500 transition-all outline-none">
             </div>
-            
-            <div class="flex flex-wrap gap-3">
-                <select id="filtroAccion" onchange="filtrarLogs()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-[10px] font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="TODAS">Todas las acciones</option>
-                    <option value="CREATE">Creación</option>
-                    <option value="UPDATE">Actualización</option>
-                    <option value="DELETE">Eliminación</option>
-                    <option value="LOGIN">Accesos</option>
-                </select>
-                <button onclick="exportarCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
-                    <i class="fas fa-file-csv mr-2"></i> Exportar
+
+            <div class="flex items-center gap-2 border-r border-slate-200 dark:border-slate-700 pr-6">
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl text-slate-400 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:text-blue-500 transition-colors">
+                    <i class="fas fa-moon dark:hidden text-xs"></i>
+                    <i class="fas fa-sun hidden dark:block text-yellow-500 text-xs"></i>
+                </button>
+                <button onclick="togglePrivacy()" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
+                    <i class="fas fa-eye text-xs"></i>
                 </button>
             </div>
-        </div>
 
-        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-            <div class="overflow-x-auto custom-scrollbar blur-data">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 dark:bg-slate-800/50">
-                        <tr>
-                            <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Timestamp</th>
-                            <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">IP</th>
-                            <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Usuario</th>
-                            <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Acción</th>
-                            <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Detalle</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaLogs" class="divide-y divide-slate-50 dark:divide-slate-800">
-                        </tbody>
-                </table>
+            <div class="flex items-center gap-4">
+                <div id="avatar-circle" onclick="cerrarSesion()" class="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg cursor-pointer">--</div>
             </div>
         </div>
-    </main>
+    </div>
+</header>
 
-    <script>
-        let allLogs = [];
+<main class="max-w-7xl mx-auto w-full p-8 flex-grow">
 
-        async function init() {
-            const user = JSON.parse(localStorage.getItem('user'));
-            // CORRECCIÓN LOGIN: Verificamos admin y asignamos iniciales correctamente
-            if (!user || user.rol !== 'admin') { 
-                window.location.href = 'index.html'; 
-                return; 
-            }
-            
-            const avatar = document.getElementById('avatar-circle');
-            if(avatar) avatar.innerText = user.iniciales || 'AD';
-            
-            if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
-            if (localStorage.getItem('privacyMode') === 'true') document.body.classList.add('privacy-active');
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+    <div>
+        <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-2">Sistema de Auditoría Root</p>
+        <h2 class="text-4xl font-black uppercase tracking-tighter italic">Historial de <span class="text-blue-600">Eventos</span></h2>
+    </div>
+    
+    <div class="flex flex-wrap gap-3">
+        <select id="filtroAccion" onchange="filtrarLogs()" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-[10px] font-bold uppercase outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="TODAS">Todas</option>
+            <option value="CREATE">Creación</option>
+            <option value="UPDATE">Actualización</option>
+            <option value="DELETE">Eliminación</option>
+            <option value="LOGIN">Acceso</option>
+            <option value="EXPORT">Exportación</option>
+        </select>
+        <button onclick="exportarCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
+            <i class="fas fa-file-csv mr-2"></i> Exportar
+        </button>
+    </div>
+</div>
 
-            await cargarLogs();
-        }
-
-        async function cargarLogs() {
-            try {
-                const res = await fetch('/api/logs');
-                allLogs = await res.json();
-                renderLogs(allLogs);
-            } catch (err) { console.error("Error BBDD:", err); }
-        }
-
-        function renderLogs(logs) {
-            const tbody = document.getElementById('tablaLogs');
-            if(!tbody) return;
-            tbody.innerHTML = logs.map(l => `
-                <tr class="log-row hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td class="px-8 py-5 text-[11px] font-bold text-slate-500">${new Date(l.fecha).toLocaleString()}</td>
-                    <td class="px-8 py-5 text-[10px] font-mono text-slate-400">${l.ip_address || '---'}</td>
-                    <td class="px-8 py-5">
-                        <div class="flex items-center gap-2">
-                            <span class="w-6 h-6 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center text-[8px] font-black">${l.usuario_iniciales || '??'}</span>
-                            <span class="text-[10px] font-black uppercase">${l.usuario_nombre}</span>
-                        </div>
-                    </td>
-                    <td class="px-8 py-5">
-                        <span class="px-3 py-1 rounded-lg text-[8px] font-black ${getBadgeClass(l.accion)}">${l.accion}</span>
-                    </td>
-                    <td class="px-8 py-5 text-[10px] font-medium italic text-slate-600 dark:text-slate-400">"${l.detalle}"</td>
+<div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+    <div class="overflow-x-auto custom-scrollbar blur-data">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                    <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Timestamp</th>
+                    <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">IP</th>
+                    <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Usuario</th>
+                    <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Acción</th>
+                    <th class="px-8 py-5 text-[9px] font-black uppercase tracking-widest text-slate-400">Detalle</th>
                 </tr>
-            `).join('');
+            </thead>
+            <tbody id="tablaLogs" class="divide-y divide-slate-50 dark:divide-slate-800"></tbody>
+        </table>
+    </div>
+</div>
+
+</main>
+
+<script>
+let allLogs = [];
+
+async function init() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.rol !== 'admin') {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    const avatar = document.getElementById('avatar-circle');
+    if (avatar) avatar.innerText = user.iniciales || 'AD';
+
+    if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
+    if (localStorage.getItem('privacyMode') === 'true') document.body.classList.add('privacy-active');
+
+    await cargarLogs();
+}
+
+async function cargarLogs() {
+    try {
+        const res = await fetch('/api/logs', { cache: 'no-store' });
+
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}`);
         }
 
-        function filtrarLogs() {
-            const term = document.getElementById('buscador').value.toLowerCase();
-            const action = document.getElementById('filtroAccion').value;
+        const data = await res.json();
 
-            const filtered = allLogs.filter(l => {
-                const matchSearch = l.usuario_nombre.toLowerCase().includes(term) || l.detalle.toLowerCase().includes(term);
-                const matchAction = action === 'TODAS' || l.accion === action;
-                return matchSearch && matchAction;
-            });
-            renderLogs(filtered);
-        }
+        // Ordenar por fecha descendente
+        allLogs = (data || []).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        renderLogs(allLogs);
 
-        function getBadgeClass(accion) {
-            switch(accion) {
-                case 'CREATE': return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400';
-                case 'UPDATE': return 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
-                case 'DELETE': return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400';
-                case 'LOGIN': return 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
-                default: return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
-            }
-        }
+    } catch (err) {
+        console.error("❌ Error cargando logs:", err);
+        document.getElementById('tablaLogs').innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-10 text-red-500 text-xs font-bold">
+                    Error cargando logs desde servidor
+                </td>
+            </tr>
+        `;
+    }
+}
 
-        function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
-        }
+function renderLogs(logs) {
+    const tbody = document.getElementById('tablaLogs');
+    if (!tbody) return;
 
-        function togglePrivacy() {
-            const active = document.body.classList.toggle('privacy-active');
-            localStorage.setItem('privacyMode', active);
-        }
+    if (!logs.length) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-10 text-slate-400 text-xs font-bold">
+                    Sin registros
+                </td>
+            </tr>`;
+        return;
+    }
 
-        function cerrarSesion() {
-            localStorage.clear();
-            window.location.href = 'index.html';
-        }
+    tbody.innerHTML = logs.map(l => `
+        <tr class="log-row hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+            <td class="px-8 py-5 text-[11px] font-bold text-slate-500">
+                ${l.fecha ? new Date(l.fecha).toLocaleString() : '---'}
+            </td>
+            <td class="px-8 py-5 text-[10px] font-mono text-slate-400">
+                ${l.ip_address || '---'}
+            </td>
+            <td class="px-8 py-5">
+                <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center text-[8px] font-black">
+                        ${l.usuario_iniciales || '??'}
+                    </span>
+                    <span class="text-[10px] font-black uppercase">
+                        ${l.usuario_nombre || '---'}
+                    </span>
+                </div>
+            </td>
+            <td class="px-8 py-5">
+                <span class="px-3 py-1 rounded-lg text-[8px] font-black ${getBadgeClass(l.accion)}">
+                    ${l.accion || '---'}
+                </span>
+            </td>
+            <td class="px-8 py-5 text-[10px] font-medium italic text-slate-600 dark:text-slate-400">
+                "${l.detalle || ''}"
+            </td>
+        </tr>
+    `).join('');
+}
 
-        function exportarCSV() {
-            let csv = "\uFEFFFecha,IP,Usuario,Accion,Detalle\n";
-            allLogs.forEach(l => {
-                const detalleLimpio = l.detalle.replace(/"/g, '""');
-                csv += `"${new Date(l.fecha).toLocaleString()}","${l.ip_address}","${l.usuario_nombre}","${l.accion}","${detalleLimpio}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('hidden', '');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'logs_auditoria.csv');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
+function filtrarLogs() {
+    const term = document.getElementById('buscador').value.toLowerCase();
+    const action = document.getElementById('filtroAccion').value;
 
-        window.onload = init;
-    </script>
+    const filtered = allLogs.filter(l => {
+        const usuario = (l.usuario_nombre || '').toLowerCase();
+        const detalle = (l.detalle || '').toLowerCase();
+        const accion = l.accion || '';
+
+        const matchSearch = usuario.includes(term) || detalle.includes(term);
+        const matchAction = action === 'TODAS' || accion === action;
+
+        return matchSearch && matchAction;
+    });
+
+    renderLogs(filtered);
+}
+
+function getBadgeClass(accion) {
+    switch (accion) {
+        case 'CREATE': return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400';
+        case 'UPDATE': return 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
+        case 'DELETE': return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400';
+        case 'LOGIN': return 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
+        case 'EXPORT': return 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400';
+        default: return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400';
+    }
+}
+
+function toggleDarkMode() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('darkMode', isDark);
+}
+
+function togglePrivacy() {
+    const active = document.body.classList.toggle('privacy-active');
+    localStorage.setItem('privacyMode', active);
+}
+
+function cerrarSesion() {
+    localStorage.clear();
+    window.location.href = 'index.html';
+}
+
+function exportarCSV() {
+    let csv = "\uFEFFFecha,IP,Usuario,Accion,Detalle\n";
+    allLogs.forEach(l => {
+        const detalle = (l.detalle || '').replace(/"/g, '""');
+        csv += `"${new Date(l.fecha).toLocaleString()}","${l.ip_address || ''}","${l.usuario_nombre || ''}","${l.accion || ''}","${detalle}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'logs_auditoria.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+window.onload = init;
+</script>
+
 </body>
 </html>
