@@ -526,6 +526,40 @@ await registrarLog({
   }
 });
 
+// Alias compatible para talleres (usado por pedidos-taller.html)
+app.get('/api/talleres', async (req, res) => {
+  try {
+    const sql = `
+      SELECT
+        id,
+        email,
+        rol,
+        nombre_taller,
+        provincia,
+        telefono_whatsapp,
+        telefono_whatsapp_2,
+        telefono_whatsapp_3,
+        telefono_whatsapp_4,
+        telefono_whatsapp_5,
+        telefono_whatsapp_6,
+        telefono_whatsapp_7,
+        telefono_whatsapp_8,
+        telefono_whatsapp_9,
+        telefono_whatsapp_10
+      FROM usuarios
+      WHERE rol = 'taller'
+      ORDER BY nombre_taller
+    `;
+
+    const result = await query(sql);
+    res.json(result.rows);
+
+  } catch (error) {
+    console.error('❌ Error /api/talleres:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Usuarios
 app.get('/api/usuarios', async (req, res) => {
   try {
