@@ -695,6 +695,32 @@ app.post('/api/pedidos', async (req, res) => {
   }
 });
 
+// ============================================================================
+// 🧾 API - OBTENER LOGS DE AUDITORÍA
+// ============================================================================
+app.get('/api/logs', async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT
+        id,
+        accion,
+        usuario_nombre,
+        usuario_iniciales,
+        ip_address,
+        detalle,
+        fecha
+      FROM logs
+      ORDER BY fecha DESC
+      LIMIT 1000
+    `);
+
+    res.json(result.rows);
+
+  } catch (error) {
+    console.error('❌ Error /api/logs:', error);
+    res.status(500).json({ error: 'Error obteniendo logs' });
+  }
+});
 
 // ============================================================================
 // RUTA CATCH-ALL PARA ARCHIVOS ESTÁTICOS
