@@ -312,8 +312,8 @@
                     admin_user: 'Admin Root'
                 };
                 try {
-const url = data.id ? `/api/pedidos/${data.id}` : '/api/pedidos';
-const method = data.id ? 'PUT' : 'POST';
+const url = '/api/pedidos';
+const method = 'POST';
 
 await fetch(url, {
     method: method,
