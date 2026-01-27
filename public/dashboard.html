@@ -805,12 +805,28 @@ const nuevoEstadoLower = nuevoEstado
         }
         function cerrarAjustes() { document.getElementById('modalAjustes').classList.add('hidden'); }
         function guardarAjustes() {
-            ajustesSemaf.naranja = parseInt(document.getElementById('adj-naranja').value);
-            ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value);
-            localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf));
-            cerrarAjustes();
-			cargarDatos();
-        }
+    // 🔴 Ajustes semáforo (existente)
+    ajustesSemaf.naranja = parseInt(document.getElementById('adj-naranja').value);
+    ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value);
+    localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf));
+
+    // 🟢 NUEVO — Configuración de datos a copiar
+    const copyConfig = {
+        pieza: document.getElementById('copy-pieza').checked,
+        marca: document.getElementById('copy-marca').checked,
+        modelo: document.getElementById('copy-modelo').checked,
+        anio: document.getElementById('copy-anio').checked,
+        matricula: document.getElementById('copy-matricula').checked,
+        bastidor: document.getElementById('copy-bastidor').checked,
+        precio: document.getElementById('copy-precio').checked
+    };
+
+    localStorage.setItem('kanban_copy_config', JSON.stringify(copyConfig));
+    console.log('✅ Configuración de copiado guardada:', copyConfig);
+
+    cerrarAjustes();
+    cargarDatos();
+}
 
         function abrirExportar() { document.getElementById('modalExportar').classList.remove('hidden'); }
         function cerrarExportar() { document.getElementById('modalExportar').classList.add('hidden'); }
