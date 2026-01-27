@@ -653,21 +653,35 @@ app.get('/api/pedidos', async (req, res) => {
   }
 });
 
-// Eliminar pedido
+// Eliminar pedido (versión robusta)
 app.delete('/api/pedidos/:id', async (req, res) => {
+  const { id } = req.params;
+
+  console.log('🗑️ Intentando eliminar pedido ID:', id);
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ error: 'ID inválido' });
+  }
+
   try {
-    const { id } = req.params;
-
-    console.log('🗑️ Eliminando pedido ID:', id);
-
-    const result = await query(
-      'DELETE FROM pedidos WHERE id = $1 RETURNING id',
+    // Verificar que existe primero
+    const check = await query(
+      'SELECT id FROM pedidos WHERE id = $1',
       [id]
     );
 
-    if (result.rowCount === 0) {
+    if (check.rows.length === 0) {
+      console.warn('⚠️ Pedido no existe:', id);
       return res.status(404).json({ error: 'Pedido no encontrado' });
     }
+
+    // Intentar borrar
+    const result = await query(
+      'DELETE FROM pedidos WHERE id = $1',
+      [id]
+    );
+
+    console.log('✅ Pedido eliminado correctamente:', id);
 
     res.json({
       success: true,
@@ -675,8 +689,17 @@ app.delete('/api/pedidos/:id', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error eliminando pedido:', error);
-    res.status(500).json({ error: error.message });
+    console.error('🔥 ERROR REAL eliminando pedido:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      constraint: error.constraint
+    });
+
+    res.status(500).json({
+      error: 'No se pudo eliminar el pedido',
+      detail: error.message
+    });
   }
 });
 
