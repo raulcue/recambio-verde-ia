@@ -180,7 +180,52 @@ function servirArchivo(res, filename) {
     </html>
   `);
 }
+// ============================================================================
+// 🧾 SISTEMA DE AUDITORÍA (LOGS)
+// ============================================================================
 
+function getIP(req) {
+  return (
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.socket?.remoteAddress ||
+    'unknown'
+  );
+}
+
+async function registrarLog({
+  usuario_id,
+  accion,
+  usuario_nombre,
+  usuario_iniciales,
+  ip_address,
+  detalle
+}) {
+  try {
+    await query(`
+      INSERT INTO logs (
+        usuario_id,
+        accion,
+        usuario_nombre,
+        usuario_iniciales,
+        ip_address,
+        detalle,
+        fecha
+      )
+      VALUES ($1,$2,$3,$4,$5,$6, CURRENT_TIMESTAMP)
+    `, [
+      usuario_id,
+      accion,
+      usuario_nombre,
+      usuario_iniciales,
+      ip_address,
+      detalle
+    ]);
+
+    console.log('📝 LOG registrado:', accion, detalle);
+  } catch (error) {
+    console.error('❌ Error registrando log:', error.message);
+  }
+}
 // ============================================================================
 // RUTAS DE ARCHIVOS HTML
 // ============================================================================
@@ -374,6 +419,7 @@ app.get('/api/whatsapp/notifications', (req, res) => {
   });
 });
 
+
 // ============================================================================
 // 🔄 RESET NOTIFICACIONES DESDE DASHBOARD
 // ============================================================================
@@ -463,6 +509,17 @@ app.post('/api/login', async (req, res) => {
     }
     
     const { password: _, ...userWithoutPassword } = user;
+    // 👉 REGISTRAR LOGIN EN AUDITORÍA
+await registrarLog({
+  usuario_id: user.id,
+  accion: 'LOGIN',
+  usuario_nombre: user.nombre_taller || user.email,
+  usuario_iniciales: (user.nombre_taller || user.email)
+    .substring(0,2)
+    .toUpperCase(),
+  ip_address: getIP(req),
+  detalle: `Login usuario ${user.email}`
+});
     res.json(userWithoutPassword);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
