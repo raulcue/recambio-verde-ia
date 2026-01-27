@@ -403,8 +403,13 @@
                     admin_user: 'Admin Root'
                 };
                 try {
-const url = '/api/pedidos';
-const method = 'POST';
+const isEdit = !!data.id;
+
+const url = isEdit 
+    ? `/api/pedidos/${data.id}` 
+    : '/api/pedidos';
+
+const method = isEdit ? 'PUT' : 'POST';
 
 await fetch(url, {
     method: method,
