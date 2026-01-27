@@ -653,33 +653,54 @@ app.get('/api/pedidos', async (req, res) => {
   }
 });
 
-// Eliminar pedido (versión robusta)
+// ============================================================================
+// 🗑️ ELIMINAR PEDIDO (con auditoría segura)
+// ============================================================================
 app.delete('/api/pedidos/:id', async (req, res) => {
-  const { id } = req.params;
-
-  console.log('🗑️ Intentando eliminar pedido ID:', id);
-
-  if (!id || isNaN(id)) {
-    return res.status(400).json({ error: 'ID inválido' });
-  }
-
   try {
-    // Verificar que existe primero
-    const check = await query(
-      'SELECT id FROM pedidos WHERE id = $1',
+    const { id } = req.params;
+
+    console.log('🗑️ Intentando eliminar pedido ID:', id);
+
+    // 1️⃣ Leer datos antes de borrar (para auditoría)
+    const prev = await query(
+      `
+      SELECT
+        id,
+        pieza,
+        matricula,
+        usuario_id
+      FROM pedidos
+      WHERE id = $1
+      `,
       [id]
     );
 
-    if (check.rows.length === 0) {
-      console.warn('⚠️ Pedido no existe:', id);
+    if (prev.rows.length === 0) {
       return res.status(404).json({ error: 'Pedido no encontrado' });
     }
 
-    // Intentar borrar
+    const pedido = prev.rows[0];
+
+    // 2️⃣ Borrar pedido
     const result = await query(
-      'DELETE FROM pedidos WHERE id = $1',
+      'DELETE FROM pedidos WHERE id = $1 RETURNING id',
       [id]
     );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado al borrar' });
+    }
+
+    // 3️⃣ Registrar auditoría
+    await registrarLog({
+      usuario_id: null, // más adelante podemos pasar el usuario real
+      accion: 'DELETE_PEDIDO',
+      usuario_nombre: 'ADMIN',
+      usuario_iniciales: 'AD',
+      ip_address: getIP(req),
+      detalle: `Pedido #${pedido.id} eliminado (pieza: ${pedido.pieza || 'N/A'}, matrícula: ${pedido.matricula || 'N/A'})`
+    });
 
     console.log('✅ Pedido eliminado correctamente:', id);
 
@@ -689,15 +710,9 @@ app.delete('/api/pedidos/:id', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('🔥 ERROR REAL eliminando pedido:', {
-      message: error.message,
-      code: error.code,
-      detail: error.detail,
-      constraint: error.constraint
-    });
-
+    console.error('🔥 Error eliminando pedido:', error);
     res.status(500).json({
-      error: 'No se pudo eliminar el pedido',
+      error: 'Error eliminando pedido',
       detail: error.message
     });
   }
