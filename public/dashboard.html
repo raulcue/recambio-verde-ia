@@ -134,80 +134,106 @@
                     <button type="button" id="tab-tec-btn" onclick="switchTab('tec')" class="py-4 px-6 text-[10px] font-black uppercase">Técnico</button>
                 </div>
                 <div class="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
-                    <div id="tab-gen" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Pieza</label>
-                                <input type="text" id="p-pieza" required class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20">
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Matrícula</label>
-                                <input type="text" id="p-matricula" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none uppercase">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Marca</label>
-                                <input type="text" id="p-marca" list="marcas-list" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
-                                <datalist id="marcas-list"></datalist>
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Modelo</label>
-                                <input type="text" id="p-modelo" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Taller Solicitante</label>
-                                <select id="p-taller" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none"></select>
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Estado Flujo</label>
-                                <select id="p-estado" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none"></select>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="tab-eco" class="hidden space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Precio Venta (€)</label>
-                                <input type="number" id="p-precio" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-blue-600 outline-none">
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Precio Coste (€)</label>
-                                <input type="number" id="p-coste" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-red-500 outline-none">
-                            </div>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Proveedor</label>
-                            <input type="text" id="p-proveedor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
-                        </div>
-                    </div>
-                    <div id="tab-tec" class="hidden space-y-6">
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Bastidor (VIN)</label>
-                            <input type="text" id="p-bastidor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold uppercase outline-none">
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Incidencias / Subestado</label>
-                            <input type="text" id="p-subestado" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Notas Técnicas</label>
-                            <textarea id="p-notes" rows="3" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none custom-scrollbar"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-8 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-4 bg-slate-50/30">
-                    <button type="button" onclick="eliminarRegistro()" class="text-red-500 hover:bg-red-50 w-10 h-10 flex items-center justify-center rounded-full transition-all"><i class="fas fa-trash-alt"></i></button>
-                    <div class="flex gap-4">
-                        <button type="button" onclick="cerrarModal()" class="text-slate-400 text-[10px] font-black uppercase px-6 py-2">Cancelar</button>
-                        <button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-full text-xs font-black uppercase shadow-xl hover:scale-105 active:scale-95 shadow-blue-500/20">Guardar Cambios</button>
-                    </div>
-                </div>
-            </form>
+    <div id="tab-gen" class="space-y-6">
+
+        <!-- Pieza / Matrícula -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Pieza</label>
+                <input type="text" id="p-pieza" required class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/20">
+            </div>
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Matrícula</label>
+                <input type="text" id="p-matricula" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none uppercase">
+            </div>
+        </div>
+
+        <!-- Marca / Modelo -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Marca</label>
+                <input type="text" id="p-marca" list="marcas-list" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
+                <datalist id="marcas-list"></datalist>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Modelo</label>
+                <input type="text" id="p-modelo" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
+            </div>
+        </div>
+
+        <!-- Año del coche -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Año del coche</label>
+                <input 
+                    type="number"
+                    id="p-anio"
+                    min="1900"
+                    max="2100"
+                    placeholder="Ej: 2018"
+                    class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
+            </div>
+        </div>
+
+        <!-- Taller / Estado -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Taller Solicitante</label>
+                <select id="p-taller" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none"></select>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Estado Flujo</label>
+                <select id="p-estado" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none"></select>
+            </div>
         </div>
     </div>
+
+    <!-- TAB ECONÓMICO -->
+    <div id="tab-eco" class="hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Precio Venta (€)</label>
+                <input type="number" id="p-precio" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-blue-600 outline-none">
+            </div>
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Precio Coste (€)</label>
+                <input type="number" id="p-coste" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold text-red-500 outline-none">
+            </div>
+        </div>
+        <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Proveedor</label>
+            <input type="text" id="p-proveedor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
+        </div>
+    </div>
+
+    <!-- TAB TÉCNICO -->
+    <div id="tab-tec" class="hidden space-y-6">
+        <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Bastidor (VIN)</label>
+            <input type="text" id="p-bastidor" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold uppercase outline-none">
+        </div>
+        <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Incidencias / Subestado</label>
+            <input type="text" id="p-subestado" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
+        </div>
+        <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Notas Técnicas</label>
+            <textarea id="p-notes" rows="3" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none custom-scrollbar"></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="p-8 border-t border-slate-100 dark:border-slate-800 flex justify-between gap-4 bg-slate-50/30">
+    <button type="button" onclick="eliminarRegistro()" class="text-red-500 hover:bg-red-50 w-10 h-10 flex items-center justify-center rounded-full transition-all">
+        <i class="fas fa-trash-alt"></i>
+    </button>
+    <div class="flex gap-4">
+        <button type="button" onclick="cerrarModal()" class="text-slate-400 text-[10px] font-black uppercase px-6 py-2">Cancelar</button>
+        <button type="submit" class="bg-blue-600 text-white px-10 py-4 rounded-full text-xs font-black uppercase shadow-xl hover:scale-105 active:scale-95 shadow-blue-500/20">
+            Guardar Cambios
+        </button>
+    </div>
+</div>
     
     <div id="toast-container"></div>
     <div id="modal-confirmacion" class="fixed inset-0 z-[120] hidden bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">

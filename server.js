@@ -709,14 +709,28 @@ app.post('/api/pedidos', async (req, res) => {
     const p = req.body;
     const numero_pedido = `PED-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
-    // MODIFICACIÓN QUIRÚRGICA: El estado por defecto ahora es 'solicitud'
     const result = await query(`
-      INSERT INTO pedidos (numero_pedido, pieza, marca_coche, modelo_coche, estado, precio, usuario_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO pedidos (
+        numero_pedido,
+        pieza,
+        marca_coche,
+        modelo_coche,
+        anio_coche,
+        estado,
+        precio,
+        usuario_id
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id, numero_pedido
     `, [
-      numero_pedido, p.pieza, p.marca_coche, p.modelo_coche, 
-      p.estado || 'solicitud', p.precio || 0, p.usuario_id
+      numero_pedido,
+      p.pieza,
+      p.marca_coche,
+      p.modelo_coche,
+      p.anio_coche || null,
+      p.estado || 'solicitud',
+      p.precio || 0,
+      p.usuario_id
     ]);
     
     res.status(201).json({ 
@@ -724,7 +738,9 @@ app.post('/api/pedidos', async (req, res) => {
       numero_pedido: result.rows[0].numero_pedido,
       message: 'Order created'
     });
+
   } catch (error) {
+    console.error('❌ Error creando pedido:', error);
     res.status(500).json({ error: error.message });
   }
 });
