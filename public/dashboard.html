@@ -270,7 +270,7 @@
                 await cargarMarcasMaestras(); // Ahora sí funciona
                 
                 showToast('CONECTADO A LA BASE DE DATOS', 'success');
-                document.getElementById('db-status').classList.replace('bg-red-500', 'bg-emerald-500');
+
             } catch (error) {
                 console.error('Error en init:', error);
                 showToast('ERROR DE CONEXIÓN', 'error');
@@ -300,6 +300,7 @@
                     matricula: document.getElementById('p-matricula').value,
                     marca_coche: document.getElementById('p-marca').value,
                     modelo_coche: document.getElementById('p-modelo').value,
+                    anio_coche: document.getElementById('p-anio').value || null,
                     usuario_id: document.getElementById('p-taller').value,
                     nuevoEstado: document.getElementById('p-estado').value,
                     precio: document.getElementById('p-precio').value || 0,
@@ -311,26 +312,28 @@
                     admin_user: 'Admin Root'
                 };
                 try {
-                    const url = data.id ? `/api/pedidos/${data.id}` : '/api/pedidos';
-                    const method = data.id ? 'PUT' : 'POST';
+const url = data.id ? `/api/pedidos/${data.id}` : '/api/pedidos';
+const method = data.id ? 'PUT' : 'POST';
 
-                    await fetch(url, {
-                        method: method,
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            ...data,
-                            estado: data.nuevoEstado
-                        })
-                    });
-                    showToast('CAMBIOS GUARDADOS EN SERVIDOR', 'success');
-                    cerrarModal(); 
-                    await cargarDatos();
-                } catch(e) { 
-                    showToast('ERROR AL GUARDAR', 'error');
-                    console.error('Error al guardar:', e);
-                }
-            };
-        }
+await fetch(url, {
+    method: method,
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        ...data,
+        estado: data.nuevoEstado
+    })
+});
+
+showToast('CAMBIOS GUARDADOS EN SERVIDOR', 'success');
+cerrarModal(); 
+await cargarDatos();
+
+} catch(e) { 
+    showToast('ERROR AL GUARDAR', 'error');
+    console.error('Error al guardar:', e);
+}
+};
+}
 
         // FUNCIÓN PARA CARGAR MARCAS - AHORA SÍ FUNCIONA
         async function cargarMarcasMaestras() {
@@ -374,7 +377,11 @@
 
         // FILTRO DE ESTADOS
         const items = sourceData.filter(p => {
-            const estado = (p.estado || '').toLowerCase();
+            const estado = (p.estado || '')
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, '')   // quita acentos
+    .trim();
 
             if (col.id === 'solicitud') {
                 return ['solicitud', 'pendiente', 'solicitado'].includes(estado);
@@ -386,8 +393,8 @@
                 return ['listo', 'verificado', 'listo / verificado'].includes(estado);
             }
             if (col.id === 'transito') {
-                return ['transito', 'en tránsito', 'en transito'].includes(estado);
-            }
+    return ['transito', 'en transito'].includes(estado);
+}
             if (col.id === 'finalizado') {
                 return ['finalizado', 'entregado', 'completado'].includes(estado);
             }
@@ -444,7 +451,7 @@
                              class="drag-item bg-white dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-grab text-[10px]">
 
                             <div class="font-black text-blue-600 truncate">
-                                ${p.nombre_usuario || 'Taller Particular'}
+                                ${p.nombre_usuario || 'SIN TALLER'}
                             </div>
 
                             <div class="font-bold truncate">
@@ -524,24 +531,38 @@
             }
         }
 
-        async function cargarTalleres() {
-            try {
-                const res = await fetch('/api/usuarios?rol=taller');
-                const data = await res.json();
-                const fT = document.getElementById('filtroTaller');
-                const pT = document.getElementById('p-taller');
-                fT.innerHTML = '<option value="todos">TODOS LOS TALLERES</option>';
-                pT.innerHTML = '';
-                data.forEach(t => {
-    const label = (t.nombre_taller || 'TALLER SIN NOMBRE').toUpperCase();
-    fT.add(new Option(label, t.id));
-    pT.add(new Option(label, t.id));
-});
-            } catch(e) { 
-                console.error("Error cargando talleres:", e);
-                showToast('ERROR CARGANDO TALLERES', 'error');
-            }
-        }
+async function cargarTalleres() {
+    try {
+        // ✅ Usar endpoint normalizado de talleres
+        const res = await fetch('/api/talleres');
+
+if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+}
+
+const data = await res.json();
+
+        const fT = document.getElementById('filtroTaller');
+        const pT = document.getElementById('p-taller');
+
+        fT.innerHTML = '<option value="todos">TODOS LOS TALLERES</option>';
+        pT.innerHTML = '<option value="">SELECCIONA TALLER</option>';
+
+        data.forEach(t => {
+            const label = (t.nombre_taller || t.email || 'TALLER SIN NOMBRE').toUpperCase();
+            const value = String(t.id);
+
+            fT.add(new Option(label, value));
+            pT.add(new Option(label, value));
+        });
+
+        console.log('✅ Talleres cargados:', data.length);
+
+    } catch (e) { 
+        console.error("❌ Error cargando talleres:", e);
+        showToast('ERROR CARGANDO TALLERES', 'error');
+    }
+}
 
 async function cargarDatos() {
     const board = document.getElementById('kanbanBoard');
@@ -564,8 +585,10 @@ async function cargarDatos() {
 
         let filtrados = db;
         if (tId !== 'todos') {
-            filtrados = db.filter(p => String(p.usuario_id) === String(tId));
-        }
+    filtrados = db.filter(p => 
+        p.usuario_id !== null && String(p.usuario_id) === String(tId)
+    );
+}
 
         console.log('Filtro taller:', tId, 'Registros visibles:', filtrados.length);
 
@@ -624,8 +647,17 @@ async function cargarDatos() {
             }
             
             // Verificar si el estado ya es el mismo
-            const estadoActual = pedido.estado ? pedido.estado.toLowerCase() : '';
-            const nuevoEstadoLower = nuevoEstado.toLowerCase();
+const estadoActual = (pedido.estado || '')
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+const nuevoEstadoLower = nuevoEstado
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
             
             if (estadoActual === nuevoEstadoLower) {
                 console.log('Mismo estado o equivalente, no se actualiza');
@@ -655,7 +687,7 @@ async function cargarDatos() {
                 pedido.estado = nuevoEstado;
                 
                 // Volver a renderizar el board
-                renderBoard();
+                await cargarDatos();
             } catch(err) {
                 console.error('Error en drag & drop:', err);
                 showToast('ERROR AL MOVER', 'error');
@@ -686,7 +718,7 @@ async function cargarDatos() {
             ajustesSemaf.rojo = parseInt(document.getElementById('adj-rojo').value);
             localStorage.setItem('kanban_ajustes', JSON.stringify(ajustesSemaf));
             cerrarAjustes();
-            renderBoard();
+			cargarDatos();
         }
 
         function abrirExportar() { document.getElementById('modalExportar').classList.remove('hidden'); }
@@ -730,27 +762,28 @@ async function cargarDatos() {
         }
 
         function abrirEditar(p) {
-            document.getElementById('p-id').value = p.id;
-            document.getElementById('p-pieza').value = p.pieza || '';
-            document.getElementById('p-matricula').value = p.matricula || '';
-            document.getElementById('p-marca').value = p.marca_coche || '';
-            document.getElementById('p-modelo').value = p.modelo_coche || '';
-            document.getElementById('p-taller').value = p.usuario_id || '';
-            document.getElementById('p-estado').value = p.estado || 'solicitud';
-            document.getElementById('p-precio').value = p.precio || 0;
-            document.getElementById('p-coste').value = p.precio_coste || 0;
-            document.getElementById('p-proveedor').value = p.proveedor || '';
-            document.getElementById('p-bastidor').value = p.bastidor || '';
-            document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
-            document.getElementById('p-notes').value = p.notas_tecnicas || '';
-            document.getElementById('modal-titulo').innerText = "Editar #" + p.id;
-            document.getElementById('modal-estado-badge').innerText = "PEDIDO";
-            document.getElementById('modal').classList.remove('hidden');
-            switchTab('gen');
-        }
+document.getElementById('p-id').value = p.id;
+document.getElementById('p-pieza').value = p.pieza || '';
+document.getElementById('p-matricula').value = p.matricula || '';
+document.getElementById('p-marca').value = p.marca_coche || '';
+document.getElementById('p-modelo').value = p.modelo_coche || '';
+document.getElementById('p-anio').value = p.anio_coche || '';   // ✅ AÑO DEL COCHE
+document.getElementById('p-taller').value = p.usuario_id || '';
+document.getElementById('p-estado').value = p.estado || 'solicitud';
+document.getElementById('p-precio').value = p.precio || 0;
+document.getElementById('p-coste').value = p.precio_coste || 0;
+document.getElementById('p-proveedor').value = p.proveedor || '';
+document.getElementById('p-bastidor').value = p.bastidor || '';
+document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
+document.getElementById('p-notes').value = p.notas_tecnicas || '';
+document.getElementById('modal-titulo').innerText = "Editar #" + p.id;
+document.getElementById('modal-estado-badge').innerText = "PEDIDO";
+document.getElementById('modal').classList.remove('hidden');
+switchTab('gen');
+} 
         function abrirEditarById(id) {
     const pedido = db.find(p => p.id == id);
-    if (!pedido) {
+    if (!pedido) {   // ✅ corregido
         showToast('Pedido no encontrado', 'error');
         return;
     }
