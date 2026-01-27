@@ -782,16 +782,21 @@ app.post('/api/pedidos', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-// Actualizar pedido completo
+// ============================================================================
+// ✏️ ACTUALIZAR PEDIDO COMPLETO
+// ============================================================================
 app.put('/api/pedidos/:id', async (req, res) => {
   const { id } = req.params;
   const p = req.body;
 
+  // 🛡️ Validación básica
   if (!id || isNaN(id)) {
     return res.status(400).json({ error: 'ID inválido' });
   }
 
   try {
+    console.log('✏️ Actualizando pedido:', id, p);
+
     const result = await query(`
       UPDATE pedidos SET
         pieza = $1,
@@ -811,25 +816,39 @@ app.put('/api/pedidos/:id', async (req, res) => {
       WHERE id = $14
       RETURNING *
     `, [
-      p.pieza,
-      p.matricula,
-      p.marca_coche,
-      p.modelo_coche,
-      p.anio_coche,
-      p.estado,
-      p.precio,
-      p.precio_coste,
-      p.proveedor,
-      p.bastidor,
-      p.sub_estado_incidencia,
-      p.notas_tecnicas,
-      p.usuario_id,
+      p.pieza || null,
+      p.matricula || null,
+      p.marca_coche || null,
+      p.modelo_coche || null,
+      p.anio_coche || null,
+      p.estado || 'solicitud',
+      Number(p.precio) || 0,
+      Number(p.precio_coste) || 0,
+      p.proveedor || null,
+      p.bastidor || null,
+      p.sub_estado_incidencia || null,
+      p.notas_tecnicas || null,
+      p.usuario_id || null,
       id
     ]);
 
     if (result.rows.length === 0) {
+      console.warn('⚠️ Pedido no encontrado:', id);
       return res.status(404).json({ error: 'Pedido no encontrado' });
     }
+
+    // 🧾 Auditoría
+    await registrarLog({
+      usuario_id: null,
+      accion: 'UPDATE',
+      usuario_nombre: p.admin_user || 'ADMIN',
+      usuario_iniciales: (p.admin_user || 'AD').substring(0, 2).toUpperCase(),
+      ip_address: getIP(req),
+      pedido_id: id,
+      detalle: `Pedido #${id} actualizado`
+    });
+
+    console.log('✅ Pedido actualizado correctamente:', id);
 
     res.json({
       success: true,
@@ -838,7 +857,10 @@ app.put('/api/pedidos/:id', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error actualizando pedido:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: 'Error actualizando pedido',
+      detail: error.message
+    });
   }
 });
 // ============================================================================
