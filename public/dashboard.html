@@ -507,9 +507,10 @@
                 fT.innerHTML = '<option value="todos">TODOS LOS TALLERES</option>';
                 pT.innerHTML = '';
                 data.forEach(t => {
-                    fT.add(new Option(t.nombre, t.id));
-                    pT.add(new Option(t.nombre, t.id));
-                });
+    const label = (t.nombre_taller || 'TALLER SIN NOMBRE').toUpperCase();
+    fT.add(new Option(label, t.id));
+    pT.add(new Option(label, t.id));
+});
             } catch(e) { 
                 console.error("Error cargando talleres:", e);
                 showToast('ERROR CARGANDO TALLERES', 'error');
