@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kanban Recambio Reciclado | Panel de Control</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    corePlugins: {
+      preflight: true,
+    }
+  }
+</script>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
     <script>
         tailwind.config = { darkMode: 'class' }
@@ -475,57 +483,60 @@ try {
 
     columns.forEach(col => {
 
-        // FILTRO DE ESTADOS
-        const items = sourceData.filter(p => {
-            const estado = (p.estado || '')
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, '')   // quita acentos
-    .trim();
+// FILTRO DE ESTADOS
+const items = sourceData.filter(p => {
+    const estado = (p.estado || '')
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, '')   // quita acentos
+        .trim();
 
-            if (col.id === 'solicitud') {
-                return ['solicitud', 'pendiente', 'solicitado'].includes(estado);
-            }
-            if (col.id === 'desguace') {
-                return ['desguace', 'en desguace', 'proceso', 'en proceso'].includes(estado);
-            }
-            if (col.id === 'listo') {
-                return ['listo', 'verificado', 'listo / verificado'].includes(estado);
-            }
-            if (col.id === 'transito') {
-    return ['transito', 'en transito'].includes(estado);
-}
-            if (col.id === 'finalizado') {
-                return ['finalizado', 'entregado', 'completado'].includes(estado);
-            }
-            if (col.id === 'incidencia') {
-                return ['incidencia', 'cancelado', 'anulado', 'error'].includes(estado);
-            }
+    if (col.id === 'solicitud') {
+        return ['solicitud', 'pendiente', 'solicitado'].includes(estado);
+    }
+    if (col.id === 'desguace') {
+        return ['desguace', 'en desguace', 'proceso', 'en proceso'].includes(estado);
+    }
+    if (col.id === 'listo') {
+        return ['listo', 'verificado', 'listo / verificado'].includes(estado);
+    }
+    if (col.id === 'transito') {
+        return ['transito', 'en transito'].includes(estado);
+    }
+    if (col.id === 'finalizado') {
+        return ['finalizado', 'entregado', 'completado'].includes(estado);
+    }
+    if (col.id === 'incidencia') {
+        return ['incidencia', 'cancelado', 'anulado', 'error'].includes(estado);
+    }
 
-            return estado === col.id;
-        });
+    return estado === col.id;
+});
 
-        const colSum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
+// 🔒 ORDEN ESTABLE POR NOMBRE DE PIEZA
+items.sort((a, b) => (a.pieza || '').localeCompare(b.pieza || ''));
 
-        const columnHtml = `
-        <div class="kanban-column flex flex-col gap-4 h-full"
-             data-column-id="${col.id}"
-             ondragover="event.preventDefault(); this.classList.add('drag-over')" 
-             ondragleave="this.classList.remove('drag-over')" 
-             ondrop="dropHandler(event, '${col.id}')">
+const colSum = items.reduce((a, b) => a + parseFloat(b.precio || 0), 0);
 
-            <!-- CABECERA -->
-            <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color} py-1">
-                <div>
-                    <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
-                </div>
-                ${col.id === 'finalizado'
-    ? ''
-    : '<span class="text-xs font-black text-blue-600 italic">' +
-        colSum.toFixed(0) + '€' +
-      '</span>'
-}
+const columnHtml = `
+<div class="kanban-column flex flex-col gap-4 h-full"
+     data-column-id="${col.id}"
+     ondragover="event.preventDefault(); this.classList.add('drag-over')" 
+     ondragleave="this.classList.remove('drag-over')" 
+     ondrop="dropHandler(event, '${col.id}')">
+
+    <!-- CABECERA -->
+    <div class="flex justify-between items-center px-4 border-l-[6px] ${col.color} py-1">
+        <div>
+            <h3 class="text-[11px] font-black uppercase tracking-widest dark:text-white">${col.label}</h3>
+            <p class="text-[9px] font-bold text-slate-400 uppercase">${items.length} piezas</p>
+        </div>
+        ${col.id === 'finalizado'
+            ? ''
+            : '<span class="text-xs font-black text-blue-600 italic">' +
+                colSum.toFixed(0) + '€' +
+              '</span>'
+        }
             </div>
 
             <!-- LISTADO -->
@@ -1030,6 +1041,13 @@ async function pollWhatsappNotifications() {
 // 👉 Al hacer click en la campana SOLO abre panel (no resetea)
 async function openWhatsappPanel() {
     const panel = document.getElementById('whatsapp-panel');
+
+    if (!panel) {
+        console.warn('⚠️ whatsapp-panel no existe en el DOM');
+        showToast('Panel de notificaciones no disponible', 'error');
+        return;
+    }
+
     panel.classList.toggle('hidden');
 
     if (!panel.classList.contains('hidden')) {
@@ -1038,7 +1056,14 @@ async function openWhatsappPanel() {
 }
 
 function closeWhatsappPanel() {
-    document.getElementById('whatsapp-panel').classList.add('hidden');
+    const panel = document.getElementById('whatsapp-panel');
+
+    if (!panel) {
+        console.warn('⚠️ whatsapp-panel no existe en el DOM');
+        return;
+    }
+
+    panel.classList.add('hidden');
 }
 
 async function loadWhatsappNotifications() {

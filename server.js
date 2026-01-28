@@ -745,41 +745,69 @@ app.put('/api/pedidos/:id/estado', async (req, res) => {
 app.post('/api/pedidos', async (req, res) => {
   try {
     const p = req.body;
+
+    console.log('📦 Payload recibido en POST /api/pedidos:', p);
+
+    // 🛡️ Validaciones mínimas
+    if (!p.pieza || !p.usuario_id) {
+      return res.status(400).json({
+        error: 'Campos obligatorios faltantes',
+        required: ['pieza', 'usuario_id']
+      });
+    }
+
     const numero_pedido = `PED-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    
+
     const result = await query(`
       INSERT INTO pedidos (
         numero_pedido,
         pieza,
+        matricula,
         marca_coche,
         modelo_coche,
         anio_coche,
         estado,
         precio,
-        usuario_id
+        precio_coste,
+        proveedor,
+        bastidor,
+        sub_estado_incidencia,
+        notas_tecnicas,
+        usuario_id,
+        fecha_creacion
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, CURRENT_TIMESTAMP)
       RETURNING id, numero_pedido
     `, [
       numero_pedido,
-      p.pieza,
-      p.marca_coche,
-      p.modelo_coche,
+      p.pieza || null,
+      p.matricula || null,
+      p.marca_coche || null,
+      p.modelo_coche || null,
       p.anio_coche || null,
       p.estado || 'solicitud',
-      p.precio || 0,
+      Number(p.precio) || 0,
+      Number(p.precio_coste) || 0,
+      p.proveedor || null,
+      p.bastidor || null,
+      p.sub_estado_incidencia || null,
+      p.notas_tecnicas || null,
       p.usuario_id
     ]);
-    
-    res.status(201).json({ 
-      id: result.rows[0].id, 
-      numero_pedido: result.rows[0].numero_pedido,
-      message: 'Order created'
+
+    console.log('✅ Pedido creado correctamente:', result.rows[0]);
+
+    res.status(201).json({
+      success: true,
+      pedido: result.rows[0]
     });
 
   } catch (error) {
     console.error('❌ Error creando pedido:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: 'Error creando pedido',
+      detail: error.message
+    });
   }
 });
 // ============================================================================

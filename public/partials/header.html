@@ -39,9 +39,31 @@
                     </span>
                 </div>
 
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs">
-                    AD
-                </div>
+				<!-- 👤 AVATAR USUARIO -->
+				<div class="relative group">
+					<div id="avatar-circle"
+						 class="w-8 h-8 md:w-10 md:h-10 bg-blue-700 text-white rounded-full flex items-center justify-center font-black text-xs cursor-pointer">
+						AD
+					</div>
+
+					<div class="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 py-2 
+								opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+
+						<div class="px-6 py-3 border-b border-slate-50 dark:border-slate-800 mb-2">
+							<p id="user-name-dropdown" class="text-[10px] font-black uppercase text-slate-800 dark:text-white truncate">
+								Admin
+							</p>
+							<p id="user-role-dropdown" class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+								admin
+							</p>
+						</div>
+
+						<button onclick="cerrarSesion()"
+								class="w-full text-left px-6 py-3 text-[10px] font-black uppercase text-red-500 hover:bg-red-50 transition-colors">
+							<i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+						</button>
+					</div>
+				</div>
 
                 <!-- WAFFLE + NOTIFICACIONES -->
                 <div class="flex items-center gap-1">
@@ -69,10 +91,6 @@
                         <i class="fas fa-bell text-xs"></i>
                         <span id="bell-count"
                             class="hidden absolute -top-1 -right-1 bg-emerald-600 text-white text-[9px] font-black rounded-full px-1.5">0</span>
-                    </button>
-
-                    <button class="w-8 h-8 text-slate-400 hover:text-red-600 transition-colors">
-                        <i class="fas fa-power-off text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -124,12 +142,49 @@ async function actualizarTotalTransito() {
         console.warn('⚠️ Error calculando total tránsito:', err);
     }
 }
+/**
+ * 🟢 Comprueba estado real de la base de datos
+ */
+async function checkDatabaseHealth() {
+    const dot = document.getElementById('db-status');
+    if (!dot) return;
 
+    try {
+        const res = await fetch('/api/health', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Health not OK');
+
+        const data = await res.json();
+
+        if (data.status === 'ok') {
+            // 🟢 ONLINE
+            dot.classList.remove('bg-red-500');
+            dot.classList.add('bg-emerald-500');
+            dot.title = 'Base de datos conectada';
+        } else {
+            throw new Error('DB warning');
+        }
+
+    } catch (err) {
+        // 🔴 OFFLINE
+        dot.classList.remove('bg-emerald-500');
+        dot.classList.add('bg-red-500');
+        dot.title = 'Base de datos no disponible';
+        console.warn('⚠️ DB health error:', err);
+    }
+}
 // ▶️ Ejecutar al cargar el header
 document.addEventListener('DOMContentLoaded', () => {
     actualizarTotalTransito();
+    checkDatabaseHealth(); // ✅ LLAMADA INICIAL
 
-    // 🔄 Refresco automático cada 15 segundos
+    // 🔄 Refresco automático
     setInterval(actualizarTotalTransito, 15000);
+    setInterval(checkDatabaseHealth, 10000); // ✅ REFRESCO DB
 });
+
+// 🔐 Cerrar sesión (usado por header dinámico)
+function cerrarSesion() {
+    localStorage.clear();
+    window.location.href = 'index.html';
+}
 </script>
