@@ -560,17 +560,59 @@ app.get('/api/talleres', async (req, res) => {
   }
 });
 
-// Usuarios
-app.get('/api/usuarios', async (req, res) => {
+// Crear usuario (taller / agente / admin)
+app.post('/api/usuarios', async (req, res) => {
   try {
-    const { rol } = req.query;
+    const {
+      email,
+      password,
+      nombre_taller,
+      rol,
+      provincia,
+      telefono_whatsapp,
+      telefono_whatsapp_2,
+      telefono_whatsapp_3,
+      telefono_whatsapp_4,
+      telefono_whatsapp_5,
+      telefono_whatsapp_6,
+      telefono_whatsapp_7,
+      telefono_whatsapp_8,
+      telefono_whatsapp_9,
+      telefono_whatsapp_10
+    } = req.body;
 
-    let sql = `
-      SELECT
-        id,
+    // Validaciones obligatorias
+    if (!email || !nombre_taller) {
+      return res.status(400).json({
+        error: 'Email y nombre_taller son obligatorios'
+      });
+    }
+
+    // Verificar email único
+    const existing = await query(
+      'SELECT id FROM usuarios WHERE email = $1',
+      [email]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({
+        error: 'El email ya existe'
+      });
+    }
+
+    // Password por defecto si viene vacío
+    const finalPassword = password && password.trim() !== ''
+      ? password
+      : 'Taller123!';
+
+    const hashedPassword = bcrypt.hashSync(finalPassword, 10);
+
+    const result = await query(`
+      INSERT INTO usuarios (
         email,
-        rol,
+        password,
         nombre_taller,
+        rol,
         provincia,
         telefono_whatsapp,
         telefono_whatsapp_2,
@@ -581,25 +623,272 @@ app.get('/api/usuarios', async (req, res) => {
         telefono_whatsapp_7,
         telefono_whatsapp_8,
         telefono_whatsapp_9,
-        telefono_whatsapp_10
-      FROM usuarios
-      WHERE 1=1
-    `;
-    const params = [];
+        telefono_whatsapp_10,
+        fecha_registro,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,
+        $6,$7,$8,$9,$10,
+        $11,$12,$13,$14,$15,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      )
+      RETURNING
+        id,
+        email,
+        rol,
+        nombre_taller,
+        provincia
+    `, [
+      email,
+      hashedPassword,
+      nombre_taller,
+      rol || 'taller',
+      provincia || null,
+      telefono_whatsapp || null,
+      telefono_whatsapp_2 || null,
+      telefono_whatsapp_3 || null,
+      telefono_whatsapp_4 || null,
+      telefono_whatsapp_5 || null,
+      telefono_whatsapp_6 || null,
+      telefono_whatsapp_7 || null,
+      telefono_whatsapp_8 || null,
+      telefono_whatsapp_9 || null,
+      telefono_whatsapp_10 || null
+    ]);
+
+    res.status(201).json({
+      success: true,
+      usuario: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('❌ Error creando usuario:', error);
+
+    // Manejo limpio de errores UNIQUE
+    if (error.code === '23505') {
+      return res.status(400).json({
+        error: 'Dato duplicado (email o teléfono ya existe)'
+      });
+    }
+
+    res.status(500).json({
+      error: 'Error interno al crear usuario'
+    });
+  }
+});
+
+// Actualizar usuario
+app.put('/api/usuarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      email,
+      password,
+      nombre_taller,
+      rol,
+      provincia,
+      telefono_whatsapp,
+      telefono_whatsapp_2,
+      telefono_whatsapp_3,
+      telefono_whatsapp_4,
+      telefono_whatsapp_5,
+      telefono_whatsapp_6,
+      telefono_whatsapp_7,
+      telefono_whatsapp_8,
+      telefono_whatsapp_9,
+      telefono_whatsapp_10
+    } = req.body;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    // Verificar que el usuario existe
+    const existingUser = await query(
+      'SELECT id, email FROM usuarios WHERE id = $1',
+      [id]
+    );
+
+    if (existingUser.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Validar email único si cambia
+    if (email && email !== existingUser.rows[0].email) {
+      const emailCheck = await query(
+        'SELECT id FROM usuarios WHERE email = $1 AND id <> $2',
+        [email, id]
+      );
+
+      if (emailCheck.rows.length > 0) {
+        return res.status(400).json({
+          error: 'El email ya está en uso'
+        });
+      }
+    }
+
+    // Construir actualización dinámica
+    let updateFields = [];
+    let params = [];
+    let index = 1;
+
+    if (email) {
+      updateFields.push(`email = $${index++}`);
+      params.push(email);
+    }
+
+    if (nombre_taller) {
+      updateFields.push(`nombre_taller = $${index++}`);
+      params.push(nombre_taller);
+    }
 
     if (rol) {
-      sql += ' AND rol = $1';
+      updateFields.push(`rol = $${index++}`);
       params.push(rol);
     }
 
-    sql += ' ORDER BY nombre_taller';
+    if (provincia !== undefined) {
+      updateFields.push(`provincia = $${index++}`);
+      params.push(provincia || null);
+    }
+
+    // WhatsApps
+    const whatsappFields = [
+      telefono_whatsapp,
+      telefono_whatsapp_2,
+      telefono_whatsapp_3,
+      telefono_whatsapp_4,
+      telefono_whatsapp_5,
+      telefono_whatsapp_6,
+      telefono_whatsapp_7,
+      telefono_whatsapp_8,
+      telefono_whatsapp_9,
+      telefono_whatsapp_10
+    ];
+
+    const whatsappColumns = [
+      'telefono_whatsapp',
+      'telefono_whatsapp_2',
+      'telefono_whatsapp_3',
+      'telefono_whatsapp_4',
+      'telefono_whatsapp_5',
+      'telefono_whatsapp_6',
+      'telefono_whatsapp_7',
+      'telefono_whatsapp_8',
+      'telefono_whatsapp_9',
+      'telefono_whatsapp_10'
+    ];
+
+    whatsappFields.forEach((value, i) => {
+      if (value !== undefined) {
+        updateFields.push(`${whatsappColumns[i]} = $${index++}`);
+        params.push(value || null);
+      }
+    });
+
+    // Password solo si viene
+    if (password && password.trim() !== '') {
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      updateFields.push(`password = $${index++}`);
+      params.push(hashedPassword);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        error: 'No hay campos para actualizar'
+      });
+    }
+
+    updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+
+    const sql = `
+      UPDATE usuarios
+      SET ${updateFields.join(', ')}
+      WHERE id = $${index}
+      RETURNING id, email, rol, nombre_taller, provincia
+    `;
+
+    params.push(id);
 
     const result = await query(sql, params);
-    res.json(result.rows);
+
+    res.json({
+      success: true,
+      usuario: result.rows[0]
+    });
 
   } catch (error) {
-    console.error('❌ Error /api/usuarios:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ Error actualizando usuario:', error);
+
+    if (error.code === '23505') {
+      return res.status(400).json({
+        error: 'Dato duplicado (email o teléfono ya existe)'
+      });
+    }
+
+    res.status(500).json({
+      error: 'Error interno al actualizar usuario'
+    });
+  }
+});
+
+// Eliminar usuario
+app.delete('/api/usuarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    // Verificar que existe
+    const userCheck = await query(
+      'SELECT id FROM usuarios WHERE id = $1',
+      [id]
+    );
+
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Contar pedidos asociados
+    const pedidosCheck = await query(
+      'SELECT COUNT(*) FROM pedidos WHERE usuario_id = $1',
+      [id]
+    );
+
+    const totalPedidos = Number(pedidosCheck.rows[0].count);
+
+    // Si tiene pedidos, desvincularlos
+    if (totalPedidos > 0) {
+      await query(
+        'UPDATE pedidos SET usuario_id = NULL WHERE usuario_id = $1',
+        [id]
+      );
+    }
+
+    // Eliminar usuario
+    await query(
+      'DELETE FROM usuarios WHERE id = $1',
+      [id]
+    );
+
+    res.json({
+      success: true,
+      teniaPedidos: totalPedidos > 0,
+      pedidosAfectados: totalPedidos
+    });
+
+  } catch (error) {
+    console.error('❌ Error eliminando usuario:', error);
+    res.status(500).json({
+      error: 'Error interno al eliminar usuario'
+    });
   }
 });
 
@@ -749,12 +1038,12 @@ app.post('/api/pedidos', async (req, res) => {
     console.log('📦 Payload recibido en POST /api/pedidos:', p);
 
     // 🛡️ Validaciones mínimas
-    if (!p.pieza || !p.usuario_id) {
-      return res.status(400).json({
-        error: 'Campos obligatorios faltantes',
-        required: ['pieza', 'usuario_id']
-      });
-    }
+if (!p.pieza) {
+  return res.status(400).json({
+    error: 'La pieza es obligatoria',
+    required: ['pieza']
+  });
+}
 
     const numero_pedido = `PED-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -792,7 +1081,7 @@ app.post('/api/pedidos', async (req, res) => {
       p.bastidor || null,
       p.sub_estado_incidencia || null,
       p.notas_tecnicas || null,
-      p.usuario_id
+      p.usuario_id || null
     ]);
 
     console.log('✅ Pedido creado correctamente:', result.rows[0]);

@@ -42,6 +42,19 @@
 <main class="flex-grow p-6 max-w-7xl mx-auto w-full">
 
     <div class="bg-white dark:bg-slate-900 rounded-2xl shadow overflow-hidden">
+				<!-- HEADER ACCIONES -->
+		<div class="p-4 border-b flex justify-between items-center">
+			<h2 class="font-black uppercase text-sm tracking-wide">
+				Equipo y Talleres
+			</h2>
+
+			<button
+				id="btnNuevoTaller"
+				class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full text-xs font-black uppercase shadow active:scale-95"
+			>
+				+ Nuevo Taller
+			</button>
+		</div>
 
         <!-- FILTROS -->
         <div class="p-4 border-b flex flex-col sm:flex-row gap-3">
@@ -200,7 +213,15 @@ async function init() {
 
 // CARGAR
 async function cargarTalleres() {
-    const res = await fetch('/api/usuarios?rol=taller', { cache:'no-store' });
+    const res = await fetch('/api/talleres', { cache: 'no-store' });
+
+    if (!res.ok) {
+        console.error('Error cargando talleres:', res.status);
+        allTalleres = [];
+        renderTalleres();
+        return;
+    }
+
     allTalleres = await res.json();
     filtrarTalleres();
 }
@@ -270,6 +291,8 @@ function editarTaller(id) {
     const t = allTalleres.find(x => x.id === id);
     if (!t) return;
 
+    document.getElementById('modal-title').textContent = 'Editar Taller 🛠️';
+
     document.getElementById('t-id').value = t.id;
     document.getElementById('t-nombre').value = t.nombre_taller || '';
     document.getElementById('t-email').value = t.email || '';
@@ -281,6 +304,7 @@ function editarTaller(id) {
         const key = i === 1 ? 'telefono_whatsapp' : `telefono_whatsapp_${i}`;
         if (t[key]) phones.push(t[key]);
     }
+
     document.getElementById('t-whatsapp').value = phones.join('\n');
     document.getElementById('t-pass').value = '';
 
@@ -291,17 +315,21 @@ function cerrarModal() {
     document.getElementById('modalTaller').classList.add('hidden');
 }
 
-// GUARDAR
+// GUARDAR (crear o editar automáticamente)
 document.getElementById('form-taller').addEventListener('submit', async e => {
     e.preventDefault();
 
-    const id = document.getElementById('t-id').value;
-    const phones = document.getElementById('t-whatsapp').value.split('\n').map(p => p.trim()).filter(Boolean);
+    const id = document.getElementById('t-id').value.trim();
+    const phones = document.getElementById('t-whatsapp')
+        .value
+        .split('\n')
+        .map(p => p.trim())
+        .filter(Boolean);
 
     const payload = {
-        nombre_taller: document.getElementById('t-nombre').value,
-        email: document.getElementById('t-email').value,
-        provincia: document.getElementById('t-provincia').value,
+        nombre_taller: document.getElementById('t-nombre').value.trim(),
+        email: document.getElementById('t-email').value.trim(),
+        provincia: document.getElementById('t-provincia').value.trim(),
         rol: document.getElementById('t-rol').value,
         password: document.getElementById('t-pass').value || undefined
     };
@@ -310,11 +338,31 @@ document.getElementById('form-taller').addEventListener('submit', async e => {
         payload[i === 0 ? 'telefono_whatsapp' : `telefono_whatsapp_${i+1}`] = p;
     });
 
-    await fetch(`/api/usuarios/${id}`, {
-        method: 'PUT',
-        headers: {'Content-Type':'application/json'},
+    let url;
+    let method;
+
+    if (id) {
+        // MODO EDICIÓN
+        url = `/api/usuarios/${id}`;
+        method = 'PUT';
+    } else {
+        // MODO CREACIÓN
+        url = `/api/usuarios`;
+        method = 'POST';
+    }
+
+    const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        alert(data.error || 'Error guardando taller');
+        return;
+    }
 
     cerrarModal();
     await cargarTalleres();
@@ -333,10 +381,39 @@ function cerrarConfirm() {
 
 async function confirmarEliminar() {
     if (!deleteId) return;
-    await fetch(`/api/usuarios/${deleteId}`, { method:'DELETE' });
+
+    const res = await fetch(`/api/usuarios/${deleteId}`, {
+        method: 'DELETE'
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        alert(data.error || 'Error eliminando taller');
+        return;
+    }
+
+    if (data.teniaPedidos) {
+        alert(`El taller tenía ${data.pedidosAfectados} pedidos asociados.\nLos pedidos han quedado sin asignar.`);
+    }
+
     cerrarConfirm();
     await cargarTalleres();
 }
+	document.getElementById('btnNuevoTaller').addEventListener('click', () => {
+
+		document.getElementById('modal-title').textContent = 'Nuevo Taller 🆕';
+
+		document.getElementById('t-id').value = '';
+		document.getElementById('t-nombre').value = '';
+		document.getElementById('t-email').value = '';
+		document.getElementById('t-provincia').value = '';
+		document.getElementById('t-rol').value = 'taller';
+		document.getElementById('t-whatsapp').value = '';
+		document.getElementById('t-pass').value = '';
+
+		document.getElementById('modalTaller').classList.remove('hidden');
+	});
 
 window.onload = init;
 </script>
