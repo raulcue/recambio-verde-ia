@@ -368,18 +368,19 @@
             document.getElementById('user-role-dropdown').innerText = user.rol || 'admin';
             const avatarCircle = document.getElementById('avatar-circle');
             if (avatarCircle) {
-			const nombre = (user.nombre || '').trim();
-			if (nombre.length > 0) {
-				const partes = nombre.split(' ');
-				const iniciales = partes.length > 1
-					? partes[0][0] + partes[1][0]
-					: partes[0][0];
-				avatarCircle.innerText = iniciales.toUpperCase();
+			const rol = (user.rol || '').toLowerCase();
+
+			if (rol === 'admin') {
+				avatarCircle.innerText = 'AD';
+			} else if (rol === 'agente') {
+				avatarCircle.innerText = 'AG';
+			} else if (rol === 'taller') {
+				avatarCircle.innerText = 'TA';
 			} else {
-				avatarCircle.innerText = 'U';
+				avatarCircle.innerText = 'US';
 			}
 		}
-            aplicarRestricciones(user.rol);
+					aplicarRestricciones(user.rol);
         }
 
         function toggleDarkMode() {
