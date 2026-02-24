@@ -367,7 +367,18 @@
             document.getElementById('user-name-dropdown').innerText = user.nombre || 'Usuario';
             document.getElementById('user-role-dropdown').innerText = user.rol || 'admin';
             const avatarCircle = document.getElementById('avatar-circle');
-            if (avatarCircle) avatarCircle.innerText = user.iniciales || '??';
+            if (avatarCircle) {
+			const nombre = (user.nombre || '').trim();
+			if (nombre.length > 0) {
+				const partes = nombre.split(' ');
+				const iniciales = partes.length > 1
+					? partes[0][0] + partes[1][0]
+					: partes[0][0];
+				avatarCircle.innerText = iniciales.toUpperCase();
+			} else {
+				avatarCircle.innerText = 'U';
+			}
+		}
             aplicarRestricciones(user.rol);
         }
 
