@@ -88,7 +88,7 @@
                 <div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-2"></div>
 
                 <div class="relative group">
-                    <div id="avatar-circle" class="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-black text-xs cursor-pointer">A</div>
+                    <div id="avatar-circle" class="w-10 h-10 bg-slate-500 text-white rounded-full flex items-center justify-center font-black text-xs cursor-pointer">A</div>
                     <div class="absolute right-0 mt-3 w-48 bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                         <div class="px-6 py-3 border-b border-slate-50 dark:border-slate-800 mb-2">
                             <p id="user-name-dropdown" class="text-[10px] font-black uppercase text-slate-800 dark:text-white truncate">Admin</p>
@@ -357,59 +357,68 @@
             }
         }
 
-        function initSession() {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) { window.location.href = 'index.html'; return; }
-            if (localStorage.getItem('darkMode') === 'true') document.documentElement.classList.add('dark');
-            const lang = localStorage.getItem('idioma_seleccionado') || 'es';
-            aplicarTextos(lang);
-            document.getElementById('user-name').innerText = user.nombre || 'Usuario';
-            document.getElementById('user-name-dropdown').innerText = user.nombre || 'Usuario';
-            document.getElementById('user-role-dropdown').innerText = user.rol || 'admin';
-            const avatarCircle = document.getElementById('avatar-circle');
-            if (avatarCircle) {
-			const rol = (user.rol || '').toLowerCase();
+function initSession() {
+    const user = JSON.parse(localStorage.getItem('user'));
 
-			if (rol === 'admin') {
-				avatarCircle.innerText = 'AD';
-			} else if (rol === 'agente') {
-				avatarCircle.innerText = 'AG';
-			} else if (rol === 'taller') {
-				avatarCircle.innerText = 'TA';
-			} else {
-				avatarCircle.innerText = 'US';
-			}
-		}
-					aplicarRestricciones(user.rol);
+    if (!user) { 
+        window.location.href = 'index.html'; 
+        return; 
+    }
+
+    // 🌙 Dark mode persistente
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+    }
+
+    // 🌍 Idioma persistente
+    const lang = localStorage.getItem('idioma_seleccionado') || 'es';
+    aplicarTextos(lang);
+
+    // 👤 Datos usuario
+    document.getElementById('user-name').innerText = user.nombre || 'Usuario';
+    document.getElementById('user-name-dropdown').innerText = user.nombre || 'Usuario';
+    document.getElementById('user-role-dropdown').innerText = user.rol || 'admin';
+
+    const avatarCircle = document.getElementById('avatar-circle');
+
+    if (avatarCircle) {
+        const rol = (user.rol || '').toLowerCase();
+
+        // 🔠 Iniciales por rol
+        if (rol === 'admin') {
+            avatarCircle.innerText = 'AD';
+        } else if (rol === 'agente') {
+            avatarCircle.innerText = 'AG';
+        } else if (rol === 'taller') {
+            avatarCircle.innerText = 'TA';
+        } else {
+            avatarCircle.innerText = 'US';
         }
 
-        function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('darkMode', isDark);
+        // 🎨 Color por rol
+        avatarCircle.classList.remove(
+            'bg-slate-500',
+            'bg-blue-600',
+            'bg-emerald-600',
+            'bg-orange-500'
+        );
+
+        if (rol === 'admin') {
+            avatarCircle.classList.add('bg-blue-600');
+        } else if (rol === 'agente') {
+            avatarCircle.classList.add('bg-emerald-600');
+        } else if (rol === 'taller') {
+            avatarCircle.classList.add('bg-orange-500');
+        } else {
+            avatarCircle.classList.add('bg-slate-500');
         }
+    }
 
-		function aplicarRestricciones(rol) {
-			const disableLink = (id) => {
-				const el = document.getElementById(id);
-				if (el) el.classList.add('opacity-40', 'grayscale', 'pointer-events-none');
-			};
+    aplicarRestricciones(user.rol);
+}
 
-			if (rol === 'admin') return;
-
-			if (rol === 'taller') {
-				// El taller solo ve Pedidos (Módulo 04).
-				['btn-c1', 'btn-c2', 'btn-c3', 'btn-c5', 'btn-c6', 'btn-c7', 'btn-c8'].forEach(disableLink);
-				// El taller no ve Desguaces
-				disableLink('btn-desguaces');
-
-			} else if (rol === 'agente') {
-				// El agente no ve Logs, ProfitPulse ni StackCost.
-				['btn-c5', 'btn-c7', 'btn-c8'].forEach(disableLink);
-			}
-		}
-
-        function cerrarSesion() { localStorage.clear(); window.location.href = 'index.html'; }
-        document.addEventListener('DOMContentLoaded', initSession);
+// 🔥 Ejecutar al cargar el DOM
+document.addEventListener('DOMContentLoaded', initSession);
     </script>
 </body>
 </html>

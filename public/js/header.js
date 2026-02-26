@@ -96,10 +96,34 @@ function initHeader() {
 
     setInterval(actualizarTotalTransito, 15000);
     setInterval(checkDatabaseHealth, 10000);
+
+    // 🎨 Aplicar color por rol (MOVER AQUÍ DENTRO)
+    const user = JSON.parse(localStorage.getItem('user'));
+    const avatar = document.getElementById('avatar-circle');
+
+    if (user && avatar) {
+        const rol = (user.rol || '').toLowerCase();
+
+        avatar.classList.remove(
+            'bg-slate-500',
+            'bg-blue-600',
+            'bg-emerald-600',
+            'bg-orange-500'
+        );
+
+        if (rol === 'admin') {
+            avatar.classList.add('bg-blue-600');
+        } else if (rol === 'agente') {
+            avatar.classList.add('bg-emerald-600');
+        } else if (rol === 'taller') {
+            avatar.classList.add('bg-orange-500');
+        } else {
+            avatar.classList.add('bg-slate-500');
+        }
+    }
 }
 
 // Esperar a que el DOM y el header estén pintados
 document.addEventListener('DOMContentLoaded', () => {
-    // Espera pequeña para asegurar que el fetch del header terminó
     setTimeout(initHeader, 300);
 });
