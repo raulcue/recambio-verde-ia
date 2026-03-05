@@ -1038,12 +1038,12 @@ app.post('/api/pedidos', async (req, res) => {
     console.log('📦 Payload recibido en POST /api/pedidos:', p);
 
     // 🛡️ Validaciones mínimas
-if (!p.pieza) {
-  return res.status(400).json({
-    error: 'La pieza es obligatoria',
-    required: ['pieza']
-  });
-}
+    if (!p.pieza) {
+      return res.status(400).json({
+        error: 'La pieza es obligatoria',
+        required: ['pieza']
+      });
+    }
 
     const numero_pedido = `PED-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -1059,13 +1059,14 @@ if (!p.pieza) {
         precio,
         precio_coste,
         proveedor,
+        prioridad,
         bastidor,
         sub_estado_incidencia,
         notas_tecnicas,
         usuario_id,
         fecha_creacion
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14, CURRENT_TIMESTAMP)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15, CURRENT_TIMESTAMP)
       RETURNING id, numero_pedido
     `, [
       numero_pedido,
@@ -1078,6 +1079,7 @@ if (!p.pieza) {
       Number(p.precio) || 0,
       Number(p.precio_coste) || 0,
       p.proveedor || null,
+      p.prioridad || 'normal',
       p.bastidor || null,
       p.sub_estado_incidencia || null,
       p.notas_tecnicas || null,
@@ -1125,12 +1127,13 @@ app.put('/api/pedidos/:id', async (req, res) => {
         precio = $7,
         precio_coste = $8,
         proveedor = $9,
-        bastidor = $10,
-        sub_estado_incidencia = $11,
-        notas_tecnicas = $12,
-        usuario_id = $13,
+        prioridad = $10,
+        bastidor = $11,
+        sub_estado_incidencia = $12,
+        notas_tecnicas = $13,
+        usuario_id = $14,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $14
+      WHERE id = $15
       RETURNING *
     `, [
       p.pieza || null,
@@ -1142,6 +1145,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
       Number(p.precio) || 0,
       Number(p.precio_coste) || 0,
       p.proveedor || null,
+      p.prioridad || 'normal',
       p.bastidor || null,
       p.sub_estado_incidencia || null,
       p.notas_tecnicas || null,
