@@ -258,6 +258,18 @@
 				</select>
 			</div>
 		</div>
+		<!-- Canal -->
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+			<div class="flex flex-col gap-2">
+				<label class="text-[10px] font-black uppercase text-slate-400 ml-2">Canal</label>
+				<select id="p-canal" class="bg-slate-50 dark:bg-slate-800 border-none rounded-2xl p-4 text-sm font-bold outline-none">
+					<option value="web">Web</option>
+					<option value="whatsapp">WhatsApp</option>
+					<option value="telefono">Teléfono</option>
+					<option value="otro">Otro</option>
+				</select>
+			</div>
+		</div>
         <!-- Marca / Modelo -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="flex flex-col gap-2">
@@ -417,6 +429,7 @@
                     precio_coste: document.getElementById('p-coste').value || 0,
                     proveedor: document.getElementById('p-proveedor').value,
                     prioridad: document.getElementById('p-prioridad').value,
+                    canal: document.getElementById('p-canal').value,
                     bastidor: document.getElementById('p-bastidor').value,
                     sub_estado_incidencia: document.getElementById('p-subestado').value,
                     notas_tecnicas: document.getElementById('p-notes').value,
@@ -915,26 +928,27 @@ const nuevoEstadoLower = nuevoEstado
         }
 
         function abrirEditar(p) {
-document.getElementById('p-id').value = p.id;
-document.getElementById('p-pieza').value = p.pieza || '';
-document.getElementById('p-matricula').value = p.matricula || '';
-document.getElementById('p-marca').value = p.marca_coche || '';
-document.getElementById('p-modelo').value = p.modelo_coche || '';
-document.getElementById('p-anio').value = p.anio_coche || '';   // ✅ AÑO DEL COCHE
-document.getElementById('p-taller').value = p.usuario_id || '';
-document.getElementById('p-estado').value = p.estado || 'solicitud';
-document.getElementById('p-precio').value = p.precio || 0;
-document.getElementById('p-coste').value = p.precio_coste || 0;
-document.getElementById('p-proveedor').value = p.proveedor || '';
-document.getElementById('p-prioridad').value = p.prioridad || 'normal';
-document.getElementById('p-bastidor').value = p.bastidor || '';
-document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
-document.getElementById('p-notes').value = p.notas_tecnicas || '';
-document.getElementById('modal-titulo').innerText = "Editar #" + p.id;
-document.getElementById('modal-estado-badge').innerText = "PEDIDO";
-document.getElementById('modal').classList.remove('hidden');
-switchTab('gen');
-} 
+		document.getElementById('p-id').value = p.id;
+		document.getElementById('p-pieza').value = p.pieza || '';
+		document.getElementById('p-matricula').value = p.matricula || '';
+		document.getElementById('p-marca').value = p.marca_coche || '';
+		document.getElementById('p-modelo').value = p.modelo_coche || '';
+		document.getElementById('p-anio').value = p.anio_coche || '';   // ✅ AÑO DEL COCHE
+		document.getElementById('p-taller').value = p.usuario_id || '';
+		document.getElementById('p-estado').value = p.estado || 'solicitud';
+		document.getElementById('p-precio').value = p.precio || 0;
+		document.getElementById('p-coste').value = p.precio_coste || 0;
+		document.getElementById('p-proveedor').value = p.proveedor || '';
+		document.getElementById('p-prioridad').value = p.prioridad || 'normal';
+		document.getElementById('p-canal').value = p.canal || 'web';
+		document.getElementById('p-bastidor').value = p.bastidor || '';
+		document.getElementById('p-subestado').value = p.sub_estado_incidencia || '';
+		document.getElementById('p-notes').value = p.notas_tecnicas || '';
+		document.getElementById('modal-titulo').innerText = "Editar #" + p.id;
+		document.getElementById('modal-estado-badge').innerText = "PEDIDO";
+		document.getElementById('modal').classList.remove('hidden');
+		switchTab('gen');
+		} 
         function abrirEditarById(id) {
     const pedido = db.find(p => p.id == id);
     if (!pedido) {   // ✅ corregido
@@ -1339,33 +1353,54 @@ function enhanceCards(){
         }
 
 
-		if(pedido.prioridad){
+        // Fila compacta para prioridad + canal
+        const bottomRow = document.createElement("div");
+        bottomRow.className = "flex items-center gap-2 mt-1";
 
-			const badge = document.createElement("div");
+        if(pedido.prioridad){
 
-			let color = "bg-slate-400";
+            const badge = document.createElement("div");
 
-			if(pedido.prioridad === "alta") color = "bg-red-600";
-			if(pedido.prioridad === "baja") color = "bg-blue-500";
+            let color = "bg-slate-400";
 
-			badge.className = `text-[8px] font-black uppercase text-white ${color} px-2 py-1 rounded-full inline-block mt-1`;
+            if(pedido.prioridad === "alta") color = "bg-red-600";
+            if(pedido.prioridad === "baja") color = "bg-blue-500";
 
-			badge.innerText = pedido.prioridad;
+            badge.className = `text-[8px] font-black uppercase text-white ${color} px-2 py-1 rounded-full`;
 
-			card.appendChild(badge);
-		}
+            badge.innerText = pedido.prioridad;
+
+            bottomRow.appendChild(badge);
+        }
+
 
         if(pedido.canal){
 
             const icon = document.createElement("div");
 
-            icon.className = "text-[10px] text-green-500";
+            icon.className = "text-[12px]";
 
             if(pedido.canal === "whatsapp"){
-                icon.innerHTML = `<i class="fab fa-whatsapp"></i>`;
+                icon.innerHTML = `<i class="fab fa-whatsapp text-green-500"></i>`;
             }
 
-            card.appendChild(icon);
+            if(pedido.canal === "telefono"){
+                icon.innerHTML = `<i class="fas fa-phone text-blue-500"></i>`;
+            }
+
+            if(pedido.canal === "web"){
+                icon.innerHTML = `<i class="fas fa-globe text-slate-500"></i>`;
+            }
+
+            if(pedido.canal === "otro"){
+                icon.innerHTML = `<i class="fas fa-circle text-slate-400"></i>`;
+            }
+
+            bottomRow.appendChild(icon);
+        }
+
+        if(bottomRow.children.length > 0){
+            card.appendChild(bottomRow);
         }
 
     });

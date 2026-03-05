@@ -1060,13 +1060,14 @@ app.post('/api/pedidos', async (req, res) => {
         precio_coste,
         proveedor,
         prioridad,
+        canal,
         bastidor,
         sub_estado_incidencia,
         notas_tecnicas,
         usuario_id,
         fecha_creacion
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15, CURRENT_TIMESTAMP)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16, CURRENT_TIMESTAMP)
       RETURNING id, numero_pedido
     `, [
       numero_pedido,
@@ -1080,6 +1081,7 @@ app.post('/api/pedidos', async (req, res) => {
       Number(p.precio_coste) || 0,
       p.proveedor || null,
       p.prioridad || 'normal',
+      p.canal || 'web',
       p.bastidor || null,
       p.sub_estado_incidencia || null,
       p.notas_tecnicas || null,
@@ -1128,12 +1130,13 @@ app.put('/api/pedidos/:id', async (req, res) => {
         precio_coste = $8,
         proveedor = $9,
         prioridad = $10,
-        bastidor = $11,
-        sub_estado_incidencia = $12,
-        notas_tecnicas = $13,
-        usuario_id = $14,
+        canal = $11,
+        bastidor = $12,
+        sub_estado_incidencia = $13,
+        notas_tecnicas = $14,
+        usuario_id = $15,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $15
+      WHERE id = $16
       RETURNING *
     `, [
       p.pieza || null,
@@ -1146,6 +1149,7 @@ app.put('/api/pedidos/:id', async (req, res) => {
       Number(p.precio_coste) || 0,
       p.proveedor || null,
       p.prioridad || 'normal',
+      p.canal || 'web',
       p.bastidor || null,
       p.sub_estado_incidencia || null,
       p.notas_tecnicas || null,
