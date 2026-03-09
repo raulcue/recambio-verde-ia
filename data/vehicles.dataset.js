@@ -19,7 +19,7 @@ const VEHICLES = [
   },
   {
     brand: "Mercedes-Benz",
-    aliases: ["mercedes", "mb", "mercedesbenz", "merc"],
+    aliases: ["mercedes", "mercedes benz", "mercedes-benz", "mercedesbenz", "mb", "merc"],
     models: ["Clase A", "Clase B", "Clase C", "Clase E", "Clase S", "CLA", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "Vito", "Sprinter", "Citan", "EQC", "EQA", "EQB", "AMG GT", "SL"]
   },
   {
@@ -29,7 +29,7 @@ const VEHICLES = [
   },
   {
     brand: "Ford",
-    aliases: ["ford", "for"],
+    aliases: ["ford"],
     models: ["Fiesta", "Focus", "Mondeo", "Kuga", "Puma", "EcoSport", "Ranger", "Transit", "Tourneo", "Mustang", "Bronco", "Edge", "Explorer", "Galaxy", "S-Max", "Ka", "Fusion", "F-150", "Maverick", "B-Max"]
   },
   {

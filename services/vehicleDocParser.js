@@ -5,35 +5,36 @@ const VEHICLES = require("../data/vehicles.dataset.js");
 const { normalizeText, detectPlate, detectVIN, detectYear, detectEngine } = require('../data/patterns.dataset');
 const PARTS = require('../data/parts.dataset');
 
+/**
+ * Normaliza una palabra para comparaciones flexibles
+ */
+function normalizeToken(str = "") {
+  return normalizeText(str)
+    .replace(/\s+/g, "")
+    .toUpperCase();
+}
 
 /**
  * Detecta marca usando aliases y tolerancia básica
  */
 function detectBrand(cleanText) {
-
-  const text = normalizeText(cleanText);
-  const words = text.split(" ");
+  const text = normalizeToken(cleanText);
 
   for (const brand of VEHICLES) {
+    const brandName = normalizeToken(brand.brand);
 
-    const brandName = normalizeText(brand.brand);
-
-    // match directo marca
-    if (words.includes(brandName)) {
+    // Match directo marca
+    if (text.includes(brandName)) {
       return brand.brand;
     }
 
-    // match por alias
+    // Match por alias
     for (const alias of brand.aliases || []) {
-
-      const a = normalizeText(alias);
-
-      if (words.includes(a)) {
+      const a = normalizeToken(alias);
+      if (text.includes(a)) {
         return brand.brand;
       }
-
     }
-
   }
 
   return null;
@@ -43,89 +44,27 @@ function detectBrand(cleanText) {
  * Detecta modelo dentro de la marca encontrada
  */
 function detectModel(cleanText, detectedBrand) {
+  if (!detectedBrand) return null;
 
-  const text = normalizeText(cleanText);
-  const words = text.split(" ");
+  const text = normalizeToken(cleanText);
+  const brand = VEHICLES.find(b => b.brand === detectedBrand);
+  if (!brand) return null;
 
-  // si hay marca detectada
-  if (detectedBrand) {
-
-    const brand = VEHICLES.find(b => b.brand === detectedBrand);
-    if (!brand) return null;
-
-    for (const model of brand.models || []) {
-
-      const m = normalizeText(model);
-
-      if (text.includes(m)) {
-        return model;
-      }
-
+  for (const model of brand.models || []) {
+    const m = normalizeToken(model);
+    if (text.includes(m)) {
+      return model;
     }
 
-  } 
-  else {
-
-    // buscar modelo en todas las marcas
-    for (const brand of VEHICLES) {
-
-      for (const model of brand.models || []) {
-
-        const m = normalizeText(model);
-
-        if (words.includes(m)) {
-          return model;
-        }
-
-      }
-
+    // tolerancia básica: primeras 5 letras
+    if (m.length >= 5 && text.includes(m.slice(0, 5))) {
+      return model;
     }
-
   }
 
   return null;
 }
-function expandTokens(text) {
 
-  const words = expandTokens(text);
-  const expanded = [...words];
-
-  for (const w of words) {
-
-    const split = w.match(/^([A-Z]+)(\d+[A-Z]*)$/);
-
-    if (split) {
-      expanded.push(split[1]);
-      expanded.push(split[2]);
-    }
-
-  }
-
-  return expanded;
-}
-/**
- * Infiere la marca a partir del modelo
- */
-function inferBrandFromModel(model) {
-
-  if (!model) return null;
-
-  const normalizedModel = normalizeText(model);
-
-  for (const brand of VEHICLES) {
-
-    for (const m of brand.models || []) {
-
-      if (normalizeText(m) === normalizedModel) {
-        return brand.brand;
-      }
-
-    }
-
-  }
-
-  return null;
-}
 /**
  * Limpia el texto eliminando datos detectados
  */
@@ -165,13 +104,8 @@ function parseWhatsappMessage(message = "") {
 
   const plate = detectPlate(message);
   const vin = detectVIN(message);
-let brand = detectBrand(normalized);
-let model = detectModel(normalized, brand);
-
-// inferir marca si no existe pero el modelo sí
-if (!brand && model) {
-  brand = inferBrandFromModel(model);
-}
+  const brand = detectBrand(normalized);
+  const model = detectModel(normalized, brand);
   const year = detectYear(message);
   const engine = detectEngine(message);
 
