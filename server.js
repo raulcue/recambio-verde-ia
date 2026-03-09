@@ -10,7 +10,8 @@ const bcrypt = require('bcryptjs');
 
 // 🧠 WhatsApp Intelligent Parser
 const { parseWhatsappMessage } = require('./services/whatsappParser.js');
-
+// 🤖 WhatsApp Conversation Engine
+const { processMessage, clearSession } = require('./services/whatsappConversationEngine.js');
 // =======================
 // INYECCIÓN QUIRÚRGICA #1
 // =======================
@@ -253,6 +254,38 @@ Object.entries(rutasHTML).forEach(([ruta, archivo]) => {
 // ============================================================================
 // RUTAS API
 // ============================================================================
+// ============================================================================
+// CONFIGURACIÓN WHATSAPP
+// ============================================================================
+app.post('/api/config/whatsapp', async (req, res) => {
+
+  const { numero } = req.body;
+
+  if (!numero) {
+    return res.status(400).json({ error: 'Número requerido' });
+  }
+
+  try {
+
+    await query(`
+      INSERT INTO configuracion (clave, valor)
+      VALUES ('whatsapp_receiver', $1)
+      ON CONFLICT (clave)
+      DO UPDATE SET valor = $1
+    `, [numero]);
+
+    console.log('📲 WhatsApp receptor actualizado:', numero);
+
+    res.json({ success: true });
+
+  } catch (err) {
+
+    console.error('❌ Error guardando WhatsApp:', err);
+    res.status(500).json({ error: err.message });
+
+  }
+
+});
 // =======================
 // 🔔 INYECCIÓN QUIRÚRGICA #3
 // WHATSAPP AUTOMATION CORE
@@ -262,8 +295,6 @@ Object.entries(rutasHTML).forEach(([ruta, archivo]) => {
 let whatsappNotifications = [];
 let whatsappCounter = 0;
 
-// Teléfono receptor oficial (sandbox / pruebas)
-const WHATSAPP_RECEIVER_NUMBER = '+971523241001';
 
 // Normalizar teléfonos para comparar
 function normalizePhone(phone) {
@@ -271,7 +302,16 @@ function normalizePhone(phone) {
   return phone.replace(/\s+/g, '').replace(/^\+/, '');
 }
 
+// Obtener número WhatsApp receptor desde configuración
+async function getWhatsappReceiver() {
 
+  const result = await query(
+    "SELECT valor FROM configuracion WHERE clave = 'whatsapp_receiver'"
+  );
+
+  return result.rows[0]?.valor || null;
+
+}
 
 // ============================================================================
 // 📩 WEBHOOK SIMULADO PARA RECIBIR WHATSAPP
@@ -290,24 +330,26 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
       return res.status(400).json({ error: 'Payload incompleto' });
     }
 
-    // Verificar que llega al número correcto
-    if (normalizePhone(to) !== normalizePhone(WHATSAPP_RECEIVER_NUMBER)) {
-      console.log('⚠️ WhatsApp ignorado: número receptor incorrecto');
-      return res.json({ ignored: true });
-    }
+// Verificar que llega al número correcto
+const receiverNumber = await getWhatsappReceiver();
 
-    // Buscar taller por teléfono
-    const phoneNormalized = normalizePhone(from);
+if (!receiverNumber || normalizePhone(to.replace('whatsapp:', '')) !== normalizePhone(receiverNumber)) {
+  console.log('⚠️ WhatsApp ignorado: número receptor incorrecto');
+  return res.json({ ignored: true });
+}
 
-    const tallerResult = await query(`
-      SELECT id, nombre_taller, telefono_whatsapp
-      FROM usuarios
-      WHERE telefono_whatsapp IS NOT NULL
-    `);
+// Buscar taller por teléfono
+const phoneNormalized = normalizePhone(from);
 
-    const taller = tallerResult.rows.find(u =>
-      normalizePhone(u.telefono_whatsapp) === phoneNormalized
-    );
+const tallerResult = await query(`
+  SELECT id, nombre_taller, telefono_whatsapp
+  FROM usuarios
+  WHERE telefono_whatsapp IS NOT NULL
+`);
+
+const taller = tallerResult.rows.find(u =>
+  normalizePhone(u.telefono_whatsapp) === phoneNormalized
+);
 
     if (!taller) {
       console.log('❌ Taller no encontrado para teléfono:', from);
@@ -317,10 +359,34 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
     console.log('✅ Taller detectado:', taller.nombre_taller);
 
     // Inferir datos desde el mensaje
-    const parsed = parseWhatsappMessage(message);
+const parsed = parseWhatsappMessage(message);
 
-    const numero_pedido = `WA-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+// Procesar conversación
+const conversation = processMessage(from, parsed, message);
 
+console.log("🧠 Conversation result:", conversation);
+
+// Si el sistema necesita más datos → responder y terminar
+if (conversation.type === "ask" || conversation.type === "ask_year") {
+  return res.json({
+    success: true,
+    reply: conversation.message
+  });
+}
+
+// Si aún no hay confirmación → responder
+if (conversation.type !== "confirm") {
+  return res.json({
+    success: true,
+    reply: conversation.message
+  });
+}
+
+// ====================================================================
+// Crear pedido SOLO cuando la conversación está confirmada
+// ====================================================================
+
+const numero_pedido = `WA-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     // Crear pedido mínimo
     const insertResult = await query(`
       INSERT INTO pedidos (
@@ -356,7 +422,8 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
 ]);
 
     const pedidoCreado = insertResult.rows[0];
-
+// cerrar conversación WhatsApp
+clearSession(from);
     // Registrar notificación en memoria
     whatsappCounter++;
     whatsappNotifications.push({
