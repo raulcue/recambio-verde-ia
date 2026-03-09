@@ -21,6 +21,20 @@ const PLATE_OLD = /\b([A-Z]{1,2})[-\s]?(\d{3,4})[-\s]?([A-Z]{1,2})\b/i;
 const VIN = /\b([A-HJ-NPR-Z0-9]{17})\b/i;
 
 // =============================
+// 📅 AÑO VEHÍCULO
+// =============================
+
+// Detecta años entre 1950 y 2035
+const YEAR = /\b(19[5-9]\d|20[0-3]\d)\b/;
+
+
+// =============================
+// ⚙️ MOTOR / MOTORIZACIÓN
+// =============================
+
+// Ejemplos: 2.0 TDI, 1.6 HDI, 320D, 1.9 JTD
+const ENGINE = /\b(\d\.\d\s?(TDI|HDI|CDI|JTD|TSI|TFSI|D|I|DCI))\b|\b\d{3}[A-Z]\b/i;
+// =============================
 // 🧹 NORMALIZACIÓN TEXTO
 // =============================
 
@@ -59,9 +73,22 @@ function detectVIN(text) {
     const match = clean.match(VIN);
     return match ? match[1] : null;
 }
+function detectYear(text) {
+    const clean = normalizeText(text);
+    const match = clean.match(YEAR);
+    return match ? parseInt(match[1]) : null;
+}
+
+function detectEngine(text) {
+    const clean = normalizeText(text);
+    const match = clean.match(ENGINE);
+    return match ? match[0] : null;
+}
 
 module.exports = {
     normalizeText,
     detectPlate,
-    detectVIN
+    detectVIN,
+    detectYear,
+    detectEngine
 };
