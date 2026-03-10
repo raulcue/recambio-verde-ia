@@ -79,3 +79,17 @@
 2026/03/10-00:11:38.176 9ca65 Generated table #33@1: 38038 keys, 1218728 bytes
 2026/03/10-00:11:38.176 9ca65 Compacted 1@1 + 2@2 files => 3418796 bytes
 2026/03/10-00:11:38.179 9ca65 compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/03/10-17:59:41.650 9ca65 Level-0 table #35: started
+2026/03/10-17:59:41.672 9ca65 Level-0 table #35: 1318879 bytes OK
+2026/03/10-17:59:41.678 9ca65 Delete type=2 #29
+2026/03/10-17:59:41.685 9ca65 Delete type=2 #28
+2026/03/10-17:59:41.686 9ca65 Delete type=2 #31
+2026/03/10-17:59:41.686 9ca65 Delete type=0 #30
+2026/03/10-18:11:57.681 9ca65 Compacting 1@1 + 2@2 files
+2026/03/10-18:11:57.726 9ca65 Generated table #36@1: 44682 keys, 2206143 bytes
+2026/03/10-18:11:57.744 9ca65 Generated table #37@1: 40813 keys, 1461003 bytes
+2026/03/10-18:11:57.744 9ca65 Compacted 1@1 + 2@2 files => 3667146 bytes
+2026/03/10-18:11:57.748 9ca65 compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/03/10-18:11:57.748 9ca65 Delete type=2 #35
+2026/03/10-18:11:57.748 9ca65 Delete type=2 #32
+2026/03/10-18:11:57.749 9ca65 Delete type=2 #33

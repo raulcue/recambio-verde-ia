@@ -1,2 +1,5 @@
 2026/03/10-00:05:33.301 9cae5 Creating DB /Users/raulcueherreria/Documents/GitHub/recambio-verde-ia/.wwebjs_auth/session/Default/Local Storage/leveldb since it was missing.
 2026/03/10-00:05:33.305 9cae5 Reusing MANIFEST /Users/raulcueherreria/Documents/GitHub/recambio-verde-ia/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/03/10-14:48:44.804 9caea Level-0 table #5: started
+2026/03/10-14:48:44.811 9caea Level-0 table #5: 18482 bytes OK
+2026/03/10-14:48:44.813 9caea Delete type=0 #3
