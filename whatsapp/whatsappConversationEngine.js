@@ -1,46 +1,94 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
-const axios = require('axios');
+const sessions = {};
 
-const client = new Client({
-    authStrategy: new LocalAuth()
-});
+function processMessage(phone, parsed, originalMessage) {
 
-client.on('qr', qr => {
-    console.log('Escanea este QR con WhatsApp:');
-    qrcode.generate(qr, { small: true });
-});
+    if (!sessions[phone]) {
+        sessions[phone] = {
+            part: parsed.part || null,
+            brand: parsed.brand || null,
+            model: parsed.model || null,
+            year: parsed.year || null
+        };
+    }
 
-client.on('ready', () => {
-    console.log('✅ WhatsApp conectado');
-});
+    const s = sessions[phone];
 
-client.on('message', async message => {
+    if (!s.part && parsed.part) s.part = parsed.part;
+    if (!s.brand && parsed.brand) s.brand = parsed.brand;
+    if (!s.model && parsed.model) s.model = parsed.model;
+    if (!s.year && parsed.year) s.year = parsed.year;
 
-    const from = message.from.replace('@c.us','');
-    const text = message.body;
+    // falta pieza
+    if (!s.part) {
+        return {
+            type: "ask",
+            message: "¿Qué pieza necesitas?"
+        };
+    }
 
-    console.log("📩 Mensaje recibido:", from, text);
+    // falta marca
+    if (!s.brand) {
+        return {
+            type: "ask",
+            message: "¿De qué marca es el coche?"
+        };
+    }
 
-    try {
+    // falta modelo
+    if (!s.model) {
+        return {
+            type: "ask",
+            message: "¿Qué modelo es?"
+        };
+    }
 
-        await axios.post(
-            "https://recambio-verde-iax.onrender.com/api/whatsapp/inbound",
-            {
-                from: "+" + from,
-                to: "+971523241001",
-                message: text
-            }
-        );
+    // falta año
+    if (!s.year) {
+        return {
+            type: "ask_year",
+            message: "¿De qué año es el coche?"
+        };
+    }
 
-        console.log("📤 Enviado al backend");
+    // detectar confirmación del usuario
+    if (originalMessage) {
 
-    } catch(err) {
+        const txt = originalMessage.toLowerCase();
 
-        console.error("Error enviando al backend", err.message);
+        if (
+            txt.includes("si") ||
+            txt.includes("sí") ||
+            txt.includes("ok") ||
+            txt.includes("vale") ||
+            txt.includes("pedido")
+        ) {
+            return {
+                type: "confirm"
+            };
+        }
 
     }
 
-});
+    // mostrar resumen antes de confirmar
+    return {
+        type: "confirm",
+        message:
+`He detectado:
 
-client.initialize();
+Pieza: ${s.part}
+Marca: ${s.brand}
+Modelo: ${s.model}
+Año: ${s.year}
+
+Escribe "pedido" para confirmar`
+    };
+}
+
+function clearSession(phone) {
+    delete sessions[phone];
+}
+
+module.exports = {
+    processMessage,
+    clearSession
+};
