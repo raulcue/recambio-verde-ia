@@ -22,43 +22,69 @@ client.on('message', async msg => {
 
     try {
 
-        // ignorar grupos
-        if (msg.from.includes('@g.us')) return;
+    // ignorar grupos
+    if (msg.from.includes('@g.us')) return;
 
-        const phone = msg.from.replace('@c.us', '');
+    const phone = msg.from.replace('@c.us', '');
 
-        console.log('📩 Mensaje recibido:', phone, msg.body);
+    console.log('📩 Mensaje recibido:', phone);
 
-        const response = await axios.post(
-            'https://recambio-verde-iax.onrender.com/api/whatsapp/inbound',
-            {
-                from: `+${phone}`,
-                to: '+971523241001',
-                message: msg.body
-            }
-        );
+    let payload = {
+        from: `+${phone}`,
+        to: '+971523241001'
+    };
 
-        // respuesta conversacional
-        if (response.data.reply) {
-            await msg.reply(response.data.reply);
-        }
+    // =========================
+    // MENSAJE DE TEXTO
+    // =========================
+    if (!msg.hasMedia) {
 
-        // pedido creado
-        if (response.data.pedido) {
-            await msg.reply(
-                `✅ Pedido creado\nNúmero: ${response.data.pedido.numero_pedido}`
-            );
-        }
+        console.log('💬 Texto:', msg.body);
 
-    } catch (error) {
-
-        console.error('❌ Error:', error.message);
-
-        await msg.reply(
-            '⚠️ Error procesando el mensaje'
-        );
+        payload.message = msg.body;
 
     }
+
+    // =========================
+    // MENSAJE CON IMAGEN
+    // =========================
+    if (msg.hasMedia) {
+
+        console.log('📷 Imagen recibida');
+
+        const media = await msg.downloadMedia();
+
+        payload.image = media.data;
+        payload.mimetype = media.mimetype;
+
+    }
+
+const response = await axios.post(
+    'https://recambio-verde-iax.onrender.com/api/whatsapp/inbound',
+    payload
+);
+
+// respuesta conversacional
+if (response.data.reply) {
+    await msg.reply(response.data.reply);
+}
+
+// pedido creado
+if (response.data.pedido) {
+    await msg.reply(
+        `✅ Pedido creado\nNúmero: ${response.data.pedido.numero_pedido}`
+    );
+}
+
+} catch (error) {
+
+    console.error('❌ Error:', error.message);
+
+    await msg.reply(
+        '⚠️ Error procesando el mensaje'
+    );
+
+}
 
 });
 

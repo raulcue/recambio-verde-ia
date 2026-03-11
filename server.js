@@ -325,68 +325,89 @@ async function getWhatsappReceiver() {
 }
 
 // ============================================================================
-// 📩 WEBHOOK SIMULADO PARA RECIBIR WHATSAPP
+// 📩 WEBHOOK PARA RECIBIR WHATSAPP
 // ============================================================================
 app.post('/api/whatsapp/inbound', async (req, res) => {
   try {
+
+    // ========================================================================
+    // DATOS RECIBIDOS DESDE WHATSAPP BRIDGE
+    // ========================================================================
     const {
       from,       // número que envía (taller)
       to,         // número receptor
-      message     // texto del mensaje
+      message,    // texto del mensaje
+      image,      // imagen base64 (si envían foto)
+      mimetype    // tipo de archivo de la imagen
     } = req.body;
 
-    console.log('📩 WhatsApp inbound:', req.body);
+    console.log('📩 WhatsApp inbound:', {
+      from,
+      to,
+      hasMessage: !!message,
+      hasImage: !!image
+    });
 
-    if (!from || !to || !message) {
+    // ========================================================================
+    // VALIDACIÓN BÁSICA
+    // ========================================================================
+    if (!from || !to) {
       return res.status(400).json({ error: 'Payload incompleto' });
     }
 
-// Verificar que llega al número correcto
-const receiverNumber = await getWhatsappReceiver();
+    // ========================================================================
+    // VERIFICAR QUE EL MENSAJE LLEGA AL NÚMERO CORRECTO
+    // ========================================================================
+    const receiverNumber = await getWhatsappReceiver();
 
-if (!receiverNumber || normalizePhone(to.replace('whatsapp:', '')) !== normalizePhone(receiverNumber)) {
-  console.log('⚠️ WhatsApp ignorado: número receptor incorrecto');
-  return res.json({ ignored: true });
-}
+    if (
+      !receiverNumber ||
+      normalizePhone(to.replace('whatsapp:', '')) !== normalizePhone(receiverNumber)
+    ) {
+      console.log('⚠️ WhatsApp ignorado: número receptor incorrecto');
+      return res.json({ ignored: true });
+    }
 
-// Buscar taller por teléfono
-const phoneNormalized = normalizePhone(from);
+    // ========================================================================
+    // BUSCAR TALLER POR TELÉFONO
+    // ========================================================================
+    const phoneNormalized = normalizePhone(from);
 
-const tallerResult = await query(`
-  SELECT
-    id,
-    nombre_taller,
-    telefono_whatsapp,
-    telefono_whatsapp_2,
-    telefono_whatsapp_3,
-    telefono_whatsapp_4,
-    telefono_whatsapp_5,
-    telefono_whatsapp_6,
-    telefono_whatsapp_7,
-    telefono_whatsapp_8,
-    telefono_whatsapp_9,
-    telefono_whatsapp_10
-  FROM usuarios
-`);
+    const tallerResult = await query(`
+      SELECT
+        id,
+        nombre_taller,
+        telefono_whatsapp,
+        telefono_whatsapp_2,
+        telefono_whatsapp_3,
+        telefono_whatsapp_4,
+        telefono_whatsapp_5,
+        telefono_whatsapp_6,
+        telefono_whatsapp_7,
+        telefono_whatsapp_8,
+        telefono_whatsapp_9,
+        telefono_whatsapp_10
+      FROM usuarios
+    `);
 
-const taller = tallerResult.rows.find(u => {
+    const taller = tallerResult.rows.find(u => {
 
-  const phones = [
-    u.telefono_whatsapp,
-    u.telefono_whatsapp_2,
-    u.telefono_whatsapp_3,
-    u.telefono_whatsapp_4,
-    u.telefono_whatsapp_5,
-    u.telefono_whatsapp_6,
-    u.telefono_whatsapp_7,
-    u.telefono_whatsapp_8,
-    u.telefono_whatsapp_9,
-    u.telefono_whatsapp_10
-  ];
+      const phones = [
+        u.telefono_whatsapp,
+        u.telefono_whatsapp_2,
+        u.telefono_whatsapp_3,
+        u.telefono_whatsapp_4,
+        u.telefono_whatsapp_5,
+        u.telefono_whatsapp_6,
+        u.telefono_whatsapp_7,
+        u.telefono_whatsapp_8,
+        u.telefono_whatsapp_9,
+        u.telefono_whatsapp_10
+      ];
 
-  return phones.some(p => normalizePhone(p) === phoneNormalized);
+      return phones.some(p => normalizePhone(p) === phoneNormalized);
 
-});
+    });
 
     if (!taller) {
       console.log('❌ Taller no encontrado para teléfono:', from);
@@ -395,29 +416,71 @@ const taller = tallerResult.rows.find(u => {
 
     console.log('✅ Taller detectado:', taller.nombre_taller);
 
-    // Inferir datos desde el mensaje
-const parsed = parseWhatsappMessage(message);
+    // ========================================================================
+    // PARSEAR MENSAJE O IMAGEN
+    // ========================================================================
 
-// Procesar conversación
-const conversation = processMessage(from, parsed, message);
+    let parsed = null;
 
-console.log("🧠 Conversation result:", conversation);
+    // -----------------------------
+    // 📷 CASO 1: FOTO DE FICHA TÉCNICA
+    // -----------------------------
+    if (image) {
 
-// Si el sistema necesita más datos → responder y terminar
-if (conversation.type === "ask" || conversation.type === "ask_year") {
-  return res.json({
-    success: true,
-    reply: conversation.message
-  });
-}
+      console.log("📷 Imagen recibida → procesando OCR");
 
-// Si aún no hay confirmación → responder
-if (conversation.type !== "confirm") {
-  return res.json({
-    success: true,
-    reply: conversation.message
-  });
-}
+      const { parseVehicleDocument } = require('./services/vehicleDocParser.js');
+
+      const ocrData = await parseVehicleDocument(image, mimetype);
+
+      console.log("📄 OCR detectado:", ocrData);
+
+      parsed = {
+        brand: ocrData.brand || null,
+        model: ocrData.model || null,
+        year: ocrData.year || null,
+        vin: ocrData.vin || null,
+        extractedPiece: null,
+        original: "OCR image"
+      };
+
+    }
+
+    // -----------------------------
+    // 💬 CASO 2: MENSAJE DE TEXTO
+    // -----------------------------
+    else {
+
+      parsed = parseWhatsappMessage(message);
+
+    }
+
+    // ========================================================================
+    // PROCESAR CONVERSACIÓN INTELIGENTE
+    // ========================================================================
+    const conversation = processMessage(from, parsed, message);
+
+    console.log("🧠 Conversation result:", conversation);
+
+    // ========================================================================
+    // SI FALTAN DATOS → PREGUNTAR
+    // ========================================================================
+    if (conversation.type === "ask" || conversation.type === "ask_year") {
+      return res.json({
+        success: true,
+        reply: conversation.message
+      });
+    }
+
+    // ========================================================================
+    // SI AÚN NO CONFIRMA → RESPONDER
+    // ========================================================================
+    if (conversation.type !== "confirm") {
+      return res.json({
+        success: true,
+        reply: conversation.message
+      });
+    }
 
 // ====================================================================
 // Crear pedido SOLO cuando la conversación está confirmada
