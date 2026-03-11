@@ -299,7 +299,18 @@ let whatsappCounter = 0;
 // Normalizar teléfonos para comparar
 function normalizePhone(phone) {
   if (!phone) return '';
-  return phone.replace(/\s+/g, '').replace(/^\+/, '');
+
+  let p = phone
+    .replace('whatsapp:', '')
+    .replace(/\s+/g, '')
+    .replace(/^\+/, '');
+
+  // Si viene con prefijo España 34 lo quitamos
+  if (p.startsWith('34') && p.length === 11) {
+    p = p.substring(2);
+  }
+
+  return p;
 }
 
 // Obtener número WhatsApp receptor desde configuración
