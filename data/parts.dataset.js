@@ -649,32 +649,32 @@ const PARTS = [
     ]
   },
 {
-  "id": 54,
-  "part": "caja de cambios",
-  "aliases": [
-    "caja de cambios",
-    "caja cambios",
-    "caja",
-    "gearbox",
-    "transmision",
-    "transmisión",
-    "caja cambios coche",
-    "caja cambios auto"
-  ]
-},
+    "id": 54,
+    "part": "caja de cambios",
+    "aliases": [
+      "caja de cambios",
+      "caja cambios",
+      "caja",
+      "gearbox",
+      "transmision",
+      "transmisión",
+      "caja cambios coche",
+      "caja cambios auto"
+    ]
+  },
 {
-  "id": 55,
-  "part": "caja de cambios automatica",
-  "aliases": [
-    "caja de cambios automatica",
-    "caja cambios automatica",
-    "caja automatica",
-    "caja automatica coche",
-    "caja automatica auto",
-    "transmision automatica",
-    "gearbox automatic"
-  ]
-}
+    "id": 55,
+    "part": "caja de cambios automatica",
+    "aliases": [
+      "caja de cambios automatica",
+      "caja cambios automatica",
+      "caja automatica",
+      "caja automatica coche",
+      "caja automatica auto",
+      "transmision automatica",
+      "gearbox automatic"
+    ]
+  },
   {
     "id": 56,
     "part": "embrague",
