@@ -524,13 +524,15 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
     }
 
     // -----------------------------
-    // 💬 CASO 2: MENSAJE DE TEXTO
-    // -----------------------------
-    else {
+// 💬 CASO 2: MENSAJE DE TEXTO
+// -----------------------------
+else {
 
-      parsed = parseWhatsappMessage(message);
+  parsed = parseWhatsappMessage(message);
 
-    }
+  console.log("📄 PARSED RESULT:", parsed);
+
+}
 
     // ========================================================================
     // PROCESAR CONVERSACIÓN INTELIGENTE
