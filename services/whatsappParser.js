@@ -4,7 +4,19 @@ const VEHICLES = require("../data/vehicles.dataset.js");
 
 const { normalizeText, detectPlate, detectVIN, detectYear, detectEngine } = require('../data/patterns.dataset');
 const PARTS = require('../data/parts.dataset');
+// ============================================================
+// NORMALIZACIÓN EXTRA (para NLP)
+// ============================================================
 
+function normalize(text) {
+  return text
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 /**
  * Detecta marca usando aliases y tolerancia básica
@@ -38,7 +50,31 @@ function detectBrand(cleanText) {
 
   return null;
 }
+// ============================================================
+// DETECTAR PIEZA
+// ============================================================
 
+function detectPart(cleanText) {
+
+  const text = normalize(cleanText);
+
+  for (const part of PARTS) {
+
+    for (const alias of part.aliases || []) {
+
+      const a = normalize(alias);
+
+      if (text.includes(a)) {
+        return part.name;
+      }
+
+    }
+
+  }
+
+  return null;
+
+}
 /**
  * Detecta modelo dentro de la marca encontrada
  */
@@ -85,24 +121,8 @@ function detectModel(cleanText, detectedBrand) {
 
   return null;
 }
-function expandTokens(text) {
 
-  const words = expandTokens(text);
-  const expanded = [...words];
 
-  for (const w of words) {
-
-    const split = w.match(/^([A-Z]+)(\d+[A-Z]*)$/);
-
-    if (split) {
-      expanded.push(split[1]);
-      expanded.push(split[2]);
-    }
-
-  }
-
-  return expanded;
-}
 /**
  * Infiere la marca a partir del modelo
  */
@@ -126,24 +146,7 @@ function inferBrandFromModel(model) {
 
   return null;
 }
-/**
- * Limpia el texto eliminando datos detectados
- */
- function detectPart(text) {
-  const clean = normalizeText(text);
 
-  for (const p of PARTS) {
-    for (const alias of p.aliases) {
-      const a = normalizeText(alias);
-
-      if (clean.includes(a)) {
-        return p.part;
-      }
-    }
-  }
-
-  return null;
-}
 function extractPieceText(original, plate, vin, brand, model) {
   let txt = original;
 
