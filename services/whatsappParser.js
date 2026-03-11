@@ -72,7 +72,7 @@ function detectPart(text) {
         // preferir alias más largos (ej: "caja de cambios" > "caja")
         if (a.length > longestAlias) {
           longestAlias = a.length;
-          bestMatch = part.name;
+          bestMatch = part.part;
         }
 
       }
