@@ -648,30 +648,33 @@ const PARTS = [
       "sensor presion auto"
     ]
   },
-  {
-    "id": 54,
-    "part": "caja cambios",
-    "aliases": [
-      "caja cambios",
-      "caja cambios",
-      "caja cambios coche",
-      "caja cambios coche",
-      "caja cambios auto",
-      "caja cambios auto"
-    ]
-  },
-  {
-    "id": 55,
-    "part": "caja cambios automatica",
-    "aliases": [
-      "caja cambios automatica",
-      "caja cambios automatica",
-      "caja cambios automatica coche",
-      "caja cambios automatica coche",
-      "caja cambios automatica auto",
-      "caja cambios automatica auto"
-    ]
-  },
+{
+  "id": 54,
+  "part": "caja de cambios",
+  "aliases": [
+    "caja de cambios",
+    "caja cambios",
+    "caja",
+    "gearbox",
+    "transmision",
+    "transmisión",
+    "caja cambios coche",
+    "caja cambios auto"
+  ]
+},
+{
+  "id": 55,
+  "part": "caja de cambios automatica",
+  "aliases": [
+    "caja de cambios automatica",
+    "caja cambios automatica",
+    "caja automatica",
+    "caja automatica coche",
+    "caja automatica auto",
+    "transmision automatica",
+    "gearbox automatic"
+  ]
+}
   {
     "id": 56,
     "part": "embrague",
