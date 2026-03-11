@@ -7,6 +7,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const axios = require('axios');
 
 // 🧠 WhatsApp Intelligent Parser
 const { parseWhatsappMessage } = require('./services/whatsappParser.js');
@@ -182,6 +183,75 @@ function servirArchivo(res, filename) {
   `);
 }
 // ============================================================================
+// 📲 ENVIAR WHATSAPP POR CAMBIO DE ESTADO
+// ============================================================================
+async function sendPedidoStatusWhatsapp(pedido, estadoAnterior, estadoNuevo) {
+
+  try {
+
+    if (!pedido.usuario_id) return;
+
+    const tallerResult = await query(
+      `SELECT telefono_whatsapp
+       FROM usuarios
+       WHERE id=$1`,
+      [pedido.usuario_id]
+    );
+
+    const telefono = tallerResult.rows[0]?.telefono_whatsapp;
+
+    if (!telefono) return;
+
+    let mensaje = null;
+
+    if (estadoNuevo === "desguace") {
+      mensaje = `🔧 Pedido ${pedido.numero_pedido}
+
+La pieza "${pedido.pieza}" está siendo procesada en el desguace.`;
+    }
+
+    if (estadoNuevo === "listo") {
+      mensaje = `✅ Pedido ${pedido.numero_pedido}
+
+La pieza "${pedido.pieza}" ha sido localizada y verificada.`;
+    }
+
+    if (estadoNuevo === "transito") {
+      mensaje = `🚚 Pedido ${pedido.numero_pedido}
+
+La pieza "${pedido.pieza}" está en tránsito.`;
+    }
+
+    if (estadoNuevo === "finalizado") {
+      mensaje = `📦 Pedido ${pedido.numero_pedido}
+
+La pieza "${pedido.pieza}" ha sido entregada.`;
+    }
+
+    if (estadoNuevo === "incidencia") {
+      mensaje = `⚠️ Pedido ${pedido.numero_pedido}
+
+Se ha detectado una incidencia con tu pedido.`;
+    }
+
+    if (!mensaje) return;
+
+    // guardar en cola
+    whatsappOutgoing.push({
+      to: telefono,
+      message: mensaje
+    });
+
+    console.log("📲 WhatsApp queued:", telefono);
+
+  } catch (err) {
+
+    console.error("⚠️ Error preparando WhatsApp:", err.message);
+
+  }
+
+}
+// ============================================================================
 // 🧾 SISTEMA DE AUDITORÍA (LOGS)
 // ============================================================================
 
@@ -294,6 +364,8 @@ app.post('/api/config/whatsapp', async (req, res) => {
 // Memoria de notificaciones WhatsApp (simple en RAM)
 let whatsappNotifications = [];
 let whatsappCounter = 0;
+// Cola de mensajes salientes
+let whatsappOutgoing = [];
 
 
 // Normalizar teléfonos para comparar
@@ -505,7 +577,7 @@ const insertResult = await query(`
   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, CURRENT_TIMESTAMP)
   RETURNING id
 `, [
-  parsed.extractedPiece || message.substring(0, 80),
+  parsed.extractedPiece || (message ? message.substring(0, 80) : "pieza no especificada"),
   parsed.brand || '',
   parsed.model || '',
   parsed.plate || null,
@@ -614,6 +686,21 @@ app.post('/api/whatsapp/reset', (req, res) => {
   whatsappCounter = 0;
   whatsappNotifications = [];
   res.json({ success: true });
+});
+// ============================================================================
+// 📤 MENSAJES WHATSAPP SALIENTES (consultado por el bridge)
+// ============================================================================
+app.get('/api/whatsapp/outgoing', (req, res) => {
+
+  const messages = [...whatsappOutgoing];
+
+  // limpiar cola después de enviarla
+  whatsappOutgoing = [];
+
+  res.json({
+    messages
+  });
+
 });
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -1201,30 +1288,96 @@ app.delete('/api/pedidos/:id', async (req, res) => {
 // ============================================================================
 app.put('/api/pedidos/:id/estado', async (req, res) => {
   try {
+
     const { id } = req.params;
     const { estado } = req.body;
 
+    // 1️⃣ Obtener estado anterior
+    const pedidoActual = await query(
+      'SELECT * FROM pedidos WHERE id = $1',
+      [id]
+    );
+
+    if (pedidoActual.rows.length === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    const pedido = pedidoActual.rows[0];
+    const estadoAnterior = pedido.estado;
+
+    // 2️⃣ Actualizar estado
     const result = await query(
       'UPDATE pedidos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       [estado, id]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Pedido no encontrado' });
+    const pedidoActualizado = result.rows[0];
+
+    // 3️⃣ Si cambia el estado → enviar WhatsApp
+    if (estadoAnterior !== estado) {
+
+      await sendPedidoStatusWhatsapp(
+        pedidoActualizado,
+        estadoAnterior,
+        estado
+      );
+
     }
 
     res.json({
       success: true,
-      pedido: result.rows[0]
+      pedido: pedidoActualizado
     });
 
   } catch (error) {
+
     console.error('❌ Error actualizando estado:', error);
-    res.status(500).json({ error: error.message });
+
+    res.status(500).json({
+      error: error.message
+    });
+
   }
 });
 
+// ============================================================================
+// 📤 ENVIAR MENSAJE WHATSAPP DESDE EL SISTEMA (cola)
+// ============================================================================
+app.post('/api/whatsapp/send', async (req, res) => {
 
+  try {
+
+    const { to, message } = req.body;
+
+    if (!to || !message) {
+      return res.status(400).json({
+        error: "Missing 'to' or 'message'"
+      });
+    }
+
+    console.log("📤 WhatsApp queued:", { to, message });
+
+    // añadir a cola
+    whatsappOutgoing.push({
+      to,
+      message
+    });
+
+    res.json({
+      success: true
+    });
+
+  } catch (error) {
+
+    console.error("❌ Error preparando WhatsApp:", error.message);
+
+    res.status(500).json({
+      error: error.message
+    });
+
+  }
+
+});
 // ============================================================================
 // 📦 CREAR PEDIDO (panel / API)
 // ============================================================================
