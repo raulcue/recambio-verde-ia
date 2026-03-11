@@ -187,18 +187,23 @@ function servirArchivo(res, filename) {
 // ============================================================================
 async function sendPedidoStatusWhatsapp(pedido, estadoAnterior, estadoNuevo) {
 
+  if (estadoAnterior === estadoNuevo) return;
+
   try {
+
 
     if (!pedido.usuario_id) return;
 
     const tallerResult = await query(
-      `SELECT telefono_whatsapp
-       FROM usuarios
-       WHERE id=$1`,
-      [pedido.usuario_id]
-    );
+  `SELECT telefono_whatsapp
+   FROM usuarios
+   WHERE id=$1`,
+  [pedido.usuario_id]
+);
 
-    const telefono = tallerResult.rows[0]?.telefono_whatsapp;
+if (!tallerResult.rows.length) return;
+
+const telefono = tallerResult.rows[0].telefono_whatsapp;
 
     if (!telefono) return;
 
@@ -216,7 +221,7 @@ La pieza "${pedido.pieza}" está siendo procesada en el desguace.`;
 La pieza "${pedido.pieza}" ha sido localizada y verificada.`;
     }
 
-    if (estadoNuevo === "transito") {
+    if (estadoNuevo === "transito" || estadoNuevo === "tránsito") {
       mensaje = `🚚 Pedido ${pedido.numero_pedido}
 
 La pieza "${pedido.pieza}" está en tránsito.`;
