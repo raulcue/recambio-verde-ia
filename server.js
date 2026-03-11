@@ -407,15 +407,12 @@ async function getWhatsappReceiver() {
 app.post('/api/whatsapp/inbound', async (req, res) => {
   try {
 
-    // ========================================================================
-    // DATOS RECIBIDOS DESDE WHATSAPP BRIDGE
-    // ========================================================================
     const {
-      from,       // número que envía (taller)
-      to,         // número receptor
-      message,    // texto del mensaje
-      image,      // imagen base64 (si envían foto)
-      mimetype    // tipo de archivo de la imagen
+      from,
+      to,
+      message,
+      image,
+      mimetype
     } = req.body;
 
     console.log('📩 WhatsApp inbound:', {
@@ -425,16 +422,10 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
       hasImage: !!image
     });
 
-    // ========================================================================
-    // VALIDACIÓN BÁSICA
-    // ========================================================================
     if (!from || !to) {
       return res.status(400).json({ error: 'Payload incompleto' });
     }
 
-    // ========================================================================
-    // VERIFICAR QUE EL MENSAJE LLEGA AL NÚMERO CORRECTO
-    // ========================================================================
     const receiverNumber = await getWhatsappReceiver();
 
     if (
@@ -445,9 +436,6 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
       return res.json({ ignored: true });
     }
 
-    // ========================================================================
-    // BUSCAR TALLER POR TELÉFONO
-    // ========================================================================
     const phoneNormalized = normalizePhone(from);
 
     const tallerResult = await query(`
@@ -493,15 +481,8 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
 
     console.log('✅ Taller detectado:', taller.nombre_taller);
 
-    // ========================================================================
-    // PARSEAR MENSAJE O IMAGEN
-    // ========================================================================
-
     let parsed = null;
 
-    // -----------------------------
-    // 📷 CASO 1: FOTO DE FICHA TÉCNICA
-    // -----------------------------
     if (image) {
 
       console.log("📷 Imagen recibida → procesando OCR");
@@ -509,8 +490,6 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
       const { parseVehicleDocument } = require('./services/vehicleDocParser.js');
 
       const ocrData = await parseVehicleDocument(image, mimetype);
-
-      console.log("📄 OCR detectado:", ocrData);
 
       parsed = {
         brand: ocrData.brand || null,
@@ -521,12 +500,7 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
         original: "OCR image"
       };
 
-    }
-
-    // -----------------------------
-    // 💬 CASO 2: MENSAJE DE TEXTO
-    // -----------------------------
-    else {
+    } else {
 
       parsed = parseWhatsappMessage(message);
 
@@ -534,16 +508,10 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
 
     }
 
-    // ========================================================================
-    // PROCESAR CONVERSACIÓN INTELIGENTE
-    // ========================================================================
     const conversation = processMessage(from, parsed, message);
 
     console.log("🧠 Conversation result:", conversation);
 
-    // ========================================================================
-    // SI FALTAN DATOS → PREGUNTAR
-    // ========================================================================
     if (conversation.type === "ask" || conversation.type === "ask_year") {
       return res.json({
         success: true,
@@ -551,9 +519,6 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
       });
     }
 
-    // ========================================================================
-    // SI AÚN NO CONFIRMA → RESPONDER
-    // ========================================================================
     if (conversation.type !== "confirm") {
       return res.json({
         success: true,
@@ -562,7 +527,7 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
     }
 
     // ====================================================================
-    // CREAR PEDIDO (FIX numero_pedido)
+    // CREAR PEDIDO
     // ====================================================================
 
     const numero_pedido = `RV-${Date.now()}`;
@@ -625,88 +590,12 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
     });
 
   } catch (error) {
+
     console.error('🔥 Error WhatsApp inbound:', error);
+
     res.status(500).json({ error: error.message });
+
   }
-});
-
-// ====================================================================
-// Crear pedido SOLO cuando la conversación está confirmada
-// ====================================================================
-
-// Crear pedido mínimo (sin numero_pedido todavía)
-const insertResult = await query(`
-  INSERT INTO pedidos (
-    pieza,
-    marca_coche,
-    modelo_coche,
-    matricula,
-    anio_coche,
-    bastidor,
-    estado,
-    usuario_id,
-    precio,
-    canal,
-    notas_tecnicas,
-    fecha_creacion
-  )
-  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, CURRENT_TIMESTAMP)
-  RETURNING id
-`, [
-  parsed.extractedPiece || (message ? message.substring(0, 80) : "pieza no especificada"),
-  parsed.brand || '',
-  parsed.model || '',
-  parsed.plate || null,
-  parsed.year || null,
-  parsed.vin || null,
-  'solicitud',
-  taller.id,
-  0,
-  'whatsapp',
-  parsed.original || message
-]);
-
-// Obtener ID real
-const pedidoId = insertResult.rows[0].id;
-
-// Generar número visible corto
-const numero_pedido = `RV-${pedidoId.toString().padStart(4, '0')}`;
-
-// Guardarlo en la BBDD
-await query(
-  `UPDATE pedidos SET numero_pedido = $1 WHERE id = $2`,
-  [numero_pedido, pedidoId]
-);
-
-// Objeto final para respuesta
-const pedidoCreado = {
-  id: pedidoId,
-  numero_pedido
-};
-
-// cerrar conversación WhatsApp
-clearSession(from);
-
-// Registrar notificación en memoria
-whatsappCounter++;
-whatsappNotifications.push({
-  id: pedidoId,
-  numero_pedido: numero_pedido,
-  taller: taller.nombre_taller,
-  mensaje: message,
-  timestamp: Date.now()
-});
-
-console.log('🟢 Pedido creado vía WhatsApp:', pedidoCreado);
-
-res.json({
-  success: true,
-  pedido: pedidoCreado
-});
-} catch (error) {
-  console.error('🔥 Error WhatsApp inbound:', error);
-  res.status(500).json({ error: error.message });
-}
 });
 // ============================================================================
 // 🧪 WHATSAPP PARSER TEST ENDPOINT
