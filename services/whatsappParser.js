@@ -63,13 +63,14 @@ function detectPart(text) {
 
   for (const part of PARTS) {
 
-    for (const alias of part.aliases || []) {
+    const aliases = (part.aliases || []).sort((a,b) => b.length - a.length);
+
+    for (const alias of aliases) {
 
       const a = normalize(alias);
 
       if (clean.includes(a)) {
 
-        // preferir alias más largos (ej: "caja de cambios" > "caja")
         if (a.length > longestAlias) {
           longestAlias = a.length;
           bestMatch = part.part;
