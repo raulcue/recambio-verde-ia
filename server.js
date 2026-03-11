@@ -524,15 +524,15 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
     }
 
     // -----------------------------
-// 💬 CASO 2: MENSAJE DE TEXTO
-// -----------------------------
-else {
+    // 💬 CASO 2: MENSAJE DE TEXTO
+    // -----------------------------
+    else {
 
-  parsed = parseWhatsappMessage(message);
+      parsed = parseWhatsappMessage(message);
 
-  console.log("📄 PARSED RESULT:", parsed);
+      console.log("📄 PARSED RESULT:", parsed);
 
-}
+    }
 
     // ========================================================================
     // PROCESAR CONVERSACIÓN INTELIGENTE
@@ -560,6 +560,75 @@ else {
         reply: conversation.message
       });
     }
+
+    // ====================================================================
+    // CREAR PEDIDO (FIX numero_pedido)
+    // ====================================================================
+
+    const numero_pedido = `RV-${Date.now()}`;
+
+    const insertResult = await query(`
+      INSERT INTO pedidos (
+        numero_pedido,
+        pieza,
+        marca_coche,
+        modelo_coche,
+        matricula,
+        anio_coche,
+        bastidor,
+        estado,
+        usuario_id,
+        precio,
+        canal,
+        notas_tecnicas,
+        fecha_creacion
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,CURRENT_TIMESTAMP)
+      RETURNING id
+    `, [
+      numero_pedido,
+      parsed.part || parsed.extractedPiece || "pieza no especificada",
+      parsed.brand || '',
+      parsed.model || '',
+      parsed.plate || null,
+      parsed.year || null,
+      parsed.vin || null,
+      'solicitud',
+      taller.id,
+      0,
+      'whatsapp',
+      parsed.original || message
+    ]);
+
+    const pedidoId = insertResult.rows[0].id;
+
+    clearSession(from);
+
+    whatsappCounter++;
+
+    whatsappNotifications.push({
+      id: pedidoId,
+      numero_pedido,
+      taller: taller.nombre_taller,
+      mensaje: message,
+      timestamp: Date.now()
+    });
+
+    console.log('🟢 Pedido creado vía WhatsApp:', numero_pedido);
+
+    res.json({
+      success: true,
+      pedido: {
+        id: pedidoId,
+        numero_pedido
+      }
+    });
+
+  } catch (error) {
+    console.error('🔥 Error WhatsApp inbound:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ====================================================================
 // Crear pedido SOLO cuando la conversación está confirmada
