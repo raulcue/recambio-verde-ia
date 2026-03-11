@@ -509,7 +509,8 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
     }
 
     const conversation = processMessage(from, parsed, message);
-
+const { getSession } = require('./services/whatsappConversationEngine.js');
+const session = getSession(from);
     console.log("🧠 Conversation result:", conversation);
 
     if (conversation.type === "ask" || conversation.type === "ask_year") {
@@ -552,12 +553,12 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
       RETURNING id
     `, [
       numero_pedido,
-      parsed.part || parsed.extractedPiece || "pieza no especificada",
-      parsed.brand || '',
-      parsed.model || '',
-      parsed.plate || null,
-      parsed.year || null,
-      parsed.vin || null,
+session.pieza || parsed.part || "pieza no especificada",
+session.marca || parsed.brand || '',
+session.modelo || parsed.model || '',
+parsed.plate || null,
+session.anio || parsed.year || null,
+session.vin || parsed.vin || null,
       'solicitud',
       taller.id,
       0,
