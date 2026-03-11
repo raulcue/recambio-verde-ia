@@ -213,5 +213,6 @@ Puedes:
 module.exports = {
   processMessage,
   clearSession,
-  isConfirmation
+  isConfirmation,
+  getSession
 };
