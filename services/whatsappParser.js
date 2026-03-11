@@ -51,12 +51,15 @@ function detectBrand(cleanText) {
   return null;
 }
 // ============================================================
-// DETECTAR PIEZA
+// DETECTAR PIEZA (MEJORADO)
 // ============================================================
 
-function detectPart(cleanText) {
+function detectPart(text) {
 
-  const text = normalize(cleanText);
+  const clean = normalize(text);
+
+  let bestMatch = null;
+  let longestAlias = 0;
 
   for (const part of PARTS) {
 
@@ -64,15 +67,21 @@ function detectPart(cleanText) {
 
       const a = normalize(alias);
 
-      if (text.includes(a)) {
-        return part.name;
+      if (clean.includes(a)) {
+
+        // preferir alias más largos (ej: "caja de cambios" > "caja")
+        if (a.length > longestAlias) {
+          longestAlias = a.length;
+          bestMatch = part.name;
+        }
+
       }
 
     }
 
   }
 
-  return null;
+  return bestMatch;
 
 }
 /**
