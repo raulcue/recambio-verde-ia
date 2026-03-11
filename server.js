@@ -342,14 +342,40 @@ if (!receiverNumber || normalizePhone(to.replace('whatsapp:', '')) !== normalize
 const phoneNormalized = normalizePhone(from);
 
 const tallerResult = await query(`
-  SELECT id, nombre_taller, telefono_whatsapp
+  SELECT
+    id,
+    nombre_taller,
+    telefono_whatsapp,
+    telefono_whatsapp_2,
+    telefono_whatsapp_3,
+    telefono_whatsapp_4,
+    telefono_whatsapp_5,
+    telefono_whatsapp_6,
+    telefono_whatsapp_7,
+    telefono_whatsapp_8,
+    telefono_whatsapp_9,
+    telefono_whatsapp_10
   FROM usuarios
-  WHERE telefono_whatsapp IS NOT NULL
 `);
 
-const taller = tallerResult.rows.find(u =>
-  normalizePhone(u.telefono_whatsapp) === phoneNormalized
-);
+const taller = tallerResult.rows.find(u => {
+
+  const phones = [
+    u.telefono_whatsapp,
+    u.telefono_whatsapp_2,
+    u.telefono_whatsapp_3,
+    u.telefono_whatsapp_4,
+    u.telefono_whatsapp_5,
+    u.telefono_whatsapp_6,
+    u.telefono_whatsapp_7,
+    u.telefono_whatsapp_8,
+    u.telefono_whatsapp_9,
+    u.telefono_whatsapp_10
+  ];
+
+  return phones.some(p => normalizePhone(p) === phoneNormalized);
+
+});
 
     if (!taller) {
       console.log('❌ Taller no encontrado para teléfono:', from);
@@ -386,28 +412,25 @@ if (conversation.type !== "confirm") {
 // Crear pedido SOLO cuando la conversación está confirmada
 // ====================================================================
 
-const numero_pedido = `WA-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    // Crear pedido mínimo
-    const insertResult = await query(`
-      INSERT INTO pedidos (
-        numero_pedido,
-        pieza,
-        marca_coche,
-        modelo_coche,
-        matricula,
-        anio_coche,
-        bastidor,
-        estado,
-        usuario_id,
-        precio,
-        canal,
-        notas_tecnicas,
-        fecha_creacion
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, CURRENT_TIMESTAMP)
-      RETURNING id, numero_pedido
-    `, [
-  numero_pedido,
+// Crear pedido mínimo (sin numero_pedido todavía)
+const insertResult = await query(`
+  INSERT INTO pedidos (
+    pieza,
+    marca_coche,
+    modelo_coche,
+    matricula,
+    anio_coche,
+    bastidor,
+    estado,
+    usuario_id,
+    precio,
+    canal,
+    notas_tecnicas,
+    fecha_creacion
+  )
+  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, CURRENT_TIMESTAMP)
+  RETURNING id
+`, [
   parsed.extractedPiece || message.substring(0, 80),
   parsed.brand || '',
   parsed.model || '',
@@ -421,30 +444,42 @@ const numero_pedido = `WA-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   parsed.original || message
 ]);
 
-    const pedidoCreado = insertResult.rows[0];
+// Obtener ID real
+const pedidoId = insertResult.rows[0].id;
+
+// Generar número visible corto
+const numero_pedido = `RV-${pedidoId.toString().padStart(4, '0')}`;
+
+// Guardarlo en la BBDD
+await query(
+  `UPDATE pedidos SET numero_pedido = $1 WHERE id = $2`,
+  [numero_pedido, pedidoId]
+);
+
+// Objeto final para respuesta
+const pedidoCreado = {
+  id: pedidoId,
+  numero_pedido
+};
+
 // cerrar conversación WhatsApp
 clearSession(from);
-    // Registrar notificación en memoria
-    whatsappCounter++;
-    whatsappNotifications.push({
-      id: pedidoCreado.id,
-      numero_pedido: pedidoCreado.numero_pedido,
-      taller: taller.nombre_taller,
-      mensaje: message,
-      timestamp: Date.now()
-    });
 
-    console.log('🟢 Pedido creado vía WhatsApp:', pedidoCreado);
+// Registrar notificación en memoria
+whatsappCounter++;
+whatsappNotifications.push({
+  id: pedidoId,
+  numero_pedido: numero_pedido,
+  taller: taller.nombre_taller,
+  mensaje: message,
+  timestamp: Date.now()
+});
 
-    res.json({
-      success: true,
-      pedido: pedidoCreado
-    });
+console.log('🟢 Pedido creado vía WhatsApp:', pedidoCreado);
 
-  } catch (error) {
-    console.error('🔥 Error WhatsApp inbound:', error);
-    res.status(500).json({ error: error.message });
-  }
+res.json({
+  success: true,
+  pedido: pedidoCreado
 });
 // ============================================================================
 // 🧪 WHATSAPP PARSER TEST ENDPOINT
@@ -1029,6 +1064,7 @@ app.delete('/api/pedidos/:id', async (req, res) => {
       `
       SELECT
         id,
+        numero_pedido,
         pieza,
         matricula,
         usuario_id
@@ -1056,12 +1092,12 @@ app.delete('/api/pedidos/:id', async (req, res) => {
 
     // 3️⃣ Registrar auditoría
     await registrarLog({
-      usuario_id: null, // más adelante podemos pasar el usuario real
+      usuario_id: null,
       accion: 'DELETE_PEDIDO',
       usuario_nombre: 'ADMIN',
       usuario_iniciales: 'AD',
       ip_address: getIP(req),
-      detalle: `Pedido #${pedido.id} eliminado (pieza: ${pedido.pieza || 'N/A'}, matrícula: ${pedido.matricula || 'N/A'})`
+      detalle: `Pedido ${pedido.numero_pedido || pedido.id} eliminado (pieza: ${pedido.pieza || 'N/A'}, matrícula: ${pedido.matricula || 'N/A'})`
     });
 
     console.log('✅ Pedido eliminado correctamente:', id);
@@ -1081,36 +1117,44 @@ app.delete('/api/pedidos/:id', async (req, res) => {
 });
 
 
-// Actualizar estado (drag & drop)
+// ============================================================================
+// 🔄 ACTUALIZAR ESTADO (drag & drop)
+// ============================================================================
 app.put('/api/pedidos/:id/estado', async (req, res) => {
   try {
     const { id } = req.params;
     const { estado } = req.body;
-    
-    // MODIFICACIÓN QUIRÚRGICA: Actualizar estado respetando los nuevos nombres
+
     const result = await query(
       'UPDATE pedidos SET estado = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *',
       [estado, id]
     );
-    
+
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: 'Pedido no encontrado' });
     }
-    
-    res.json({ success: true, pedido: result.rows[0] });
+
+    res.json({
+      success: true,
+      pedido: result.rows[0]
+    });
+
   } catch (error) {
+    console.error('❌ Error actualizando estado:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Crear pedido
+
+// ============================================================================
+// 📦 CREAR PEDIDO (panel / API)
+// ============================================================================
 app.post('/api/pedidos', async (req, res) => {
   try {
     const p = req.body;
 
     console.log('📦 Payload recibido en POST /api/pedidos:', p);
 
-    // 🛡️ Validaciones mínimas
     if (!p.pieza) {
       return res.status(400).json({
         error: 'La pieza es obligatoria',
@@ -1118,11 +1162,9 @@ app.post('/api/pedidos', async (req, res) => {
       });
     }
 
-    const numero_pedido = `PED-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-    const result = await query(`
+    // 1️⃣ Insertar pedido sin número
+    const insertResult = await query(`
       INSERT INTO pedidos (
-        numero_pedido,
         pieza,
         matricula,
         marca_coche,
@@ -1140,10 +1182,9 @@ app.post('/api/pedidos', async (req, res) => {
         usuario_id,
         fecha_creacion
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16, CURRENT_TIMESTAMP)
-      RETURNING id, numero_pedido
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15, CURRENT_TIMESTAMP)
+      RETURNING id
     `, [
-      numero_pedido,
       p.pieza || null,
       p.matricula || null,
       p.marca_coche || null,
@@ -1161,11 +1202,26 @@ app.post('/api/pedidos', async (req, res) => {
       p.usuario_id || null
     ]);
 
-    console.log('✅ Pedido creado correctamente:', result.rows[0]);
+    // 2️⃣ Generar número corto basado en ID
+    const pedidoId = insertResult.rows[0].id;
+    const numero_pedido = `RV-${pedidoId.toString().padStart(4, '0')}`;
+
+    // 3️⃣ Guardar número en DB
+    await query(
+      `UPDATE pedidos SET numero_pedido = $1 WHERE id = $2`,
+      [numero_pedido, pedidoId]
+    );
+
+    const pedidoCreado = {
+      id: pedidoId,
+      numero_pedido
+    };
+
+    console.log('✅ Pedido creado correctamente:', pedidoCreado);
 
     res.status(201).json({
       success: true,
-      pedido: result.rows[0]
+      pedido: pedidoCreado
     });
 
   } catch (error) {
