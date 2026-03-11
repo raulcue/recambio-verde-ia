@@ -12,7 +12,7 @@ const axios = require('axios');
 // 🧠 WhatsApp Intelligent Parser
 const { parseWhatsappMessage } = require('./services/whatsappParser.js');
 // 🤖 WhatsApp Conversation Engine
-const { processMessage, clearSession } = require('./services/whatsappConversationEngine.js');
+const { processMessage, clearSession, isConfirmation } = require('./services/whatsappConversationEngine.js');
 // =======================
 // INYECCIÓN QUIRÚRGICA #1
 // =======================
@@ -513,19 +513,20 @@ const { getSession } = require('./services/whatsappConversationEngine.js');
 const session = getSession(from);
     console.log("🧠 Conversation result:", conversation);
 
-    if (conversation.type === "ask" || conversation.type === "ask_year") {
-      return res.json({
-        success: true,
-        reply: conversation.message
-      });
-    }
+if (conversation.type !== "confirm") {
+  return res.json({
+    success: true,
+    reply: conversation.message
+  });
+}
 
-    if (conversation.type !== "confirm") {
-      return res.json({
-        success: true,
-        reply: conversation.message
-      });
-    }
+// Si está en confirmación, esperar palabra de confirmación
+if (!isConfirmation(message)) {
+  return res.json({
+    success: true,
+    reply: conversation.message
+  });
+}
 
     // ====================================================================
     // CREAR PEDIDO
