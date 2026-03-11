@@ -492,6 +492,11 @@ res.json({
   success: true,
   pedido: pedidoCreado
 });
+} catch (error) {
+  console.error('🔥 Error WhatsApp inbound:', error);
+  res.status(500).json({ error: error.message });
+}
+});
 // ============================================================================
 // 🧪 WHATSAPP PARSER TEST ENDPOINT
 // ============================================================================
