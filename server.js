@@ -552,7 +552,7 @@ app.post('/api/whatsapp/inbound', async (req, res) => {
       RETURNING id
     `, [
       numero_pedido,
-      parsed.part || "pieza no especificada",
+      parsed.part || parsed.extractedPiece || "pieza no especificada",
       parsed.brand || '',
       parsed.model || '',
       parsed.plate || null,
