@@ -173,35 +173,44 @@ function extractPieceText(original, plate, vin, brand, model) {
  * 🎯 FUNCIÓN PRINCIPAL
  */
 function parseWhatsappMessage(message = "") {
+
   const normalized = normalizeText(message);
 
   const plate = detectPlate(message);
   const vin = detectVIN(message);
-let brand = detectBrand(normalized);
-let model = detectModel(normalized, brand);
-
-// inferir marca si no existe pero el modelo sí
-if (!brand && model) {
-  brand = inferBrandFromModel(model);
-}
   const year = detectYear(message);
   const engine = detectEngine(message);
 
+  // detectar pieza primero
   const part = detectPart(message);
+
+  // detectar marca
+  let brand = detectBrand(normalized);
+
+  // detectar modelo
+  let model = detectModel(normalized, brand);
+
+  // inferir marca desde modelo si no aparece
+  if (!brand && model) {
+    brand = inferBrandFromModel(model);
+  }
+
+  // extraer texto restante
   const piece = extractPieceText(message, plate, vin, brand, model);
 
-	return {
-	  original: message,
-	  normalized,
-	  plate,
-	  vin,
-	  brand,
-	  model,
-	  year,
-	  engine,
-	  part,
-	  extractedPiece: piece || message
-	};
+  return {
+    original: message,
+    normalized,
+    plate,
+    vin,
+    brand,
+    model,
+    year,
+    engine,
+    part,
+    extractedPiece: part || piece || message
+  };
+
 }
 
 module.exports = {
