@@ -51,7 +51,7 @@ function detectBrand(cleanText) {
   return null;
 }
 // ============================================================
-// DETECTAR PIEZA (MEJORADO)
+// DETECTAR PIEZA (ROBUSTO)
 // ============================================================
 
 function detectPart(text) {
@@ -63,17 +63,15 @@ function detectPart(text) {
 
   for (const part of PARTS) {
 
-    const aliases = (part.aliases || []).sort((a,b) => b.length - a.length);
+    for (const alias of part.aliases || []) {
 
-    for (const alias of aliases) {
+      const normalizedAlias = normalize(alias);
 
-      const a = normalize(alias);
+      if (clean.includes(normalizedAlias)) {
 
-      if (clean.includes(a)) {
-
-        if (a.length > longestAlias) {
-          longestAlias = a.length;
-          bestMatch = part.part;
+        if (normalizedAlias.length > longestAlias) {
+          longestAlias = normalizedAlias.length;
+          bestMatch = part.part || part.name;
         }
 
       }
